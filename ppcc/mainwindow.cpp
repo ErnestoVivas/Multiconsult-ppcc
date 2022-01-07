@@ -21,9 +21,9 @@ MainWindow::~MainWindow() {
     if(this->measurementData) {
         delete this->measurementData;
     }
-    if(this->measurementsChart) {
-        delete this->measurementsChart;
-    }
+    //if(this->measurementsChart) {
+    //    delete this->measurementsChart;
+    //}
     for(unsigned short int i = 0; i < measurementSeries.size(); ++i) {
         delete measurementSeries[i];
     }
