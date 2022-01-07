@@ -3,14 +3,17 @@
 
 #include <QMainWindow>
 #include <QFileDialog>
+#include <QDebug>
+#include <vector>
 
-#include "QXlsx/header/xlsxdocument.h"
-//#include "xlsxchartsheet.h"
-//#include "xlsxcellrange.h"
+#include "xlsxdocument.h"
+//#include "QXlsx/header/xlsxdocument.h"
+//#include "QXlsx/header/xlsxchartsheet.h"
+//#include "QXlsx/header/xlsxcellrange.h"
 //#include "xlsxchart.h"
 //#include "xlsxrichstring.h"
 //#include "xlsxworkbook.h"
-using namespace QXlsx;
+//using namespace QXlsx;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -26,8 +29,13 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    Document* measurementData;
-    //QString spreadsheetFileName;
+    QXlsx::Document* measurementData;
+
+    void readDocument(QXlsx::Document*);
+    short int numOfDays;
+    std::vector<QDate> days;
+    //std::vector<QTime>* timestamps;
+    //std::vector<double>* values;
 
 private slots:
     void openFile();
