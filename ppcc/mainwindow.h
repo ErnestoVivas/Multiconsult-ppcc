@@ -2,7 +2,12 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QPixmap>
 #include <QFileDialog>
+#include <QLineSeries>
+#include <QtCharts>
+#include <QtCharts/QChartView>
+#include <QtCharts/QLineSeries>
 #include <QDebug>
 #include <vector>
 
@@ -30,14 +35,16 @@ public:
 private:
     Ui::MainWindow *ui;
     QXlsx::Document* measurementData;
-
-    void readDocument(QXlsx::Document*);
+    QChart* measurementsChart;
     short int numOfDays;
     std::vector<QDate> days;
-    //std::vector<QTime>* timestamps;
-    //std::vector<double>* values;
+    std::vector<QLineSeries*> measurementSeries;
+
+    void readDocument(QXlsx::Document*);
 
 private slots:
     void openFile();
+    void generateDiagram();
+    void saveDiagram();
 };
 #endif // MAINWINDOW_H
