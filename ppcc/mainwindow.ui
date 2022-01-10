@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>873</width>
-    <height>518</height>
+    <width>881</width>
+    <height>699</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <property name="geometry">
      <rect>
       <x>350</x>
-      <y>30</y>
+      <y>610</y>
       <width>71</width>
       <height>22</height>
      </rect>
@@ -31,7 +31,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>30</y>
+      <y>610</y>
       <width>331</width>
       <height>22</height>
      </rect>
@@ -41,7 +41,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>10</y>
+      <y>550</y>
       <width>141</width>
       <height>16</height>
      </rect>
@@ -53,8 +53,8 @@
    <widget class="QPushButton" name="buttonGenerateDiagram">
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>320</y>
+      <x>720</x>
+      <y>438</y>
       <width>121</width>
       <height>24</height>
      </rect>
@@ -66,28 +66,28 @@
    <widget class="QTextEdit" name="textEditDisplaySheet">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>90</y>
-      <width>411</width>
-      <height>221</height>
+      <x>440</x>
+      <y>520</y>
+      <width>421</width>
+      <height>131</height>
      </rect>
     </property>
    </widget>
    <widget class="QChartView" name="graphicsViewChart">
     <property name="geometry">
      <rect>
-      <x>440</x>
-      <y>30</y>
-      <width>411</width>
-      <height>311</height>
+      <x>140</x>
+      <y>10</y>
+      <width>531</width>
+      <height>451</height>
      </rect>
     </property>
    </widget>
    <widget class="QPushButton" name="buttonSaveDiagram">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>320</y>
+      <x>10</x>
+      <y>438</y>
       <width>121</width>
       <height>24</height>
      </rect>
@@ -96,13 +96,26 @@
      <string>Guardar Diagrama</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="buttonImportDocuments">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>10</y>
+      <width>75</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Importar</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>873</width>
+     <width>881</width>
      <height>22</height>
     </rect>
    </property>

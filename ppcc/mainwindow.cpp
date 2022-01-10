@@ -5,11 +5,12 @@ MainWindow::MainWindow(QWidget *parent):
     QMainWindow(parent), ui(new Ui::MainWindow), numOfDays(0) {
     ui->setupUi(this);
 
-    // set pointers to NULL to check for destroying in destructor
+    // set pointers and small pointers for correct resource management
     this->measurementData = NULL;
-    this->measurementsChart = NULL;
+    this->measurementsChart = std::make_shared<QChart>();
 
     // connect interactive elements with respective functions
+    connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
     connect(ui->buttonOpenFile, SIGNAL(clicked()), this, SLOT(openFile()));
     connect(ui->buttonGenerateDiagram, SIGNAL(clicked()), this, SLOT(generateDiagram()));
     connect(ui->buttonSaveDiagram, SIGNAL(clicked()), this, SLOT(saveDiagram()));
@@ -21,9 +22,7 @@ MainWindow::~MainWindow() {
     if(this->measurementData) {
         delete this->measurementData;
     }
-    //if(this->measurementsChart) {
-    //    delete this->measurementsChart;
-    //}
+
     for(unsigned short int i = 0; i < measurementSeries.size(); ++i) {
         delete measurementSeries[i];
     }
@@ -34,7 +33,7 @@ void MainWindow::readDocument(QXlsx::Document* measurementData) {
 
         // Document has 3 columns and a variable number of rows
         // indexing off excel sheets starts at (1,1)
-        measurementData->selectSheet("Hoja1");
+        measurementData->selectSheet("NNC P");
 
         bool cellNotEmpty = true;
         QVariant currentCellValue;
@@ -51,6 +50,7 @@ void MainWindow::readDocument(QXlsx::Document* measurementData) {
 
                 // read current cell value as iterating through the document
                 currentCellValue = measurementData->read(i,j);
+                qDebug() << currentCellValue.toReal();
 
                 // convert wrongly detected times
                 if((j == 2) && (i > 1)) {
@@ -69,7 +69,10 @@ void MainWindow::readDocument(QXlsx::Document* measurementData) {
                 }
 
                 // convert cell value to string (to print), check for end of doc and count days
+                // TODO: check for correct parsing of time or hour format!
                 cellValueString = currentCellValue.toString();
+
+                qDebug() << cellValueString;
                 if((j == 1) && (!(cellValueString.isEmpty()))) {
                     if(i == 2) {
                         prevCellValueString = cellValueString;
@@ -99,11 +102,13 @@ void MainWindow::readDocument(QXlsx::Document* measurementData) {
             ui->textEditDisplaySheet->append(currentRow);
             currentRow = "";
         }
-        qDebug() << days.size();
-        qDebug() << measurementSeries.size();
+        //qDebug() << days.size();
+        //qDebug() << measurementSeries.size();
     }
 }
 
+
+// TODO: open file will be replaced by importDocument
 void MainWindow::openFile() {
     QString spreadsheetFileName = QFileDialog::getOpenFileName(this,
         tr("Abrir archivo Excel"), "~/", tr("Formato Excel (*.xls *.xlsx)"));
@@ -113,11 +118,22 @@ void MainWindow::openFile() {
     readDocument(this->measurementData);
 }
 
+void MainWindow::importDocument() {
+    QString docFileName = QFileDialog::getOpenFileName(this,
+        tr("Abrir archivo Excel"), "~/", tr("Formato Excel (*.xlsx)"));
+    documents.push_back(MeasurementsDocument(docFileName));
+
+    // debug on every import:
+    for(unsigned short i = 0; i < documents.size(); ++i) {
+        qDebug() << documents[i].docName;
+    }
+}
+
 void MainWindow::generateDiagram() {
     if(numOfDays == 0) {
         return;
     }
-    measurementsChart = new QChart();
+    measurementsChart.reset(new QChart());
     for(unsigned short i = 0; i < numOfDays; ++i) {
         measurementsChart->addSeries(measurementSeries[i]);
     }
@@ -125,7 +141,7 @@ void MainWindow::generateDiagram() {
     measurementsChart->createDefaultAxes();
     measurementsChart->setTitle("Consumo durante el dia.");
     ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
-    ui->graphicsViewChart->setChart(measurementsChart);
+    ui->graphicsViewChart->setChart(measurementsChart.get());
 }
 
 void MainWindow::saveDiagram() {
