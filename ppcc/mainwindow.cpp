@@ -4,6 +4,11 @@
 MainWindow::MainWindow(QWidget *parent):
     QMainWindow(parent), ui(new Ui::MainWindow), numOfDays(0) {
     ui->setupUi(this);
+    ui->comboBoxSelectDoc->setPlaceholderText("Seleccionar documento");
+    ui->comboBoxSelectDoc->placeholderText();
+    ui->comboBoxSelectDoc->setCurrentIndex(-1);
+
+    ui->listWidgetDays->setSelectionMode(QAbstractItemView::MultiSelection);
 
     // set pointers and small pointers for correct resource management
     this->measurementData = NULL;
@@ -14,6 +19,8 @@ MainWindow::MainWindow(QWidget *parent):
     connect(ui->buttonOpenFile, SIGNAL(clicked()), this, SLOT(openFile()));
     connect(ui->buttonGenerateDiagram, SIGNAL(clicked()), this, SLOT(generateDiagram()));
     connect(ui->buttonSaveDiagram, SIGNAL(clicked()), this, SLOT(saveDiagram()));
+    connect(ui->comboBoxSelectDoc, SIGNAL(currentIndexChanged(int)), this, SLOT(updateSheetList(int)));
+    connect(ui->comboBoxSelectSheet, SIGNAL(currentIndexChanged(int)), this, SLOT(updateDaysEntries(int)));
 }
 
 MainWindow::~MainWindow() {
@@ -32,8 +39,8 @@ void MainWindow::readDocument(QXlsx::Document* measurementData) {
     if(measurementData->load()) {
 
         // Document has 3 columns and a variable number of rows
-        // indexing off excel sheets starts at (1,1)
-        measurementData->selectSheet("NNC P");
+        // indexing of excel sheets starts at (1,1)
+        measurementData->selectSheet("Hoja1");
 
         bool cellNotEmpty = true;
         QVariant currentCellValue;
@@ -122,11 +129,7 @@ void MainWindow::importDocument() {
     QString docFileName = QFileDialog::getOpenFileName(this,
         tr("Abrir archivo Excel"), "~/", tr("Formato Excel (*.xlsx)"));
     documents.push_back(MeasurementsDocument(docFileName));
-
-    // debug on every import:
-    for(unsigned short i = 0; i < documents.size(); ++i) {
-        qDebug() << documents[i].docName;
-    }
+    addEntryComboBoxDocSelection(docFileName);
 }
 
 void MainWindow::generateDiagram() {
@@ -149,4 +152,34 @@ void MainWindow::saveDiagram() {
                                                         "~/", tr("Imagenes (*.png)"));
     QPixmap measurementsImage = ui->graphicsViewChart->grab();
     measurementsImage.save(saveFileName, "PNG");
+}
+
+void MainWindow::addEntryComboBoxDocSelection(const QString& newDocument) {
+    ui->comboBoxSelectDoc->addItem(newDocument);
+}
+
+void MainWindow::updateSheetList(int docIndex) {
+    ui->comboBoxSelectSheet->clear();
+    for(unsigned short i = 0; i < documents[docIndex].sheets.size(); ++i) {
+        ui->comboBoxSelectSheet->addItem(documents[docIndex].sheets[i]->sheetName);
+    }
+}
+
+void MainWindow::updateDaysEntries(int sheetIndex) {
+    QString dayEntry = "Day Number " + QString::number(sheetIndex);
+    ui->listWidgetDays->addItem(dayEntry);
+
+    // debug: display current sheet on the display
+    if(sheetIndex >= 0) {
+        ui->textEditDisplaySheet->clear();
+        int docIndex = ui->comboBoxSelectDoc->currentIndex();
+        int sheetLength = documents[docIndex].sheets[sheetIndex]->days.size();
+        QString currentDay, currentTime, currentValue;
+        for(int i = 0; i < sheetLength; ++i) {
+            currentDay = documents[docIndex].sheets[sheetIndex]->days[i].toString();
+            currentTime = documents[docIndex].sheets[sheetIndex]->timestamps[i].toString();
+            currentValue = documents[docIndex].sheets[sheetIndex]->measurements[i].toString();
+            ui->textEditDisplaySheet->append(currentDay + "  " + currentTime + "  " + currentValue);
+        }
+    }
 }

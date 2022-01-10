@@ -6,22 +6,26 @@
 #include <memory>
 #include <vector>
 #include <list>
+
 #include "xlsxdocument.h"
+#include "xlsxworkbook.h"
 
-
-class MeasurementsSheet {
+class SheetData {
 
     // One 'MeasurementsSheet' object represents one excel sheet
     // with measurement data from various days
 
 public:
-    MeasurementsSheet();
-    ~MeasurementsSheet();
+    SheetData();
+    SheetData(const QString&);
+    ~SheetData();
 
     QString sheetName;
     short numOfDays;
-    std::vector<QDate> days;
-    std::vector<QLineSeries*> measurementSeries;
+    std::vector<QVariant> days;
+    std::vector<QVariant> timestamps;
+    std::vector<QVariant> measurements;
+    std::vector<std::shared_ptr<QLineSeries> > measurementSeries;
 };
 
 class MeasurementsDocument {
@@ -36,7 +40,10 @@ public:
 
     QString docName;
     std::shared_ptr<QXlsx::Document> measurementsDoc;
-    std::vector<std::shared_ptr<MeasurementsSheet> > sheets;
+    std::vector<std::shared_ptr<SheetData> > sheets;
+
+private:
+    bool parseDocumentData();
 
 };
 

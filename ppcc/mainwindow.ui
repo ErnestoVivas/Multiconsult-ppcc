@@ -18,7 +18,7 @@
     <property name="geometry">
      <rect>
       <x>350</x>
-      <y>610</y>
+      <y>630</y>
       <width>71</width>
       <height>22</height>
      </rect>
@@ -31,7 +31,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>610</y>
+      <y>630</y>
       <width>331</width>
       <height>22</height>
      </rect>
@@ -40,9 +40,9 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>550</y>
-      <width>141</width>
+      <x>430</x>
+      <y>630</y>
+      <width>131</width>
       <height>16</height>
      </rect>
     </property>
@@ -66,10 +66,10 @@
    <widget class="QTextEdit" name="textEditDisplaySheet">
     <property name="geometry">
      <rect>
-      <x>440</x>
-      <y>520</y>
-      <width>421</width>
-      <height>131</height>
+      <x>140</x>
+      <y>470</y>
+      <width>531</width>
+      <height>141</height>
      </rect>
     </property>
    </widget>
@@ -107,6 +107,36 @@
     </property>
     <property name="text">
      <string>Importar</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="comboBoxSelectDoc">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>10</y>
+      <width>181</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="listWidgetDays">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>130</y>
+      <width>181</width>
+      <height>131</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="comboBoxSelectSheet">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>70</y>
+      <width>181</width>
+      <height>22</height>
+     </rect>
     </property>
    </widget>
   </widget>

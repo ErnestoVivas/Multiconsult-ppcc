@@ -5,6 +5,8 @@
 #include <QPixmap>
 #include <QFileDialog>
 #include <QLineSeries>
+#include <QComboBox>
+#include <QListWidget>
 #include <QtCharts>
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
@@ -53,6 +55,9 @@ private:
 
 private slots:
     void importDocument();
+    void addEntryComboBoxDocSelection(const QString&);
+    void updateSheetList(int);
+    void updateDaysEntries(int);
     void openFile();
     void generateDiagram();
     void saveDiagram();
