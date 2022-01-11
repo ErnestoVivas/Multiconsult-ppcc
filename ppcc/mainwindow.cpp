@@ -2,21 +2,22 @@
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent):
-    QMainWindow(parent), ui(new Ui::MainWindow), numOfDays(0) {
+    QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    ui->comboBoxSelectDoc->setPlaceholderText("Seleccionar documento");
-    ui->comboBoxSelectDoc->placeholderText();
     ui->comboBoxSelectDoc->setCurrentIndex(-1);
-
+    ui->comboBoxSelectDoc->setPlaceholderText("Seleccionar documento");
     ui->listWidgetDays->setSelectionMode(QAbstractItemView::MultiSelection);
 
     // set pointers and small pointers for correct resource management
-    this->measurementData = NULL;
     this->measurementsChart = std::make_shared<QChart>();
+    this->measurementsChart->createDefaultAxes();
+    this->measurementsChart->setTitle("Consumo de energia");
+    this->measurementsChart->legend()->hide();
+    ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
+    ui->graphicsViewChart->setChart(measurementsChart.get());
 
     // connect interactive elements with respective functions
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
-    connect(ui->buttonOpenFile, SIGNAL(clicked()), this, SLOT(openFile()));
     connect(ui->buttonGenerateDiagram, SIGNAL(clicked()), this, SLOT(generateDiagram()));
     connect(ui->buttonSaveDiagram, SIGNAL(clicked()), this, SLOT(saveDiagram()));
     connect(ui->comboBoxSelectDoc, SIGNAL(currentIndexChanged(int)), this, SLOT(updateSheetList(int)));
@@ -25,16 +26,9 @@ MainWindow::MainWindow(QWidget *parent):
 
 MainWindow::~MainWindow() {
     delete ui;
-
-    if(this->measurementData) {
-        delete this->measurementData;
-    }
-
-    for(unsigned short int i = 0; i < measurementSeries.size(); ++i) {
-        delete measurementSeries[i];
-    }
 }
 
+/*
 void MainWindow::readDocument(QXlsx::Document* measurementData) {
     if(measurementData->load()) {
 
@@ -113,8 +107,9 @@ void MainWindow::readDocument(QXlsx::Document* measurementData) {
         //qDebug() << measurementSeries.size();
     }
 }
+*/
 
-
+/*
 // TODO: open file will be replaced by importDocument
 void MainWindow::openFile() {
     QString spreadsheetFileName = QFileDialog::getOpenFileName(this,
@@ -124,14 +119,46 @@ void MainWindow::openFile() {
 
     readDocument(this->measurementData);
 }
+*/
+
 
 void MainWindow::importDocument() {
     QString docFileName = QFileDialog::getOpenFileName(this,
         tr("Abrir archivo Excel"), "~/", tr("Formato Excel (*.xlsx)"));
-    documents.push_back(MeasurementsDocument(docFileName));
+    documents.emplace_back(MeasurementsDocument(docFileName));
     addEntryComboBoxDocSelection(docFileName);
 }
 
+void MainWindow::generateDiagram() {
+    // get list of selected days
+    std::vector<int> selectedDaysIndices;
+    //this->auxiliaryUpdateChart = std::make_shared<QChart>();
+    measurementsChart->removeAllSeries();
+    for(int i = 0; i < ui->listWidgetDays->count(); ++i) {
+        if(ui->listWidgetDays->item(i)->isSelected()) {
+            selectedDaysIndices.emplace_back(i);
+
+            // debug is correct
+            //qDebug() << "Day " <<
+            //    documents[selectedDocIndex].sheets[selectedSheetIndex]->daysAndCounting[i].first
+            //    << "with index " << i << "is selected";
+        }
+    }
+    //measurementsChart.reset(new QChart());
+    for(unsigned short i = 0; i < selectedDaysIndices.size(); ++i) {
+        measurementsChart->addSeries(
+                 documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[selectedDaysIndices[i]].get());
+    }
+    //measurementsChart->legend()->hide();
+    //measurementsChart->createDefaultAxes();
+    //measurementsChart->setTitle("Consumo energetico");
+    //ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
+    //ui->graphicsViewChart->setChart(measurementsChart.get());
+    //measurementsChart = auxiliaryUpdateChart;
+    //auxiliaryUpdateChart = nullptr;
+}
+
+/*
 void MainWindow::generateDiagram() {
     if(numOfDays == 0) {
         return;
@@ -145,7 +172,7 @@ void MainWindow::generateDiagram() {
     measurementsChart->setTitle("Consumo durante el dia.");
     ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
     ui->graphicsViewChart->setChart(measurementsChart.get());
-}
+}*/
 
 void MainWindow::saveDiagram() {
     QString saveFileName = QFileDialog::getSaveFileName(this, tr("Guardar imagen"),
@@ -160,23 +187,31 @@ void MainWindow::addEntryComboBoxDocSelection(const QString& newDocument) {
 
 void MainWindow::updateSheetList(int docIndex) {
     ui->comboBoxSelectSheet->clear();
+    this->selectedDocIndex = docIndex;
     for(unsigned short i = 0; i < documents[docIndex].sheets.size(); ++i) {
         ui->comboBoxSelectSheet->addItem(documents[docIndex].sheets[i]->sheetName);
     }
 }
 
 void MainWindow::updateDaysEntries(int sheetIndex) {
-    QString dayEntry = "Day Number " + QString::number(sheetIndex);
-    ui->listWidgetDays->addItem(dayEntry);
+    ui->listWidgetDays->clear();
+    if(sheetIndex >= 0) {
+        this->selectedSheetIndex = sheetIndex;
+        short numberOfDays = documents[this->selectedDocIndex].sheets[this->selectedSheetIndex]->daysAndCounting.size();
+        for(short i = 0; i < numberOfDays; ++i) {
+            ui->listWidgetDays->addItem(
+                documents[this->selectedDocIndex].sheets[this->selectedSheetIndex]->daysAndCounting[i].first);
+        }
+    }
 
     // debug: display current sheet on the display
     if(sheetIndex >= 0) {
         ui->textEditDisplaySheet->clear();
         int docIndex = ui->comboBoxSelectDoc->currentIndex();
-        int sheetLength = documents[docIndex].sheets[sheetIndex]->days.size();
+        int sheetLength = documents[docIndex].sheets[sheetIndex]->allDays.size();
         QString currentDay, currentTime, currentValue;
         for(int i = 0; i < sheetLength; ++i) {
-            currentDay = documents[docIndex].sheets[sheetIndex]->days[i].toString();
+            currentDay = documents[docIndex].sheets[sheetIndex]->allDays[i].toString();
             currentTime = documents[docIndex].sheets[sheetIndex]->timestamps[i].toString();
             currentValue = documents[docIndex].sheets[sheetIndex]->measurements[i].toString();
             ui->textEditDisplaySheet->append(currentDay + "  " + currentTime + "  " + currentValue);

@@ -54,7 +54,7 @@
     <property name="geometry">
      <rect>
       <x>720</x>
-      <y>438</y>
+      <y>400</y>
       <width>121</width>
       <height>24</height>
      </rect>
@@ -86,14 +86,14 @@
    <widget class="QPushButton" name="buttonSaveDiagram">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>720</x>
       <y>438</y>
       <width>121</width>
       <height>24</height>
      </rect>
     </property>
     <property name="text">
-     <string>Guardar Diagrama</string>
+     <string>Exportar Diagrama</string>
     </property>
    </widget>
    <widget class="QPushButton" name="buttonImportDocuments">
@@ -125,7 +125,7 @@
       <x>690</x>
       <y>130</y>
       <width>181</width>
-      <height>131</height>
+      <height>161</height>
      </rect>
     </property>
    </widget>

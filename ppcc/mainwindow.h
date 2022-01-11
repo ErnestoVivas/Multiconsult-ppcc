@@ -41,14 +41,18 @@ private:
     Ui::MainWindow *ui;
 
     std::vector<MeasurementsDocument> documents;
+    std::shared_ptr<QChart> measurementsChart;
+    std::shared_ptr<QChart> auxiliaryUpdateChart;
+    int selectedDocIndex;
+    int selectedSheetIndex;
 
     // data information (will be deleted later!)
-    QXlsx::Document* measurementData;
-    std::shared_ptr<QChart> measurementsChart;
+    //QXlsx::Document* measurementData;
+    //std::shared_ptr<QChart> measurementsChart;
 
-    short int numOfDays;
-    std::vector<QDate> days;
-    std::vector<QLineSeries*> measurementSeries;
+    //short int numOfDays;
+    //std::vector<QDate> days;
+    //std::vector<QLineSeries*> measurementSeries;
 
 
     void readDocument(QXlsx::Document*);
@@ -58,7 +62,7 @@ private slots:
     void addEntryComboBoxDocSelection(const QString&);
     void updateSheetList(int);
     void updateDaysEntries(int);
-    void openFile();
+    //void openFile();
     void generateDiagram();
     void saveDiagram();
 };

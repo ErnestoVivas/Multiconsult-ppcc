@@ -6,11 +6,110 @@ SheetData::SheetData() {
 
 SheetData::SheetData(const QString& currentSheetName) {
     this->sheetName = currentSheetName;
+    this->numOfDays = 0;
 }
 
 SheetData::~SheetData() {
 
 }
+
+int SheetData::extractDays() {
+    int returnVal;
+    if(this->allDays.size() >= 1) {
+        QVariant currentDayVal = this->allDays[0];
+        QVariant prevDayVal = this->allDays[0];
+        short dayCounter = 0;
+        for(unsigned short i = 0; i < this->allDays.size(); ++i) {
+            if(this->allDays.size() == 1) {
+                this->numOfDays = 1;
+                ++dayCounter;
+                daysAndCounting.emplace_back(std::make_pair(prevDayVal.toString(), dayCounter));
+            } else if(i == 0) {
+                this->numOfDays = 1;
+                ++dayCounter;
+            } else if(i == (this->allDays.size() - 1)) {    // assuming there is never a day with just 1 measurement
+                ++dayCounter;
+                daysAndCounting.emplace_back(std::make_pair(prevDayVal.toString(), dayCounter));
+            } else {
+                currentDayVal = this->allDays[i];
+                if(currentDayVal != prevDayVal) {
+                    ++(this->numOfDays);
+                    daysAndCounting.emplace_back(std::make_pair(prevDayVal.toString(), dayCounter));
+                    dayCounter = 1;
+                } else {
+                    ++dayCounter;
+                }
+                prevDayVal = this->allDays[i];
+            }
+        }
+
+        // debugging
+        /*
+        qDebug() << "Sheet: " << this->sheetName << ", numOfDays: " << this->numOfDays;
+        for(unsigned short s = 0; s < daysAndCounting.size(); ++s) {
+            qDebug() << daysAndCounting[s].first << ", measurements: " << daysAndCounting[s].second;
+        }
+        */
+        returnVal = 0;
+    } else {
+        returnVal = -1;                         // sheet is empty
+    }
+
+    return returnVal;
+}
+
+int SheetData::extractLineSeries() {
+    int returnVal = -1;
+    if(this->allDays.size() >= 1) {
+
+        // reserve vector space and create corresponding number of lineSeries
+        this->measurementSeries.reserve(this->daysAndCounting.size());
+        int numOfMeasurements;
+        int measurementsCount = 0;
+        double currentTimeValue;
+        double currentDataValue;
+        for(unsigned int i = 0; i < daysAndCounting.size(); ++i) {
+            this->measurementSeries.emplace_back(std::make_shared<QLineSeries>());
+
+            numOfMeasurements = daysAndCounting[i].second;
+
+            // case 1: timestamps are interpreted as dateTime object
+            // qDebug() << "Measurements of day " << daysAndCounting[i].first << ":";
+            QTime currentTimestamp;
+            if( (this->timestamps[measurementsCount].type() == 14) ||
+                (this->timestamps[measurementsCount].type() == 15) ||
+                (this->timestamps[measurementsCount].type() == 16) ) {
+                // qDebug() << "Timestamp is of type " << this->timestamps[measurementsCount].typeName();
+                for(int j = 0; j < numOfMeasurements; ++j) {
+                    if(this->timestamps[j + measurementsCount].canConvert(15)) {
+                        currentTimestamp = this->timestamps[j + measurementsCount].toTime();
+                    }
+                    if(this->timestamps[measurementsCount+j].type() == 14) {
+                        currentTimestamp = QTime(0,0,0);
+                    }
+                    currentTimeValue = currentTimestamp.msecsSinceStartOfDay();
+                    currentDataValue = this->measurements[j + measurementsCount].toReal();
+                    this->measurementSeries[i]->append(currentTimeValue, currentDataValue);
+                    // qDebug() << "(" << currentTimeValue << "," << currentDataValue << ")";
+                }
+            }
+
+            // case 2: timestamps are interpreted as strings
+            else {
+                for(int j = 0; j < numOfMeasurements; ++j) {
+                    currentTimeValue = this->timestamps[j + measurementsCount].toReal();
+                    currentDataValue = this->measurements[j + measurementsCount].toReal();
+                    this->measurementSeries[i]->append(currentTimeValue, currentDataValue);
+                    // qDebug() << "(" << currentTimeValue << "," << currentDataValue << ")";
+                }
+            }
+            measurementsCount += numOfMeasurements;
+        }
+        returnVal = 0;
+    }
+    return returnVal;
+}
+
 
 MeasurementsDocument::MeasurementsDocument() {}
 
@@ -20,7 +119,7 @@ MeasurementsDocument::MeasurementsDocument(const QString &docFileName) {
 
     // get doc sheets and set up dataSheet objects
     foreach(QString currentSheetName, this->measurementsDoc->sheetNames()) {
-        sheets.push_back(std::make_shared<SheetData>(currentSheetName));
+        sheets.emplace_back(std::make_shared<SheetData>(currentSheetName));
     }
 
     // get Data from sheets and write it to the sheet objects
@@ -65,20 +164,20 @@ bool MeasurementsDocument::parseDocumentData() {
             for(int col = 0; col < maxCol; ++col) {
                 currentCellValue = measurementsDoc->read(row+1,col+1);
                 if(col == 0) {
-                    sheets[sheetIndexNumber]->days.push_back(currentCellValue);
+                    sheets[sheetIndexNumber]->allDays.emplace_back(currentCellValue);
                 }
                 if(col == 1) {
-                    sheets[sheetIndexNumber]->timestamps.push_back(currentCellValue);
+                    sheets[sheetIndexNumber]->timestamps.emplace_back(currentCellValue);
                 }
                 if(col == 2) {
-                    sheets[sheetIndexNumber]->measurements.push_back(currentCellValue);
+                    sheets[sheetIndexNumber]->measurements.emplace_back(currentCellValue);
                 }
             }
         }
 
-        qDebug() << sheets[sheetIndexNumber]->days.size();
-        qDebug() << sheets[sheetIndexNumber]->timestamps.size();
-        qDebug() << sheets[sheetIndexNumber]->measurements.size();
+        // get the days of each sheet and setup lineSeries for each day
+        sheets[sheetIndexNumber]->extractDays();
+        sheets[sheetIndexNumber]->extractLineSeries();
         ++sheetIndexNumber;
     }
 
