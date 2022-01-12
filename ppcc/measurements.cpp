@@ -68,6 +68,7 @@ int SheetData::extractLineSeries() {
         double currentDataValue;
         for(unsigned int i = 0; i < daysAndCounting.size(); ++i) {
             this->measurementSeries.emplace_back(std::make_shared<QLineSeries>());
+            this->measurementSeries[i]->setName(daysAndCounting[i].first);
 
             numOfMeasurements = daysAndCounting[i].second;
 
@@ -78,6 +79,7 @@ int SheetData::extractLineSeries() {
                 (this->timestamps[measurementsCount].type() == 15) ||
                 (this->timestamps[measurementsCount].type() == 16) ) {
                 // qDebug() << "Timestamp is of type " << this->timestamps[measurementsCount].typeName();
+                this->xIsTime = true;
                 for(int j = 0; j < numOfMeasurements; ++j) {
                     if(this->timestamps[j + measurementsCount].canConvert(15)) {
                         currentTimestamp = this->timestamps[j + measurementsCount].toTime();
@@ -94,6 +96,7 @@ int SheetData::extractLineSeries() {
 
             // case 2: timestamps are interpreted as strings
             else {
+                this->xIsTime = false;
                 for(int j = 0; j < numOfMeasurements; ++j) {
                     currentTimeValue = this->timestamps[j + measurementsCount].toReal();
                     currentDataValue = this->measurements[j + measurementsCount].toReal();

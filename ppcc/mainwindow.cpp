@@ -15,7 +15,6 @@ MainWindow::MainWindow(QWidget *parent):
     // set auxChart parameters
     this->auxiliaryUpdateChart->legend()->hide();
     this->auxiliaryUpdateChart->createDefaultAxes();
-    this->auxiliaryUpdateChart->setTitle("Consumo de Energia");
 
     // connect interactive elements with respective functions
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
@@ -23,6 +22,8 @@ MainWindow::MainWindow(QWidget *parent):
     connect(ui->buttonExportDiagram, SIGNAL(clicked()), this, SLOT(saveDiagram()));
     connect(ui->comboBoxSelectDoc, SIGNAL(currentIndexChanged(int)), this, SLOT(updateSheetList(int)));
     connect(ui->comboBoxSelectSheet, SIGNAL(currentIndexChanged(int)), this, SLOT(updateDaysEntries(int)));
+    connect(ui->menuImportDocuments, SIGNAL(triggered()), this, SLOT(importDocument()));
+    connect(ui->menuQuit, SIGNAL(triggered()), this, SLOT(exitProgram()));
 }
 
 MainWindow::~MainWindow() {
@@ -30,6 +31,10 @@ MainWindow::~MainWindow() {
     for(int i = 0; i < this->displayedSeries.size(); ++i) {
         delete displayedSeries[i];
     }
+    this->xAxisDateTime.reset();
+    this->yAxis.reset();
+    this->xAxisValue.reset();
+    measurementsChart.reset();
     delete ui;
 }
 
@@ -118,8 +123,13 @@ void MainWindow::readDocument(QXlsx::Document* measurementData) {
 void MainWindow::importDocument() {
     QString docFileName = QFileDialog::getOpenFileName(this,
         tr("Abrir archivo Excel"), "~/", tr("Formato Excel (*.xlsx)"));
-    documents.emplace_back(MeasurementsDocument(docFileName));
-    addEntryComboBoxDocSelection(docFileName);
+    if(!docFileName.isEmpty()) {
+        documents.emplace_back(MeasurementsDocument(docFileName));
+        addEntryComboBoxDocSelection(docFileName);
+        if(ui->comboBoxSelectDoc->currentIndex() == -1) {
+            ui->comboBoxSelectDoc->setCurrentIndex(0);
+        }
+    }
 }
 
 int MainWindow::generateDiagram() {
@@ -154,12 +164,17 @@ int MainWindow::generateDiagram() {
         displayedSeries.clear();
 
         // reset measurementsChart to create new clean chart
+        this->xAxisDateTime.reset();
+        this->yAxis.reset();
+        this->xAxisValue.reset();
         measurementsChart.reset();
         this->measurementsChart = std::make_shared<QChart>();
 
         // copy by value series from sheets to current displayed series
         for(unsigned short i = 0; i < selectedDaysIndices.size(); ++i) {
             displayedSeries.append(new QLineSeries());
+            displayedSeries[i]->setName(
+                    documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[selectedDaysIndices[i]]->name());
             QVector<QPointF> dataPoints =
                 documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[selectedDaysIndices[i]]->pointsVector();
             for(int j = 0; j < dataPoints.size(); ++j) {
@@ -168,14 +183,63 @@ int MainWindow::generateDiagram() {
             measurementsChart->addSeries(displayedSeries[i]);
         }
 
+        /*      TODO: implement correct date time axes
+        if(documents[selectedDocIndex].sheets[selectedSheetIndex]->xIsTime) {
+            this->xAxisDateTime = std::make_shared<QDateTimeAxis>();
+            this->xAxisDateTime->setTickCount(7);
+            this->xAxisDateTime->setFormat("hh:mm:ss");
+            this->xAxisDateTime->setMin(QDateTime(QDate(0,0,0), QTime(0,0,0)));
+            this->xAxisDateTime->setMin(QDateTime(QDate(0,0,0), QTime(23,59,59)));
+            this->xAxisDateTime->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel);
+            this->yAxis = std::make_shared<QValueAxis>();
+            this->yAxis->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel);
+            measurementsChart->addAxis(this->xAxisDateTime.get(), Qt::AlignBottom);
+            measurementsChart->addAxis(this->yAxis.get(), Qt::AlignLeft);
+            for(int i = 0; i < displayedSeries.size(); ++i) {
+                displayedSeries[i]->attachAxis(this->xAxisDateTime.get());
+                displayedSeries[i]->attachAxis(this->yAxis.get());
+            }
+        } else {
+            this->xAxisValue = std::make_shared<QValueAxis>();
+            this->xAxisValue->setTickCount(13);
+            this->xAxisValue->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel);
+            this->yAxis = std::make_shared<QValueAxis>();
+            this->yAxis->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel);
+            measurementsChart->addAxis(this->xAxisValue.get(), Qt::AlignBottom);
+            measurementsChart->addAxis(this->yAxis.get(), Qt::AlignLeft);
+            for(int i = 0; i < displayedSeries.size(); ++i) {
+                displayedSeries[i]->attachAxis(this->xAxisValue.get());
+                displayedSeries[i]->attachAxis(this->yAxis.get());
+            }
+        }*/
+
         // setup and display chart
-        measurementsChart->legend()->hide();
+        measurementsChart->legend()->setVisible(true);
+        measurementsChart->legend()->setAlignment(Qt::AlignBottom);
         measurementsChart->createDefaultAxes();
+
+        // set Axis labels
+        QList<QAbstractAxis*> chartAxes = measurementsChart->axes();
+        for(int i = 0; i < chartAxes.size(); ++i) {
+            qDebug() << "Axis number " << i;
+        }
+        chartAxes[0]->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel);
+        chartAxes[1]->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel);
+
         measurementsChart->setTitle("Consumo de energia");
         ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
         ui->graphicsViewChart->setChart(measurementsChart.get());
 
         returnVal = 0;
+    } else {
+        //QMessageBox::information infoCanNotGenerateDiagram;
+        //infoCanNotGenerateDiagram.setText("No se puede generar el diagrama.");
+        //infoCanNotGenerateDiagram.setInformativeText(
+        //            "No ha importado ningun archivo o no ha seleccionado elementos para visualizar.");
+        QMessageBox::information(this, tr("No se puede generar el diagrama."),
+                  tr("No ha importado ningun archivo o no ha seleccionado elementos para visualizar."),
+                                            QMessageBox::Ok);
+
     }
     return returnVal;
 }
@@ -224,4 +288,8 @@ void MainWindow::updateDaysEntries(int sheetIndex) {
             ui->textEditDisplaySheet->append(currentDay + "  " + currentTime + "  " + currentValue);
         }
     }
+}
+
+void MainWindow::exitProgram() {
+    QCoreApplication::quit();
 }

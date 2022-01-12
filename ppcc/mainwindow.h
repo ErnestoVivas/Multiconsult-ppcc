@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMessageBox>
 #include <QPixmap>
 #include <QFileDialog>
 #include <QLineSeries>
@@ -41,6 +42,9 @@ private:
     Ui::MainWindow *ui;
 
     std::vector<MeasurementsDocument> documents;
+    std::shared_ptr<QDateTimeAxis> xAxisDateTime;
+    std::shared_ptr<QValueAxis> xAxisValue;
+    std::shared_ptr<QValueAxis> yAxis;
     std::shared_ptr<QChart> measurementsChart;      // holds the official chart with the correct data
     std::shared_ptr<QChart> auxiliaryUpdateChart;   // pseudo chart to which chartView is set while official chart is being updated
     QList<QLineSeries*> displayedSeries;            // holds the only the series currently displayed in the chart
@@ -56,6 +60,7 @@ private slots:
     void updateSheetList(int);
     void updateDaysEntries(int);
     void saveDiagram();
+    void exitProgram();
 };
 
 #endif // MAINWINDOW_H

@@ -24,6 +24,7 @@ public:
     QString sheetName;
     QString xAxisLabel;
     QString yAxisLabel;
+    bool xIsTime;
     short numOfDays;
     std::vector<std::pair<QString, int> > daysAndCounting;
     std::vector<QVariant> allDays;
