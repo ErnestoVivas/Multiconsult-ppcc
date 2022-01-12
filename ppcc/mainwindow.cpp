@@ -8,23 +8,28 @@ MainWindow::MainWindow(QWidget *parent):
     ui->comboBoxSelectDoc->setPlaceholderText("Seleccionar documento");
     ui->listWidgetDays->setSelectionMode(QAbstractItemView::MultiSelection);
 
-    // set pointers and small pointers for correct resource management
+    // set pointers and smart pointers for correct resource management
     this->measurementsChart = std::make_shared<QChart>();
-    this->measurementsChart->createDefaultAxes();
-    this->measurementsChart->setTitle("Consumo de energia");
-    this->measurementsChart->legend()->hide();
-    ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
-    ui->graphicsViewChart->setChart(measurementsChart.get());
+    this->auxiliaryUpdateChart = std::make_shared<QChart>();
+
+    // set auxChart parameters
+    this->auxiliaryUpdateChart->legend()->hide();
+    this->auxiliaryUpdateChart->createDefaultAxes();
+    this->auxiliaryUpdateChart->setTitle("Consumo de Energia");
 
     // connect interactive elements with respective functions
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
     connect(ui->buttonGenerateDiagram, SIGNAL(clicked()), this, SLOT(generateDiagram()));
-    connect(ui->buttonSaveDiagram, SIGNAL(clicked()), this, SLOT(saveDiagram()));
+    connect(ui->buttonExportDiagram, SIGNAL(clicked()), this, SLOT(saveDiagram()));
     connect(ui->comboBoxSelectDoc, SIGNAL(currentIndexChanged(int)), this, SLOT(updateSheetList(int)));
     connect(ui->comboBoxSelectSheet, SIGNAL(currentIndexChanged(int)), this, SLOT(updateDaysEntries(int)));
 }
 
 MainWindow::~MainWindow() {
+    ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
+    for(int i = 0; i < this->displayedSeries.size(); ++i) {
+        delete displayedSeries[i];
+    }
     delete ui;
 }
 
@@ -109,18 +114,6 @@ void MainWindow::readDocument(QXlsx::Document* measurementData) {
 }
 */
 
-/*
-// TODO: open file will be replaced by importDocument
-void MainWindow::openFile() {
-    QString spreadsheetFileName = QFileDialog::getOpenFileName(this,
-        tr("Abrir archivo Excel"), "~/", tr("Formato Excel (*.xls *.xlsx)"));
-    ui->lineEditOpenFile->setText(spreadsheetFileName);
-    this->measurementData = new QXlsx::Document(spreadsheetFileName);
-
-    readDocument(this->measurementData);
-}
-*/
-
 
 void MainWindow::importDocument() {
     QString docFileName = QFileDialog::getOpenFileName(this,
@@ -129,11 +122,12 @@ void MainWindow::importDocument() {
     addEntryComboBoxDocSelection(docFileName);
 }
 
-void MainWindow::generateDiagram() {
+int MainWindow::generateDiagram() {
+
+    int returnVal = -1;
+
     // get list of selected days
     std::vector<int> selectedDaysIndices;
-    //this->auxiliaryUpdateChart = std::make_shared<QChart>();
-    measurementsChart->removeAllSeries();
     for(int i = 0; i < ui->listWidgetDays->count(); ++i) {
         if(ui->listWidgetDays->item(i)->isSelected()) {
             selectedDaysIndices.emplace_back(i);
@@ -144,35 +138,48 @@ void MainWindow::generateDiagram() {
             //    << "with index " << i << "is selected";
         }
     }
-    //measurementsChart.reset(new QChart());
-    for(unsigned short i = 0; i < selectedDaysIndices.size(); ++i) {
-        measurementsChart->addSeries(
-                 documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[selectedDaysIndices[i]].get());
+
+    // update only if there are valid entries
+    if(selectedDaysIndices.size() > 0) {
+
+        // while chart is being updated, auxChart is set in chartView to avoid crash
+        // (ownership of measurementsChart by chartView is released)
+        ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
+
+
+        // delete QLineSeries from old chart, empty series list
+        for(int i = 0; i < this->displayedSeries.size(); ++i) {
+            delete displayedSeries[i];
+        }
+        displayedSeries.clear();
+
+        // reset measurementsChart to create new clean chart
+        measurementsChart.reset();
+        this->measurementsChart = std::make_shared<QChart>();
+
+        // copy by value series from sheets to current displayed series
+        for(unsigned short i = 0; i < selectedDaysIndices.size(); ++i) {
+            displayedSeries.append(new QLineSeries());
+            QVector<QPointF> dataPoints =
+                documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[selectedDaysIndices[i]]->pointsVector();
+            for(int j = 0; j < dataPoints.size(); ++j) {
+                displayedSeries[i]->append(dataPoints[j]);
+            }
+            measurementsChart->addSeries(displayedSeries[i]);
+        }
+
+        // setup and display chart
+        measurementsChart->legend()->hide();
+        measurementsChart->createDefaultAxes();
+        measurementsChart->setTitle("Consumo de energia");
+        ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
+        ui->graphicsViewChart->setChart(measurementsChart.get());
+
+        returnVal = 0;
     }
-    //measurementsChart->legend()->hide();
-    //measurementsChart->createDefaultAxes();
-    //measurementsChart->setTitle("Consumo energetico");
-    //ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
-    //ui->graphicsViewChart->setChart(measurementsChart.get());
-    //measurementsChart = auxiliaryUpdateChart;
-    //auxiliaryUpdateChart = nullptr;
+    return returnVal;
 }
 
-/*
-void MainWindow::generateDiagram() {
-    if(numOfDays == 0) {
-        return;
-    }
-    measurementsChart.reset(new QChart());
-    for(unsigned short i = 0; i < numOfDays; ++i) {
-        measurementsChart->addSeries(measurementSeries[i]);
-    }
-    measurementsChart->legend()->hide();
-    measurementsChart->createDefaultAxes();
-    measurementsChart->setTitle("Consumo durante el dia.");
-    ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
-    ui->graphicsViewChart->setChart(measurementsChart.get());
-}*/
 
 void MainWindow::saveDiagram() {
     QString saveFileName = QFileDialog::getSaveFileName(this, tr("Guardar imagen"),

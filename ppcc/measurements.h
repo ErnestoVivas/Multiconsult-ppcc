@@ -22,13 +22,14 @@ public:
     ~SheetData();
 
     QString sheetName;
+    QString xAxisLabel;
+    QString yAxisLabel;
     short numOfDays;
     std::vector<std::pair<QString, int> > daysAndCounting;
     std::vector<QVariant> allDays;
     std::vector<QVariant> timestamps;
     std::vector<QVariant> measurements;
     std::vector<std::shared_ptr<QLineSeries> > measurementSeries;
-    //std::vector<QLineSeries> measurementSeries;
 
     int extractDays();
     int extractLineSeries();

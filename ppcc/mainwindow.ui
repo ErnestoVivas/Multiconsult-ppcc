@@ -6,50 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>881</width>
-    <height>699</height>
+    <width>890</width>
+    <height>668</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="buttonOpenFile">
-    <property name="geometry">
-     <rect>
-      <x>350</x>
-      <y>630</y>
-      <width>71</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Abrir</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="lineEditOpenFile">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>630</y>
-      <width>331</width>
-      <height>22</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>430</x>
-      <y>630</y>
-      <width>131</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Archivo con mediciones:</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="buttonGenerateDiagram">
     <property name="geometry">
      <rect>
@@ -83,7 +47,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QPushButton" name="buttonSaveDiagram">
+   <widget class="QPushButton" name="buttonExportDiagram">
     <property name="geometry">
      <rect>
       <x>720</x>
@@ -145,7 +109,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>881</width>
+     <width>890</width>
      <height>22</height>
     </rect>
    </property>

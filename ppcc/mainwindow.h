@@ -41,29 +41,21 @@ private:
     Ui::MainWindow *ui;
 
     std::vector<MeasurementsDocument> documents;
-    std::shared_ptr<QChart> measurementsChart;
-    std::shared_ptr<QChart> auxiliaryUpdateChart;
+    std::shared_ptr<QChart> measurementsChart;      // holds the official chart with the correct data
+    std::shared_ptr<QChart> auxiliaryUpdateChart;   // pseudo chart to which chartView is set while official chart is being updated
+    QList<QLineSeries*> displayedSeries;            // holds the only the series currently displayed in the chart
     int selectedDocIndex;
     int selectedSheetIndex;
-
-    // data information (will be deleted later!)
-    //QXlsx::Document* measurementData;
-    //std::shared_ptr<QChart> measurementsChart;
-
-    //short int numOfDays;
-    //std::vector<QDate> days;
-    //std::vector<QLineSeries*> measurementSeries;
-
 
     void readDocument(QXlsx::Document*);
 
 private slots:
+    int generateDiagram();
     void importDocument();
     void addEntryComboBoxDocSelection(const QString&);
     void updateSheetList(int);
     void updateDaysEntries(int);
-    //void openFile();
-    void generateDiagram();
     void saveDiagram();
 };
+
 #endif // MAINWINDOW_H

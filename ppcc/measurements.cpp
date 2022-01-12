@@ -14,7 +14,7 @@ SheetData::~SheetData() {
 }
 
 int SheetData::extractDays() {
-    int returnVal;
+    int returnVal = -1;                             // '-1' when sheet is empty
     if(this->allDays.size() >= 1) {
         QVariant currentDayVal = this->allDays[0];
         QVariant prevDayVal = this->allDays[0];
@@ -51,8 +51,6 @@ int SheetData::extractDays() {
         }
         */
         returnVal = 0;
-    } else {
-        returnVal = -1;                         // sheet is empty
     }
 
     return returnVal;
@@ -73,7 +71,7 @@ int SheetData::extractLineSeries() {
 
             numOfMeasurements = daysAndCounting[i].second;
 
-            // case 1: timestamps are interpreted as dateTime object
+            // case 1: timestamps are interpreted as dateTime objects
             // qDebug() << "Measurements of day " << daysAndCounting[i].first << ":";
             QTime currentTimestamp;
             if( (this->timestamps[measurementsCount].type() == 14) ||
@@ -160,17 +158,26 @@ bool MeasurementsDocument::parseDocumentData() {
         // iterate through the cells of the sheet and set values
         // sheet itself indexes like Matlab (0,1,2) -> (1,2,3)
         QVariant currentCellValue;
-        for(int row = 1; row < maxRow; ++row) {
+        for(int row = 0; row < maxRow; ++row) {
             for(int col = 0; col < maxCol; ++col) {
                 currentCellValue = measurementsDoc->read(row+1,col+1);
-                if(col == 0) {
-                    sheets[sheetIndexNumber]->allDays.emplace_back(currentCellValue);
-                }
-                if(col == 1) {
-                    sheets[sheetIndexNumber]->timestamps.emplace_back(currentCellValue);
-                }
-                if(col == 2) {
-                    sheets[sheetIndexNumber]->measurements.emplace_back(currentCellValue);
+                if(row == 0) {
+                    if(col == 1) {
+                        sheets[sheetIndexNumber]->xAxisLabel = currentCellValue.toString();
+                    }
+                    if(col == 2) {
+                        sheets[sheetIndexNumber]->yAxisLabel = currentCellValue.toString();
+                    }
+                } else {
+                    if(col == 0) {
+                        sheets[sheetIndexNumber]->allDays.emplace_back(currentCellValue);
+                    }
+                    if(col == 1) {
+                        sheets[sheetIndexNumber]->timestamps.emplace_back(currentCellValue);
+                    }
+                    if(col == 2) {
+                        sheets[sheetIndexNumber]->measurements.emplace_back(currentCellValue);
+                    }
                 }
             }
         }
