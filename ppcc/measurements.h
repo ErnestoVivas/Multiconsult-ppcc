@@ -8,8 +8,10 @@
 #include <list>
 #include <utility>
 
+#include "enumerations.h"
 #include "xlsxdocument.h"
 #include "xlsxworkbook.h"
+
 
 class SheetData {
 
@@ -49,6 +51,12 @@ public:
     QString docName;
     std::shared_ptr<QXlsx::Document> measurementsDoc;
     std::vector<std::shared_ptr<SheetData> > sheets;
+
+    SystemVoltage docSystemVoltage;
+    Sector docSector;
+    ResidentialRange docResRange;
+    Commercial docSubCommercial;
+    Industrial docSubIndustrial;
 
 private:
     bool parseDocumentData();

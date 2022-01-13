@@ -38,96 +38,37 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
-/*
-void MainWindow::readDocument(QXlsx::Document* measurementData) {
-    if(measurementData->load()) {
-
-        // Document has 3 columns and a variable number of rows
-        // indexing of excel sheets starts at (1,1)
-        measurementData->selectSheet("Hoja1");
-
-        bool cellNotEmpty = true;
-        QVariant currentCellValue;
-        QString currentRow;
-        QString cellValueString;
-        QString prevCellValueString;
-
-        double currentTimeDataValue;
-        double currentDataValue;
-
-        // parse measurementData, convert cell Data if necessary
-        for(int i = 1; cellNotEmpty; ++i) {
-            for(int j = 1; j < 4; ++j) {
-
-                // read current cell value as iterating through the document
-                currentCellValue = measurementData->read(i,j);
-                qDebug() << currentCellValue.toReal();
-
-                // convert wrongly detected times
-                if((j == 2) && (i > 1)) {
-                    if(currentCellValue.canConvert(15)) {
-                        currentCellValue = currentCellValue.toTime();
-                    }
-                    if(currentCellValue.type() == 14) {
-                        currentCellValue = QVariant(QTime(0,0,0));
-                    }
-                    QTime temptime = currentCellValue.toTime();
-                    currentTimeDataValue = temptime.msecsSinceStartOfDay();
-                }
-
-                if((j == 3) && (i > 1)) {
-                    currentDataValue = currentCellValue.toReal();
-                }
-
-                // convert cell value to string (to print), check for end of doc and count days
-                // TODO: check for correct parsing of time or hour format!
-                cellValueString = currentCellValue.toString();
-
-                qDebug() << cellValueString;
-                if((j == 1) && (!(cellValueString.isEmpty()))) {
-                    if(i == 2) {
-                        prevCellValueString = cellValueString;
-                        numOfDays = 1;
-                        days.push_back(currentCellValue.toDate());
-                        measurementSeries.push_back(new QLineSeries);
-                    } else if(i > 2) {
-                        if(cellValueString != prevCellValueString) {
-                            ++numOfDays;
-                            days.push_back(currentCellValue.toDate());
-                            measurementSeries.push_back(new QLineSeries);
-                        }
-                        prevCellValueString = cellValueString;
-                    }
-                }
-                if(cellValueString.isEmpty()) {
-                    cellNotEmpty = false;
-                } else {
-                    currentRow += cellValueString + "  ";
-                }
-            }
-
-            // display spreadsheet and update measurement series
-            if(i > 1) {
-                measurementSeries[numOfDays-1]->append(currentTimeDataValue, currentDataValue);
-            }
-            ui->textEditDisplaySheet->append(currentRow);
-            currentRow = "";
-        }
-        //qDebug() << days.size();
-        //qDebug() << measurementSeries.size();
-    }
-}
-*/
-
-
 void MainWindow::importDocument() {
-    QString docFileName = QFileDialog::getOpenFileName(this,
-        tr("Abrir archivo Excel"), "~/", tr("Formato Excel (*.xlsx)"));
-    if(!docFileName.isEmpty()) {
-        documents.emplace_back(MeasurementsDocument(docFileName));
-        addEntryComboBoxDocSelection(docFileName);
-        if(ui->comboBoxSelectDoc->currentIndex() == -1) {
-            ui->comboBoxSelectDoc->setCurrentIndex(0);
+    QStringList docFileNames = QFileDialog::getOpenFileNames(this,
+            tr("Abrir archivo(s) Excel"), "/home", tr("Formato Excel (*.xlsx)"));
+
+    // Add document and set classification of each document
+    Sector sec;
+    ResidentialRange rr;
+    Commercial subCom;
+    Industrial subInd;
+    for(int i = 0; i < docFileNames.size(); ++i) {
+        QString fileNameOnly = docFileNames[i].section("/",-1,-1);
+        if(!docFileNames[i].isEmpty()) {
+            SetCategoriesDialog* selectCategories =
+                    new SetCategoriesDialog(this, sec, rr, subCom, subInd, fileNameOnly);
+            selectCategories->exec();
+            delete selectCategories;
+            documents.emplace_back(MeasurementsDocument(docFileNames[i]));
+            documents.back().docSector = sec;
+            documents.back().docResRange = rr;
+            documents.back().docSubCommercial = subCom;
+            documents.back().docSubIndustrial = subInd;
+
+            qDebug() << documents.back().docSector << ", "
+                     << documents.back().docResRange << ", "
+                     << documents.back().docSubCommercial << ", "
+                     << documents.back().docSubIndustrial;
+
+            addEntryComboBoxDocSelection(fileNameOnly);
+            if(ui->comboBoxSelectDoc->currentIndex() == -1) {
+                ui->comboBoxSelectDoc->setCurrentIndex(0);
+            }
         }
     }
 }
@@ -141,7 +82,6 @@ int MainWindow::generateDiagram() {
     for(int i = 0; i < ui->listWidgetDays->count(); ++i) {
         if(ui->listWidgetDays->item(i)->isSelected()) {
             selectedDaysIndices.emplace_back(i);
-
             // debug is correct
             //qDebug() << "Day " <<
             //    documents[selectedDocIndex].sheets[selectedSheetIndex]->daysAndCounting[i].first
@@ -149,7 +89,7 @@ int MainWindow::generateDiagram() {
         }
     }
 
-    // update only if there are valid entries
+    // update diagram only if there are valid entries
     if(selectedDaysIndices.size() > 0) {
 
         // while chart is being updated, auxChart is set in chartView to avoid crash
@@ -220,9 +160,10 @@ int MainWindow::generateDiagram() {
 
         // set Axis labels
         QList<QAbstractAxis*> chartAxes = measurementsChart->axes();
-        for(int i = 0; i < chartAxes.size(); ++i) {
-            qDebug() << "Axis number " << i;
-        }
+        // debug (is correct)
+        //for(int i = 0; i < chartAxes.size(); ++i) {
+        //    qDebug() << "Axis number " << i;
+        //}
         chartAxes[0]->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel);
         chartAxes[1]->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel);
 
@@ -232,14 +173,9 @@ int MainWindow::generateDiagram() {
 
         returnVal = 0;
     } else {
-        //QMessageBox::information infoCanNotGenerateDiagram;
-        //infoCanNotGenerateDiagram.setText("No se puede generar el diagrama.");
-        //infoCanNotGenerateDiagram.setInformativeText(
-        //            "No ha importado ningun archivo o no ha seleccionado elementos para visualizar.");
         QMessageBox::information(this, tr("No se puede generar el diagrama."),
                   tr("No ha importado ningun archivo o no ha seleccionado elementos para visualizar."),
-                                            QMessageBox::Ok);
-
+                  QMessageBox::Ok);
     }
     return returnVal;
 }
@@ -279,14 +215,28 @@ void MainWindow::updateDaysEntries(int sheetIndex) {
     if(sheetIndex >= 0) {
         ui->textEditDisplaySheet->clear();
         int docIndex = ui->comboBoxSelectDoc->currentIndex();
-        int sheetLength = documents[docIndex].sheets[sheetIndex]->allDays.size();
-        QString currentDay, currentTime, currentValue;
+        //int sheetLength = documents[docIndex].sheets[sheetIndex]->allDays.size();
+        //QString currentDay, currentTime, currentValue;
+
+        for(unsigned int i = 0; i < documents[docIndex].sheets[sheetIndex]->daysAndCounting.size(); ++i) {
+            ui->textEditDisplaySheet->append(documents[docIndex].sheets[sheetIndex]->daysAndCounting[i].first);
+            QVector<QPointF> lineSeriesPoints =
+                    documents[docIndex].sheets[sheetIndex]->measurementSeries[i]->pointsVector();
+            for(int j = 0; j < lineSeriesPoints.size(); ++j) {
+                QString rowText = QString::number(lineSeriesPoints[j].x()) + ", "
+                                  + QString::number(lineSeriesPoints[j].y());
+                ui->textEditDisplaySheet->append(rowText);
+            }
+            ui->textEditDisplaySheet->append("");
+        }
+
+        /* OLD Display method (does not consider QLineSeries)
         for(int i = 0; i < sheetLength; ++i) {
             currentDay = documents[docIndex].sheets[sheetIndex]->allDays[i].toString();
             currentTime = documents[docIndex].sheets[sheetIndex]->timestamps[i].toString();
             currentValue = documents[docIndex].sheets[sheetIndex]->measurements[i].toString();
             ui->textEditDisplaySheet->append(currentDay + "  " + currentTime + "  " + currentValue);
-        }
+        }*/
     }
 }
 

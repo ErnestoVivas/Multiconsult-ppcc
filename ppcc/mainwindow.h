@@ -16,6 +16,7 @@
 #include <memory>
 
 #include "measurements.h"
+#include "setcategoriesdialog.h"
 #include "xlsxdocument.h"
 //#include "QXlsx/header/xlsxdocument.h"
 //#include "QXlsx/header/xlsxchartsheet.h"
@@ -47,7 +48,7 @@ private:
     std::shared_ptr<QValueAxis> yAxis;
     std::shared_ptr<QChart> measurementsChart;      // holds the official chart with the correct data
     std::shared_ptr<QChart> auxiliaryUpdateChart;   // pseudo chart to which chartView is set while official chart is being updated
-    QList<QLineSeries*> displayedSeries;            // holds the only the series currently displayed in the chart
+    QList<QLineSeries*> displayedSeries;            // holds only the series currently displayed in the chart
     int selectedDocIndex;
     int selectedSheetIndex;
 

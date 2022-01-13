@@ -17,14 +17,18 @@ include(./QXlsx/QXlsx.pri)
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    measurements.cpp
+    measurements.cpp \
+    setcategoriesdialog.cpp
 
 HEADERS += \
+    enumerations.h \
     mainwindow.h \
-    measurements.h
+    measurements.h \
+    setcategoriesdialog.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    setcategoriesdialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

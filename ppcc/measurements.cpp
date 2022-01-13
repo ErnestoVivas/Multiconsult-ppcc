@@ -97,8 +97,21 @@ int SheetData::extractLineSeries() {
             // case 2: timestamps are interpreted as strings
             else {
                 this->xIsTime = false;
+
+                // Problem: sometimes "00:00:00" is not interpreted as QTime but as
+                // QString, so conversion from string to double leads always 0. The first
+                // method fixes this condition, second uses direct string to double conversion
                 for(int j = 0; j < numOfMeasurements; ++j) {
-                    currentTimeValue = this->timestamps[j + measurementsCount].toReal();
+                    QString currentTimeStr = this->timestamps[j + measurementsCount].toString();
+                    if(currentTimeStr.contains(":")) {
+                        QString hourString = currentTimeStr.section(":", 0, 0);
+                        QString minuteString = currentTimeStr.section(":", 1, 1);
+                        // qDebug() << hourString << ":" << minuteString;
+                        QTime timeAsQTime = QTime(hourString.toInt(), minuteString.toInt());
+                        currentTimeValue = timeAsQTime.msecsSinceStartOfDay();
+                    } else {
+                        currentTimeValue = this->timestamps[j + measurementsCount].toReal();
+                    }
                     currentDataValue = this->measurements[j + measurementsCount].toReal();
                     this->measurementSeries[i]->append(currentTimeValue, currentDataValue);
                     // qDebug() << "(" << currentTimeValue << "," << currentDataValue << ")";
@@ -124,7 +137,12 @@ MeasurementsDocument::MeasurementsDocument(const QString &docFileName) {
     }
 
     // get Data from sheets and write it to the sheet objects
-    parseDocumentData();
+    bool readDoc = parseDocumentData();
+    if(!readDoc) {
+        qDebug() << "Could not read Excel file.";
+        sheets.resize(0);
+    }
+
 }
 
 MeasurementsDocument::~MeasurementsDocument() {}
@@ -160,31 +178,73 @@ bool MeasurementsDocument::parseDocumentData() {
 
         // iterate through the cells of the sheet and set values
         // sheet itself indexes like Matlab (0,1,2) -> (1,2,3)
-        QVariant currentCellValue;
-        for(int row = 0; row < maxRow; ++row) {
-            for(int col = 0; col < maxCol; ++col) {
-                currentCellValue = measurementsDoc->read(row+1,col+1);
-                if(row == 0) {
-                    if(col == 1) {
-                        sheets[sheetIndexNumber]->xAxisLabel = currentCellValue.toString();
+        if(maxCol == 2) {
+
+            // when there are 2 columns, date and time are stored in the same cell (1st col)
+            QVariant currentCellValue;
+            for(int row = 0; row < maxRow; ++row) {
+                for(int col = 0; col < maxCol; ++col) {
+                    currentCellValue = measurementsDoc->read(row+1,col+1);
+                    if(row == 0) {
+                        if(col == 0) {
+                            sheets[sheetIndexNumber]->xAxisLabel = currentCellValue.toString();
+                        }
+                        if(col == 1) {
+                            sheets[sheetIndexNumber]->yAxisLabel = currentCellValue.toString();
+                        }
                     }
-                    if(col == 2) {
-                        sheets[sheetIndexNumber]->yAxisLabel = currentCellValue.toString();
+                    else {
+                        if(col == 0) {
+                            if(currentCellValue.canConvert(14)) {
+                                QDateTime currentCellValueDT = currentCellValue.toDateTime();
+                                if(currentCellValueDT.date().toString().isEmpty()) {
+                                    qDebug() << "Could not parse Excel file. Data is corrupt";
+                                    return false;
+                                }
+                                sheets[sheetIndexNumber]->allDays.emplace_back(currentCellValueDT.date());
+                                sheets[sheetIndexNumber]->timestamps.emplace_back(currentCellValueDT.time());
+                            } else {
+                                qDebug() << "Could not parse Excel file.";
+                                return false;
+                            }
+                        }
+                        if(col == 1) {
+                            sheets[sheetIndexNumber]->measurements.emplace_back(currentCellValue);
+                        }
                     }
-                } else {
-                    if(col == 0) {
-                        sheets[sheetIndexNumber]->allDays.emplace_back(currentCellValue);
-                    }
-                    if(col == 1) {
-                        sheets[sheetIndexNumber]->timestamps.emplace_back(currentCellValue);
-                    }
-                    if(col == 2) {
-                        sheets[sheetIndexNumber]->measurements.emplace_back(currentCellValue);
+                    result = true;
+                }
+            }
+
+
+        }
+        else if(maxCol == 3) {
+            QVariant currentCellValue;
+            for(int row = 0; row < maxRow; ++row) {
+                for(int col = 0; col < maxCol; ++col) {
+                    currentCellValue = measurementsDoc->read(row+1,col+1);
+                    if(row == 0) {
+                        if(col == 1) {
+                            sheets[sheetIndexNumber]->xAxisLabel = currentCellValue.toString();
+                        }
+                        if(col == 2) {
+                            sheets[sheetIndexNumber]->yAxisLabel = currentCellValue.toString();
+                        }
+                    } else {
+                        if(col == 0) {
+                            sheets[sheetIndexNumber]->allDays.emplace_back(currentCellValue);
+                        }
+                        if(col == 1) {
+                            sheets[sheetIndexNumber]->timestamps.emplace_back(currentCellValue);
+                        }
+                        if(col == 2) {
+                            sheets[sheetIndexNumber]->measurements.emplace_back(currentCellValue);
+                        }
                     }
                 }
             }
+            result = true;
         }
-
         // get the days of each sheet and setup lineSeries for each day
         sheets[sheetIndexNumber]->extractDays();
         sheets[sheetIndexNumber]->extractLineSeries();
