@@ -34,7 +34,8 @@ enum Commercial {
     health = 4,
     hotels = 5,
     education = 6,
-    otherCommercial = 7
+    otherCommercial = 7,
+    notCommercial = -1
 };
 
 enum Industrial {
@@ -43,7 +44,20 @@ enum Industrial {
     plastics = 2,
     chemistry = 3,
     textiles = 4,
-    otherIndustrial = 5
+    otherIndustrial = 5,
+    notIndustrial = -1
+};
+
+enum Frequency {
+    quarterHour = 0,
+    hour = 1
+};
+
+enum DateFormat {
+    dayMonthYear = 0,
+    monthDayYear = 1,
+    yearMonthDay = 2,
+    yearDayMonth = 3
 };
 
 #endif // ENUMERATIONS_H

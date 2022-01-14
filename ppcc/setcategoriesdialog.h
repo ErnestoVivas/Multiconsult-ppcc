@@ -15,7 +15,7 @@ class SetCategoriesDialog : public QDialog {
 
 public:
     explicit SetCategoriesDialog(QWidget *parent = nullptr);
-    SetCategoriesDialog(QWidget *parent, Sector&, ResidentialRange&, Commercial&, Industrial&, QString&);
+    SetCategoriesDialog(QWidget *parent, Sector&, ResidentialRange&, Commercial&, Industrial&, Frequency&, DateFormat&, QString&);
     ~SetCategoriesDialog();
 
 private:
@@ -25,12 +25,15 @@ private:
     QButtonGroup resRangeGroup;
     QButtonGroup subCommercialGroup;
     QButtonGroup subIndustrialGroup;
+    QButtonGroup frequencyGroup;
 
     SystemVoltage* currentSV;
     Sector* currentSector;
     ResidentialRange* currentRR;
     Commercial* currentSubCom;
     Industrial* currentSubInd;
+    Frequency* currentFreq;
+    DateFormat* currentDateFormat;
 
 private slots:
     void exitCategoriesDialog();

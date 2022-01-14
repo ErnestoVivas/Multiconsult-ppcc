@@ -13,6 +13,7 @@
 #include <QtCharts/QLineSeries>
 #include <QDebug>
 #include <vector>
+#include <tuple>
 #include <memory>
 
 #include "measurements.h"
@@ -41,6 +42,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    QButtonGroup classificationVisTypeGroup;
 
     std::vector<MeasurementsDocument> documents;
     std::shared_ptr<QDateTimeAxis> xAxisDateTime;
@@ -55,11 +57,14 @@ private:
     void readDocument(QXlsx::Document*);
 
 private slots:
-    int generateDiagram();
+    bool compareDates(QDate&, QString&, DateFormat&, bool&);
+    int generateSimpleDiagram();
+    int generateClassifiedDiagram();
     void importDocument();
     void addEntryComboBoxDocSelection(const QString&);
     void updateSheetList(int);
     void updateDaysEntries(int);
+    void updateComboBoxSelectSubCat(int);
     void saveDiagram();
     void exitProgram();
 };

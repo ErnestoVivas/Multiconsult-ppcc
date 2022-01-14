@@ -7,6 +7,7 @@ SheetData::SheetData() {
 SheetData::SheetData(const QString& currentSheetName) {
     this->sheetName = currentSheetName;
     this->numOfDays = 0;
+    this->datesAreStrings = true;
 }
 
 SheetData::~SheetData() {
@@ -87,7 +88,8 @@ int SheetData::extractLineSeries() {
                     if(this->timestamps[measurementsCount+j].type() == 14) {
                         currentTimestamp = QTime(0,0,0);
                     }
-                    currentTimeValue = currentTimestamp.msecsSinceStartOfDay();
+                    //currentTimeValue = currentTimestamp.msecsSinceStartOfDay();
+                    currentTimeValue = (currentTimestamp.msecsSinceStartOfDay() / 86400000.0) * 24.0;   // map to 24 hours
                     currentDataValue = this->measurements[j + measurementsCount].toReal();
                     this->measurementSeries[i]->append(currentTimeValue, currentDataValue);
                     // qDebug() << "(" << currentTimeValue << "," << currentDataValue << ")";
@@ -108,7 +110,8 @@ int SheetData::extractLineSeries() {
                         QString minuteString = currentTimeStr.section(":", 1, 1);
                         // qDebug() << hourString << ":" << minuteString;
                         QTime timeAsQTime = QTime(hourString.toInt(), minuteString.toInt());
-                        currentTimeValue = timeAsQTime.msecsSinceStartOfDay();
+                        //currentTimeValue = timeAsQTime.msecsSinceStartOfDay();
+                        currentTimeValue = (timeAsQTime.msecsSinceStartOfDay() / 86400000.0) * 24.0;   // map to 24 hours
                     } else {
                         currentTimeValue = this->timestamps[j + measurementsCount].toReal();
                     }
@@ -130,6 +133,9 @@ MeasurementsDocument::MeasurementsDocument() {}
 MeasurementsDocument::MeasurementsDocument(const QString &docFileName) {
     this->docName = docFileName;
     this->measurementsDoc = std::make_shared<QXlsx::Document>(docFileName);
+    this->docResRange = ResidentialRange::X;
+    this->docSubCommercial = Commercial::notCommercial;
+    this->docSubIndustrial = Industrial::notIndustrial;
 
     // get doc sheets and set up dataSheet objects
     foreach(QString currentSheetName, this->measurementsDoc->sheetNames()) {
@@ -245,6 +251,13 @@ bool MeasurementsDocument::parseDocumentData() {
             }
             result = true;
         }
+        if((sheets[sheetIndexNumber]->allDays.size() >= 1) &&
+                (sheets[sheetIndexNumber]->allDays[0].type() == 10)) {
+            sheets[sheetIndexNumber]->datesAreStrings = true;
+        } else {
+            sheets[sheetIndexNumber]->datesAreStrings = false;
+        }
+
         // get the days of each sheet and setup lineSeries for each day
         sheets[sheetIndexNumber]->extractDays();
         sheets[sheetIndexNumber]->extractLineSeries();
@@ -252,4 +265,16 @@ bool MeasurementsDocument::parseDocumentData() {
     }
 
     return result;
+}
+
+int MeasurementsDocument::getSubCategory() {
+    int subCat = -1;
+    if(this->docResRange != ResidentialRange::X) {
+        subCat = this->docResRange;
+    } else if(this->docSubCommercial != Commercial::notCommercial) {
+        subCat = this->docSubCommercial;
+    } else if(this->docSubIndustrial != Industrial::notIndustrial) {
+        subCat = this->docSubIndustrial;
+    }
+    return subCat;
 }

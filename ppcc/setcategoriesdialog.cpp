@@ -6,8 +6,8 @@ SetCategoriesDialog::SetCategoriesDialog(QWidget *parent) :
     ui->setupUi(this);
 }
 
-SetCategoriesDialog::SetCategoriesDialog(QWidget *parent, Sector &s, ResidentialRange &RR,
-                                         Commercial &com, Industrial &ind, QString &fileName) :
+SetCategoriesDialog::SetCategoriesDialog(QWidget *parent, Sector &s, ResidentialRange &RR, Commercial &com,
+                                         Industrial &ind, Frequency& fr, DateFormat& df, QString &fileName) :
     QDialog(parent), ui(new Ui::SetCategoriesDialog) {
     ui->setupUi(this);
     ui->labelSetCategories->setText("Seleccione Categorias para el archivo '" + fileName + " ':");
@@ -16,6 +16,8 @@ SetCategoriesDialog::SetCategoriesDialog(QWidget *parent, Sector &s, Residential
     currentRR = &RR;
     currentSubCom = &com;
     currentSubInd = &ind;
+    currentFreq = &fr;
+    currentDateFormat = &df;
 
     // radio buttons ids are assigned ascending, as they appear on the dialog
     sectorGroup.addButton(ui->radioButtonRes, 0);
@@ -43,12 +45,38 @@ SetCategoriesDialog::SetCategoriesDialog(QWidget *parent, Sector &s, Residential
     subIndustrialGroup.addButton(ui->radioButtonChemistry, 3);
     subIndustrialGroup.addButton(ui->radioButtonTextiles, 4);
     subIndustrialGroup.addButton(ui->radioButtonOtherIndustrial, 5);
+    frequencyGroup.addButton(ui->radioButton15min, 0);
+    frequencyGroup.addButton(ui->radioButton1h, 0);
+
+    // set date format entries in comboBox
+    ui->comboBoxDateFormat->addItem("dd mm aaaa");
+    ui->comboBoxDateFormat->addItem("mm dd aaaa");
+    ui->comboBoxDateFormat->addItem("aaaa mm dd");
+    ui->comboBoxDateFormat->addItem("aaaa dd mm");
+    ui->comboBoxDateFormat->setCurrentIndex(0);
 
     // toggle selected buttons
     ui->radioButtonRes->setChecked(true);
     ui->radioButtonResA->setChecked(true);
     ui->radioButtonFinances->setChecked(true);
     ui->radioButtonFood->setChecked(true);
+    ui->radioButton15min->setChecked(true);
+
+    // toggle active buttons
+    ui->radioButtonFinances->setDisabled(true);
+    ui->radioButtonWholesale->setDisabled(true);
+    ui->radioButtonRetail->setDisabled(true);
+    ui->radioButtonGov->setDisabled(true);
+    ui->radioButtonHealth->setDisabled(true);
+    ui->radioButtonHotels->setDisabled(true);
+    ui->radioButtonEducation->setDisabled(true);
+    ui->radioButtonOtherCommercial->setDisabled(true);
+    ui->radioButtonFood->setDisabled(true);
+    ui->radioButtonPaper->setDisabled(true);
+    ui->radioButtonPlastics->setDisabled(true);
+    ui->radioButtonChemistry->setDisabled(true);
+    ui->radioButtonTextiles->setDisabled(true);
+    ui->radioButtonOtherIndustrial->setDisabled(true);
 
     connect(ui->buttonOk, SIGNAL(clicked()), this, SLOT(exitCategoriesDialog()));
     connect(ui->radioButtonRes, SIGNAL(toggled(bool)), this, SLOT(setNotResidential(bool)));
@@ -65,6 +93,7 @@ void SetCategoriesDialog::exitCategoriesDialog() {
     int checkedRR = resRangeGroup.checkedId();
     int checkedCommercial = subCommercialGroup.checkedId();
     int checkedIndustrial = subIndustrialGroup.checkedId();
+    int checkedFreq = frequencyGroup.checkedId();
 
     if(checkedSector == 0) {
         *currentSector = Sector::residential;
@@ -94,7 +123,9 @@ void SetCategoriesDialog::exitCategoriesDialog() {
         *currentRR = ResidentialRange::F;
     }
 
-    if(checkedCommercial == 0) {
+    if(!(ui->radioButtonFinances->isEnabled())) {
+        *currentSubCom = Commercial::notCommercial;
+    } else if(checkedCommercial == 0) {
         *currentSubCom = Commercial::finances;
     } else if(checkedCommercial == 1) {
         *currentSubCom = Commercial::wholesale;
@@ -112,7 +143,9 @@ void SetCategoriesDialog::exitCategoriesDialog() {
         *currentSubCom = Commercial::otherCommercial;
     }
 
-    if(checkedIndustrial == 0) {
+    if(!(ui->radioButtonFood->isEnabled())) {
+        *currentSubInd = Industrial::notIndustrial;
+    } else if(checkedIndustrial == 0) {
         *currentSubInd = Industrial::food;
     } else if(checkedIndustrial == 1) {
         *currentSubInd = Industrial::paper;
@@ -124,6 +157,22 @@ void SetCategoriesDialog::exitCategoriesDialog() {
         *currentSubInd = Industrial::textiles;
     } else if(checkedIndustrial == 5) {
         *currentSubInd = Industrial::otherIndustrial;
+    }
+
+    if(checkedFreq == 0) {
+        *currentFreq = Frequency::quarterHour;
+    } else {
+        *currentFreq = Frequency::hour;
+    }
+
+    if(ui->comboBoxDateFormat->currentIndex() == 0) {
+        *currentDateFormat = DateFormat::dayMonthYear;
+    } else if(ui->comboBoxDateFormat->currentIndex() == 1) {
+        *currentDateFormat = DateFormat::monthDayYear;
+    } else if(ui->comboBoxDateFormat->currentIndex() == 2) {
+        *currentDateFormat = DateFormat::yearMonthDay;
+    } else if(ui->comboBoxDateFormat->currentIndex() == 3) {
+        *currentDateFormat = DateFormat::yearDayMonth;
     }
 
     this->close();

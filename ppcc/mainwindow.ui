@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>890</width>
+    <width>1101</width>
     <height>668</height>
    </rect>
   </property>
@@ -14,11 +14,11 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="buttonGenerateDiagram">
+   <widget class="QPushButton" name="buttonGenerateSimpleDiagram">
     <property name="geometry">
      <rect>
-      <x>720</x>
-      <y>400</y>
+      <x>710</x>
+      <y>438</y>
       <width>121</width>
       <height>24</height>
      </rect>
@@ -50,8 +50,8 @@
    <widget class="QPushButton" name="buttonExportDiagram">
     <property name="geometry">
      <rect>
-      <x>720</x>
-      <y>438</y>
+      <x>710</x>
+      <y>588</y>
       <width>121</width>
       <height>24</height>
      </rect>
@@ -77,7 +77,7 @@
     <property name="geometry">
      <rect>
       <x>690</x>
-      <y>30</y>
+      <y>60</y>
       <width>181</width>
       <height>22</height>
      </rect>
@@ -87,9 +87,9 @@
     <property name="geometry">
      <rect>
       <x>690</x>
-      <y>170</y>
+      <y>210</y>
       <width>181</width>
-      <height>161</height>
+      <height>211</height>
      </rect>
     </property>
    </widget>
@@ -97,7 +97,7 @@
     <property name="geometry">
      <rect>
       <x>690</x>
-      <y>100</y>
+      <y>150</y>
       <width>181</width>
       <height>22</height>
      </rect>
@@ -107,7 +107,7 @@
     <property name="geometry">
      <rect>
       <x>690</x>
-      <y>10</y>
+      <y>40</y>
       <width>181</width>
       <height>16</height>
      </rect>
@@ -120,7 +120,7 @@
     <property name="geometry">
      <rect>
       <x>690</x>
-      <y>80</y>
+      <y>130</y>
       <width>181</width>
       <height>16</height>
      </rect>
@@ -133,7 +133,7 @@
     <property name="geometry">
      <rect>
       <x>690</x>
-      <y>150</y>
+      <y>190</y>
       <width>181</width>
       <height>16</height>
      </rect>
@@ -142,13 +142,202 @@
      <string>Seleccione día(s)</string>
     </property>
    </widget>
+   <widget class="Line" name="line">
+    <property name="geometry">
+     <rect>
+      <x>880</x>
+      <y>10</y>
+      <width>21</width>
+      <height>601</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Vertical</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>10</y>
+      <width>181</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="text">
+     <string>Diagrama simple</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>910</x>
+      <y>10</y>
+      <width>171</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Diagrama por clasificación</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_6">
+    <property name="geometry">
+     <rect>
+      <x>910</x>
+      <y>50</y>
+      <width>181</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Seleccione Categoría</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="comboBoxSelectSector">
+    <property name="geometry">
+     <rect>
+      <x>910</x>
+      <y>70</y>
+      <width>171</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="comboBoxSelectSubCategory">
+    <property name="geometry">
+     <rect>
+      <x>910</x>
+      <y>100</y>
+      <width>171</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QDateEdit" name="dateEditSelectDate">
+    <property name="geometry">
+     <rect>
+      <x>910</x>
+      <y>170</y>
+      <width>171</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_7">
+    <property name="geometry">
+     <rect>
+      <x>910</x>
+      <y>150</y>
+      <width>131</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Seleccione fecha</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_8">
+    <property name="geometry">
+     <rect>
+      <x>910</x>
+      <y>220</y>
+      <width>171</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Tipo de visualización</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonSum">
+    <property name="geometry">
+     <rect>
+      <x>910</x>
+      <y>250</y>
+      <width>171</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Suma</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonAverage">
+    <property name="geometry">
+     <rect>
+      <x>910</x>
+      <y>280</y>
+      <width>171</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Promedio</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonCompare">
+    <property name="geometry">
+     <rect>
+      <x>910</x>
+      <y>310</y>
+      <width>171</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Comparación</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="buttonGenerateClassifiedDiagram">
+    <property name="geometry">
+     <rect>
+      <x>930</x>
+      <y>440</y>
+      <width>121</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Generar Diagrama</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEditSector">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>90</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEditSubCat">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>90</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>890</width>
+     <width>1101</width>
      <height>22</height>
     </rect>
    </property>

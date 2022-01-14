@@ -27,6 +27,7 @@ public:
     QString xAxisLabel;
     QString yAxisLabel;
     bool xIsTime;
+    bool datesAreStrings;
     short numOfDays;
     std::vector<std::pair<QString, int> > daysAndCounting;
     std::vector<QVariant> allDays;
@@ -57,6 +58,10 @@ public:
     ResidentialRange docResRange;
     Commercial docSubCommercial;
     Industrial docSubIndustrial;
+    Frequency docFreq;
+    DateFormat docDateFormat;
+
+    int getSubCategory();
 
 private:
     bool parseDocumentData();
