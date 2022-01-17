@@ -60,4 +60,14 @@ enum DateFormat {
     yearDayMonth = 3
 };
 
+struct Categories {
+    SystemVoltage systemVoltage;
+    Sector sector;
+    ResidentialRange resRange;
+    Commercial commercial;
+    Industrial industrial;
+    Frequency frequency;
+    DateFormat dateFormat;
+};
+
 #endif // ENUMERATIONS_H

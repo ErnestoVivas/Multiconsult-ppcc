@@ -15,7 +15,7 @@ class SetCategoriesDialog : public QDialog {
 
 public:
     explicit SetCategoriesDialog(QWidget *parent = nullptr);
-    SetCategoriesDialog(QWidget *parent, Sector&, ResidentialRange&, Commercial&, Industrial&, Frequency&, DateFormat&, QString&);
+    SetCategoriesDialog(QWidget *parent, Categories&, QString&);
     ~SetCategoriesDialog();
 
 private:

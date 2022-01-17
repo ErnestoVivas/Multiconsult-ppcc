@@ -23,6 +23,11 @@ MainWindow::MainWindow(QWidget *parent):
     ui->lineEditSector->setReadOnly(true);
     ui->lineEditSubCat->setReadOnly(true);
 
+    // setup widgets containting the different functions to generate diagrams
+    simpleDiagramFunction = new SimpleDiagramFunction(this);
+    ui->stackedWidgetDiagramFunctions->addWidget(simpleDiagramFunction);
+    ui->comboBoxSelectFunction->addItem("Diagrama simple");
+
     // set pointers and smart pointers for correct resource management
     this->measurementsChart = std::make_shared<QChart>();
     this->auxiliaryUpdateChart = std::make_shared<QChart>();
@@ -33,17 +38,28 @@ MainWindow::MainWindow(QWidget *parent):
 
     // connect interactive elements with respective functions
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
-    connect(ui->buttonGenerateSimpleDiagram, SIGNAL(clicked()), this, SLOT(generateSimpleDiagram()));
-    connect(ui->buttonGenerateClassifiedDiagram, SIGNAL(clicked()), this, SLOT(generateClassifiedDiagram()));
+    //connect(ui->buttonGenerateSimpleDiagram, SIGNAL(clicked()), this, SLOT(generateSimpleDiagram()));
+    //connect(ui->buttonGenerateClassifiedDiagram, SIGNAL(clicked()), this, SLOT(generateClassifiedDiagram()));
     connect(ui->buttonExportDiagram, SIGNAL(clicked()), this, SLOT(saveDiagram()));
-    connect(ui->comboBoxSelectDoc, SIGNAL(currentIndexChanged(int)), this, SLOT(updateSheetList(int)));
-    connect(ui->comboBoxSelectSheet, SIGNAL(currentIndexChanged(int)), this, SLOT(updateDaysEntries(int)));
+    //connect(ui->comboBoxSelectDoc, SIGNAL(currentIndexChanged(int)), this, SLOT(updateSheetList(int)));
+    //connect(ui->comboBoxSelectSheet, SIGNAL(currentIndexChanged(int)), this, SLOT(updateDaysEntries(int)));
     connect(ui->comboBoxSelectSector, SIGNAL(currentIndexChanged(int)), this, SLOT(updateComboBoxSelectSubCat(int)));
     connect(ui->menuImportDocuments, SIGNAL(triggered()), this, SLOT(importDocument()));
     connect(ui->menuQuit, SIGNAL(triggered()), this, SLOT(exitProgram()));
+
+    connect(simpleDiagramFunction, SIGNAL(selectedDocChanged(int)), this, SLOT(updateSheetListSimpleDiagramFunction(int)));
+    connect(simpleDiagramFunction, SIGNAL(selectedSheetChanged(int, int)), this, SLOT(updateDaysSimpleDiagramFunction(int, int)));
+
+    connect(ui->buttonGenerateDiagram, SIGNAL(clicked()), this, SLOT(generateDiagram()));
 }
 
 MainWindow::~MainWindow() {
+
+    // remove diagram function widgets from stacked widget container and delete them
+    ui->stackedWidgetDiagramFunctions->removeWidget(simpleDiagramFunction);
+    delete simpleDiagramFunction;
+
+    // delete chart pointer elements (necessary, segfault if not)
     ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
     for(int i = 0; i < this->displayedSeries.size(); ++i) {
         delete displayedSeries[i];
@@ -52,6 +68,8 @@ MainWindow::~MainWindow() {
     this->yAxis.reset();
     this->xAxisValue.reset();
     measurementsChart.reset();
+
+    // delete rest
     delete ui;
 }
 
@@ -59,31 +77,32 @@ void MainWindow::importDocument() {
     QStringList docFileNames = QFileDialog::getOpenFileNames(this,
             tr("Abrir archivo(s) Excel"), "/home", tr("Formato Excel (*.xlsx)"));
 
-    // Add document and set classification of each document
-    Sector sec;
-    ResidentialRange rr;
-    Commercial subCom;
-    Industrial subInd;
-    Frequency freq;
-    DateFormat df;
+    // Add document to the documents list and set classification of the document
+    Categories docCategories;
     for(int i = 0; i < docFileNames.size(); ++i) {
         QString fileNameOnly = docFileNames[i].section("/",-1,-1);
         if(!docFileNames[i].isEmpty()) {
             SetCategoriesDialog* selectCategories =
-                    new SetCategoriesDialog(this, sec, rr, subCom, subInd, freq, df, fileNameOnly);
+                    new SetCategoriesDialog(this, docCategories, fileNameOnly);
+
             selectCategories->exec();
             delete selectCategories;
             documents.emplace_back(MeasurementsDocument(docFileNames[i]));
-            documents.back().docSector = sec;
-            documents.back().docResRange = rr;
-            documents.back().docSubCommercial = subCom;
-            documents.back().docSubIndustrial = subInd;
-            documents.back().docFreq = freq;
-            documents.back().docDateFormat = df;
+            documents.back().docSector = docCategories.sector;
+            documents.back().docResRange = docCategories.resRange;
+            documents.back().docSubCommercial = docCategories.commercial;
+            documents.back().docSubIndustrial = docCategories.industrial;
+            documents.back().docFreq = docCategories.frequency;
+            documents.back().docDateFormat = docCategories.dateFormat;
+
+            // old ui (will be deleted0
             addEntryComboBoxDocSelection(fileNameOnly);
             if(ui->comboBoxSelectDoc->currentIndex() == -1) {
                 ui->comboBoxSelectDoc->setCurrentIndex(0);
             }
+
+            // add corresponding entries to the function widgets
+            simpleDiagramFunction->addEntryComboBoxSelectDoc(fileNameOnly);
         }
     }
 }
@@ -92,17 +111,22 @@ int MainWindow::generateSimpleDiagram() {
 
     int returnVal = -1;
 
-    // get list of selected days
-    std::vector<int> selectedDaysIndices;
-    for(int i = 0; i < ui->listWidgetDays->count(); ++i) {
-        if(ui->listWidgetDays->item(i)->isSelected()) {
-            selectedDaysIndices.emplace_back(i);
+    // get inputs from the user
+    std::vector<int> selectedDaysIndices = simpleDiagramFunction->getSelectedDays();
+    int selectedDocIndex = simpleDiagramFunction->selectedDocIndex;
+    int selectedSheetIndex = simpleDiagramFunction->selectedSheetIndex;
+
+    // OLD
+    //std::vector<int> selectedDaysIndices;
+    //for(int i = 0; i < ui->listWidgetDays->count(); ++i) {
+    //    if(ui->listWidgetDays->item(i)->isSelected()) {
+    //        selectedDaysIndices.emplace_back(i);
             // debug is correct
             //qDebug() << "Day " <<
             //    documents[selectedDocIndex].sheets[selectedSheetIndex]->daysAndCounting[i].first
             //    << "with index " << i << "is selected";
-        }
-    }
+    //    }
+    //}
 
     // update diagram only if there are valid entries
     if(selectedDaysIndices.size() > 0) {
@@ -196,6 +220,7 @@ int MainWindow::generateSimpleDiagram() {
 }
 
 
+/* commented out for testing, use it later again
 int MainWindow::generateClassifiedDiagram() {
     int result = -1;
 
@@ -281,6 +306,8 @@ int MainWindow::generateClassifiedDiagram() {
     }
     return result;
 }
+*/
+
 
 bool MainWindow::compareDates(QDate &selectedDate, QString &candidateDate, DateFormat &candidateDF, bool &dateWasString) {
     bool result = false;
@@ -363,7 +390,29 @@ void MainWindow::addEntryComboBoxDocSelection(const QString& newDocument) {
     ui->comboBoxSelectDoc->addItem(newDocument);
 }
 
+
+void MainWindow::updateSheetListSimpleDiagramFunction(int newDocIndex) {
+    if(newDocIndex >= 0) {
+        for(unsigned short i = 0; i < documents[newDocIndex].sheets.size(); ++i) {
+            simpleDiagramFunction->updateSheetList(documents[newDocIndex].sheets[i]->sheetName);
+        }
+    }
+}
+
+void MainWindow::updateDaysSimpleDiagramFunction(int newSheetIndex, int currDocIndex) {
+    if(newSheetIndex >= 0) {
+        short numOfDays = documents[currDocIndex].sheets[newSheetIndex]->daysAndCounting.size();
+        for(short i = 0; i < numOfDays; ++i) {
+            this->simpleDiagramFunction->updateDays(
+                        documents[currDocIndex].sheets[newSheetIndex]->daysAndCounting[i].first);
+        }
+    }
+}
+
+// function will be removed
+/*
 void MainWindow::updateSheetList(int docIndex) {
+
     ui->comboBoxSelectSheet->clear();
     this->selectedDocIndex = docIndex;
     for(unsigned short i = 0; i < documents[docIndex].sheets.size(); ++i) {
@@ -380,7 +429,10 @@ void MainWindow::updateSheetList(int docIndex) {
         ui->lineEditSubCat->setText(QString::number(documents[docIndex].docSubIndustrial));
     }
 }
+*/
 
+// function will be removed
+/*
 void MainWindow::updateDaysEntries(int sheetIndex) {
     ui->listWidgetDays->clear();
     if(sheetIndex >= 0) {
@@ -411,15 +463,16 @@ void MainWindow::updateDaysEntries(int sheetIndex) {
             ui->textEditDisplaySheet->append("");
         }
 
-        /* OLD Display method (does not consider QLineSeries)
+         OLD Display method (does not consider QLineSeries)
         for(int i = 0; i < sheetLength; ++i) {
             currentDay = documents[docIndex].sheets[sheetIndex]->allDays[i].toString();
             currentTime = documents[docIndex].sheets[sheetIndex]->timestamps[i].toString();
             currentValue = documents[docIndex].sheets[sheetIndex]->measurements[i].toString();
             ui->textEditDisplaySheet->append(currentDay + "  " + currentTime + "  " + currentValue);
-        }*/
+        }
     }
 }
+*/
 
 void MainWindow::updateComboBoxSelectSubCat(int currentSector) {
     ui->comboBoxSelectSubCategory->clear();
@@ -449,6 +502,15 @@ void MainWindow::updateComboBoxSelectSubCat(int currentSector) {
         ui->comboBoxSelectSubCategory->addItem("Otros");
         ui->comboBoxSelectSubCategory->setCurrentIndex(0);
     }
+}
+
+
+int MainWindow::generateDiagram() {
+    int selectedFunction = ui->comboBoxSelectFunction->currentIndex();
+    if(selectedFunction == 0) {
+        this->generateSimpleDiagram();
+    }
+    return 0;
 }
 
 void MainWindow::exitProgram() {

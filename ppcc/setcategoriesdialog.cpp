@@ -6,18 +6,17 @@ SetCategoriesDialog::SetCategoriesDialog(QWidget *parent) :
     ui->setupUi(this);
 }
 
-SetCategoriesDialog::SetCategoriesDialog(QWidget *parent, Sector &s, ResidentialRange &RR, Commercial &com,
-                                         Industrial &ind, Frequency& fr, DateFormat& df, QString &fileName) :
+SetCategoriesDialog::SetCategoriesDialog(QWidget *parent, Categories &docCategories, QString &fileName) :
     QDialog(parent), ui(new Ui::SetCategoriesDialog) {
     ui->setupUi(this);
     ui->labelSetCategories->setText("Seleccione Categorias para el archivo '" + fileName + " ':");
 
-    currentSector = &s;
-    currentRR = &RR;
-    currentSubCom = &com;
-    currentSubInd = &ind;
-    currentFreq = &fr;
-    currentDateFormat = &df;
+    currentSector = &docCategories.sector;
+    currentRR = &docCategories.resRange;
+    currentSubCom = &docCategories.commercial;
+    currentSubInd = &docCategories.industrial;
+    currentFreq = &docCategories.frequency;
+    currentDateFormat = &docCategories.dateFormat;
 
     // radio buttons ids are assigned ascending, as they appear on the dialog
     sectorGroup.addButton(ui->radioButtonRes, 0);
