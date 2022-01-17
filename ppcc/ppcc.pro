@@ -19,19 +19,22 @@ SOURCES += \
     mainwindow.cpp \
     measurements.cpp \
     setcategoriesdialog.cpp \
-    simplediagramfunction.cpp
+    simplediagramfunction.cpp \
+    siteanalysis.cpp
 
 HEADERS += \
     enumerations.h \
     mainwindow.h \
     measurements.h \
     setcategoriesdialog.h \
-    simplediagramfunction.h
+    simplediagramfunction.h \
+    siteanalysis.h
 
 FORMS += \
     mainwindow.ui \
     setcategoriesdialog.ui \
-    simplediagramfunction.ui
+    simplediagramfunction.ui \
+    siteanalysis.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

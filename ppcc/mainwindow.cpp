@@ -6,27 +6,15 @@ MainWindow::MainWindow(QWidget *parent):
 
     // setup ui elements
     ui->setupUi(this);
-    ui->comboBoxSelectDoc->setCurrentIndex(-1);
-    ui->comboBoxSelectDoc->setPlaceholderText("Seleccionar documento");
-    ui->listWidgetDays->setSelectionMode(QAbstractItemView::MultiSelection);
-    ui->comboBoxSelectSector->addItem("Residencial");
-    ui->comboBoxSelectSector->addItem("Comercio y servicios");
-    ui->comboBoxSelectSector->addItem("Industrial");
-    ui->comboBoxSelectSector->addItem("Bombeo");
-    ui->comboBoxSelectSector->addItem("Alumbrado publico");
-    ui->comboBoxSelectSector->setCurrentIndex(0);
-    this->updateComboBoxSelectSubCat(0);
-    classificationVisTypeGroup.addButton(ui->radioButtonSum, 0);
-    classificationVisTypeGroup.addButton(ui->radioButtonAverage, 1);
-    classificationVisTypeGroup.addButton(ui->radioButtonCompare, 2);
-    ui->radioButtonSum->setChecked(true);
-    ui->lineEditSector->setReadOnly(true);
-    ui->lineEditSubCat->setReadOnly(true);
+    ui->textEditDisplaySheet->setReadOnly(true);
 
     // setup widgets containting the different functions to generate diagrams
     simpleDiagramFunction = new SimpleDiagramFunction(this);
+    siteAnalysis = new SiteAnalysis(this);
     ui->stackedWidgetDiagramFunctions->addWidget(simpleDiagramFunction);
+    ui->stackedWidgetDiagramFunctions->addWidget(siteAnalysis);
     ui->comboBoxSelectFunction->addItem("Diagrama simple");
+    ui->comboBoxSelectFunction->addItem("Analisis de sitio");
 
     // set pointers and smart pointers for correct resource management
     this->measurementsChart = std::make_shared<QChart>();
@@ -36,27 +24,31 @@ MainWindow::MainWindow(QWidget *parent):
     this->auxiliaryUpdateChart->legend()->hide();
     this->auxiliaryUpdateChart->createDefaultAxes();
 
+
     // connect interactive elements with respective functions
-    connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
-    //connect(ui->buttonGenerateSimpleDiagram, SIGNAL(clicked()), this, SLOT(generateSimpleDiagram()));
-    //connect(ui->buttonGenerateClassifiedDiagram, SIGNAL(clicked()), this, SLOT(generateClassifiedDiagram()));
-    connect(ui->buttonExportDiagram, SIGNAL(clicked()), this, SLOT(saveDiagram()));
-    //connect(ui->comboBoxSelectDoc, SIGNAL(currentIndexChanged(int)), this, SLOT(updateSheetList(int)));
-    //connect(ui->comboBoxSelectSheet, SIGNAL(currentIndexChanged(int)), this, SLOT(updateDaysEntries(int)));
-    connect(ui->comboBoxSelectSector, SIGNAL(currentIndexChanged(int)), this, SLOT(updateComboBoxSelectSubCat(int)));
+
+    // menu
     connect(ui->menuImportDocuments, SIGNAL(triggered()), this, SLOT(importDocument()));
     connect(ui->menuQuit, SIGNAL(triggered()), this, SLOT(exitProgram()));
 
+    // file management
+    connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
+
+    // functions
+    connect(ui->comboBoxSelectFunction, SIGNAL(currentIndexChanged(int)), this, SLOT(selectFunction(int)));
     connect(simpleDiagramFunction, SIGNAL(selectedDocChanged(int)), this, SLOT(updateSheetListSimpleDiagramFunction(int)));
     connect(simpleDiagramFunction, SIGNAL(selectedSheetChanged(int, int)), this, SLOT(updateDaysSimpleDiagramFunction(int, int)));
-
+    connect(siteAnalysis, SIGNAL(selectedDocChanged(int)), this, SLOT(updateSheetListSiteAnalysis(int)));
     connect(ui->buttonGenerateDiagram, SIGNAL(clicked()), this, SLOT(generateDiagram()));
+    connect(ui->buttonExportDiagram, SIGNAL(clicked()), this, SLOT(saveDiagram()));
 }
 
 MainWindow::~MainWindow() {
 
     // remove diagram function widgets from stacked widget container and delete them
+    ui->stackedWidgetDiagramFunctions->removeWidget(siteAnalysis);
     ui->stackedWidgetDiagramFunctions->removeWidget(simpleDiagramFunction);
+    delete siteAnalysis;
     delete simpleDiagramFunction;
 
     // delete chart pointer elements (necessary, segfault if not)
@@ -95,15 +87,18 @@ void MainWindow::importDocument() {
             documents.back().docFreq = docCategories.frequency;
             documents.back().docDateFormat = docCategories.dateFormat;
 
-            // old ui (will be deleted0
-            addEntryComboBoxDocSelection(fileNameOnly);
-            if(ui->comboBoxSelectDoc->currentIndex() == -1) {
-                ui->comboBoxSelectDoc->setCurrentIndex(0);
-            }
-
             // add corresponding entries to the function widgets
             simpleDiagramFunction->addEntryComboBoxSelectDoc(fileNameOnly);
+            siteAnalysis->addEntryComboBoxSelectDoc(fileNameOnly);
         }
+    }
+}
+
+void MainWindow::selectFunction(int functionIndex) {
+    if(functionIndex == 0) {
+        ui->stackedWidgetDiagramFunctions->setCurrentWidget(simpleDiagramFunction);
+    } else if(functionIndex == 1) {
+        ui->stackedWidgetDiagramFunctions->setCurrentWidget(siteAnalysis);
     }
 }
 
@@ -115,18 +110,6 @@ int MainWindow::generateSimpleDiagram() {
     std::vector<int> selectedDaysIndices = simpleDiagramFunction->getSelectedDays();
     int selectedDocIndex = simpleDiagramFunction->selectedDocIndex;
     int selectedSheetIndex = simpleDiagramFunction->selectedSheetIndex;
-
-    // OLD
-    //std::vector<int> selectedDaysIndices;
-    //for(int i = 0; i < ui->listWidgetDays->count(); ++i) {
-    //    if(ui->listWidgetDays->item(i)->isSelected()) {
-    //        selectedDaysIndices.emplace_back(i);
-            // debug is correct
-            //qDebug() << "Day " <<
-            //    documents[selectedDocIndex].sheets[selectedSheetIndex]->daysAndCounting[i].first
-            //    << "with index " << i << "is selected";
-    //    }
-    //}
 
     // update diagram only if there are valid entries
     if(selectedDaysIndices.size() > 0) {
@@ -162,55 +145,19 @@ int MainWindow::generateSimpleDiagram() {
             measurementsChart->addSeries(displayedSeries[i]);
         }
 
-        /*      TODO: implement correct date time axes
-        if(documents[selectedDocIndex].sheets[selectedSheetIndex]->xIsTime) {
-            this->xAxisDateTime = std::make_shared<QDateTimeAxis>();
-            this->xAxisDateTime->setTickCount(7);
-            this->xAxisDateTime->setFormat("hh:mm:ss");
-            this->xAxisDateTime->setMin(QDateTime(QDate(0,0,0), QTime(0,0,0)));
-            this->xAxisDateTime->setMin(QDateTime(QDate(0,0,0), QTime(23,59,59)));
-            this->xAxisDateTime->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel);
-            this->yAxis = std::make_shared<QValueAxis>();
-            this->yAxis->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel);
-            measurementsChart->addAxis(this->xAxisDateTime.get(), Qt::AlignBottom);
-            measurementsChart->addAxis(this->yAxis.get(), Qt::AlignLeft);
-            for(int i = 0; i < displayedSeries.size(); ++i) {
-                displayedSeries[i]->attachAxis(this->xAxisDateTime.get());
-                displayedSeries[i]->attachAxis(this->yAxis.get());
-            }
-        } else {
-            this->xAxisValue = std::make_shared<QValueAxis>();
-            this->xAxisValue->setTickCount(13);
-            this->xAxisValue->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel);
-            this->yAxis = std::make_shared<QValueAxis>();
-            this->yAxis->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel);
-            measurementsChart->addAxis(this->xAxisValue.get(), Qt::AlignBottom);
-            measurementsChart->addAxis(this->yAxis.get(), Qt::AlignLeft);
-            for(int i = 0; i < displayedSeries.size(); ++i) {
-                displayedSeries[i]->attachAxis(this->xAxisValue.get());
-                displayedSeries[i]->attachAxis(this->yAxis.get());
-            }
-        }*/
-
         // setup and display chart
         measurementsChart->legend()->setVisible(true);
         measurementsChart->legend()->setAlignment(Qt::AlignBottom);
         measurementsChart->createDefaultAxes();
-
-        // set Axis labels
         QList<QAbstractAxis*> chartAxes = measurementsChart->axes();
-        // debug (is correct)
-        //for(int i = 0; i < chartAxes.size(); ++i) {
-        //    qDebug() << "Axis number " << i;
-        //}
         chartAxes[0]->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel);
         chartAxes[1]->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel);
-
         measurementsChart->setTitle("Consumo de energia");
         ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
         ui->graphicsViewChart->setChart(measurementsChart.get());
 
         returnVal = 0;
+
     } else {
         QMessageBox::information(this, tr("No se puede generar el diagrama."),
                   tr("No ha importado ningun archivo o no ha seleccionado elementos para visualizar."),
@@ -219,6 +166,166 @@ int MainWindow::generateSimpleDiagram() {
     return returnVal;
 }
 
+int MainWindow::generateSiteAnalysisDiagram() {
+    int result = -1;
+
+    // get inputs from the user and find weekdays
+    int selectedDocIndex = siteAnalysis->selectedDocIndex;
+    int selectedSheetIndex = siteAnalysis->selectedSheetIndex;
+    int selectedDay = siteAnalysis->getDay() + 1;      // to compare with QDate: 1=mon,...,7=sun
+    int visType = siteAnalysis->getVisType();
+    std::vector<int> weekdayIndices = findWeekdays(selectedDay, selectedDocIndex, selectedSheetIndex);
+
+    // set to AuxChart while updating main chart
+    ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
+
+
+    // delete QLineSeries from old chart, empty series list
+    for(int i = 0; i < this->displayedSeries.size(); ++i) {
+        delete displayedSeries[i];
+    }
+    displayedSeries.clear();
+
+    // reset measurementsChart to create new clean chart
+    this->xAxisDateTime.reset();
+    this->yAxis.reset();
+    this->xAxisValue.reset();
+    measurementsChart.reset();
+    this->measurementsChart = std::make_shared<QChart>();
+
+
+    // copy by value corresponding series from sheets to current displayed series
+    for(unsigned short i = 0; i < weekdayIndices.size(); ++i) {
+        displayedSeries.append(new QLineSeries());
+        displayedSeries[i]->setName(
+                documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[weekdayIndices[i]]->name());
+        QVector<QPointF> dataPoints =
+            documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[weekdayIndices[i]]->pointsVector();
+        for(int j = 0; j < dataPoints.size(); ++j) {
+            displayedSeries[i]->append(dataPoints[j]);
+        }
+    }
+
+    if(visType == 1) {
+        displayedSeries = getAverageFromSeries(displayedSeries);
+    } else if(visType == 2) {
+        displayedSeries = getSumFromSeries(displayedSeries);
+    }
+
+    for(int i = 0; i < displayedSeries.size(); ++i) {
+        measurementsChart->addSeries(displayedSeries[i]);
+    }
+
+    // setup and display chart
+    measurementsChart->legend()->setVisible(true);
+    measurementsChart->legend()->setAlignment(Qt::AlignBottom);
+    measurementsChart->createDefaultAxes();
+    QList<QAbstractAxis*> chartAxes = measurementsChart->axes();
+    chartAxes[0]->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel);
+    chartAxes[1]->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel);
+    measurementsChart->setTitle("Consumo de energia");
+    ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
+    ui->graphicsViewChart->setChart(measurementsChart.get());
+
+    return result;
+}
+
+std::vector<int> MainWindow::findWeekdays(int &selectedDay, int &selectedDocIndex, int &selectedSheetIndex) {
+    std::vector<int> weekdayIndices;
+    QString currentDay;
+    QString currentMonth;
+    QString currentYear;
+    int candidateDay;
+    int candidateMonth;
+    int candidateYear;
+    for(unsigned int i = 0; i < documents[selectedDocIndex].sheets[selectedSheetIndex]->daysAndCounting.size(); ++i) {
+        QString candidateDateStr = documents[selectedDocIndex].sheets[selectedSheetIndex]->daysAndCounting[i].first;
+        if(documents[selectedDocIndex].sheets[selectedSheetIndex]->datesAreStrings) {
+            if(candidateDateStr.contains("/")) {
+
+                // Assumption: All dates provided by excel sheet have the format dd/mm/yyyy
+                currentDay = candidateDateStr.section("/",0,0);
+                currentMonth = candidateDateStr.section("/",1,1);
+                currentYear = candidateDateStr.section("/",2,2);
+
+            } else if(candidateDateStr.contains("-")) {
+                currentDay = candidateDateStr.section("-",0,0);
+                currentMonth = candidateDateStr.section("-",1,1);
+                currentYear = candidateDateStr.section("-",2,2);
+            }
+
+
+        } else {
+            currentDay = candidateDateStr.section("-",2,2);
+            currentMonth = candidateDateStr.section("-",1,1);
+            currentYear = candidateDateStr.section("-",0,0);
+        }
+        candidateDay = currentDay.toInt();
+        candidateMonth = currentMonth.toInt();
+        candidateYear = currentYear.toInt();
+        QDate candidateDate = QDate(candidateYear, candidateMonth, candidateDay);
+        if(candidateDate.dayOfWeek() == selectedDay) {
+            weekdayIndices.emplace_back(i);
+        }
+    }
+    return weekdayIndices;
+}
+
+QList<QLineSeries*> MainWindow::getAverageFromSeries(QList<QLineSeries*> &oldLineSeries) {
+    // TODO: check, that oldLineSeries is quadratic and all dimensions >= 0
+
+    QList<QLineSeries*> newLineSeries;
+    newLineSeries.append(new QLineSeries());
+    double totalNumOfSeries = oldLineSeries.size();
+    double totalNumOfValues = oldLineSeries[0]->count();
+
+    // Inverted traversion!
+    for(int j = 0; j < totalNumOfValues; ++j) {
+        double currentSeriesSum = 0.0;
+        double currentAverageValue = 0.0;
+        for(int i = 0; i < totalNumOfSeries; ++i) {
+            currentSeriesSum += oldLineSeries[i]->at(j).y();
+        }
+        currentAverageValue = currentSeriesSum / totalNumOfSeries;
+        newLineSeries[0]->append(oldLineSeries[0]->at(j).x(), currentAverageValue);
+    }
+    newLineSeries[0]->setName("Promedio");
+
+    // delete old line series
+    for(int i = 0; i < oldLineSeries.size(); ++i) {
+        delete oldLineSeries[i];
+    }
+    oldLineSeries.clear();
+
+    return newLineSeries;
+}
+
+QList<QLineSeries*> MainWindow::getSumFromSeries(QList<QLineSeries*> &oldLineSeries) {
+    // TODO: check, that oldLineSeries is quadratic and all dimensions >= 0
+
+    QList<QLineSeries*> newLineSeries;
+    newLineSeries.append(new QLineSeries());
+    double totalNumOfSeries = oldLineSeries.size();
+    double totalNumOfValues = oldLineSeries[0]->count();
+
+    // Inverted traversion!
+    for(int j = 0; j < totalNumOfValues; ++j) {
+        double currentSeriesSum = 0.0;
+        for(int i = 0; i < totalNumOfSeries; ++i) {
+            currentSeriesSum += oldLineSeries[i]->at(j).y();
+        }
+        newLineSeries[0]->append(oldLineSeries[0]->at(j).x(), currentSeriesSum);
+    }
+    newLineSeries[0]->setName("Suma");
+
+    // delete old line series
+    for(int i = 0; i < oldLineSeries.size(); ++i) {
+        delete oldLineSeries[i];
+    }
+    oldLineSeries.clear();
+
+    return newLineSeries;
+}
 
 /* commented out for testing, use it later again
 int MainWindow::generateClassifiedDiagram() {
@@ -386,10 +493,6 @@ void MainWindow::saveDiagram() {
     measurementsImage.save(saveFileName, "PNG");
 }
 
-void MainWindow::addEntryComboBoxDocSelection(const QString& newDocument) {
-    ui->comboBoxSelectDoc->addItem(newDocument);
-}
-
 
 void MainWindow::updateSheetListSimpleDiagramFunction(int newDocIndex) {
     if(newDocIndex >= 0) {
@@ -405,6 +508,14 @@ void MainWindow::updateDaysSimpleDiagramFunction(int newSheetIndex, int currDocI
         for(short i = 0; i < numOfDays; ++i) {
             this->simpleDiagramFunction->updateDays(
                         documents[currDocIndex].sheets[newSheetIndex]->daysAndCounting[i].first);
+        }
+    }
+}
+
+void MainWindow::updateSheetListSiteAnalysis(int newDocIndex) {
+    if(newDocIndex >= 0) {
+        for(unsigned short i = 0; i < documents[newDocIndex].sheets.size(); ++i) {
+            siteAnalysis->updateSheetList(documents[newDocIndex].sheets[i]->sheetName);
         }
     }
 }
@@ -474,6 +585,8 @@ void MainWindow::updateDaysEntries(int sheetIndex) {
 }
 */
 
+
+/* TODO: move to new function widget when it exists
 void MainWindow::updateComboBoxSelectSubCat(int currentSector) {
     ui->comboBoxSelectSubCategory->clear();
     if(currentSector == 0) {
@@ -503,12 +616,14 @@ void MainWindow::updateComboBoxSelectSubCat(int currentSector) {
         ui->comboBoxSelectSubCategory->setCurrentIndex(0);
     }
 }
-
+*/
 
 int MainWindow::generateDiagram() {
     int selectedFunction = ui->comboBoxSelectFunction->currentIndex();
     if(selectedFunction == 0) {
         this->generateSimpleDiagram();
+    } else if(selectedFunction == 1) {
+        this->generateSiteAnalysisDiagram();
     }
     return 0;
 }

@@ -10,8 +10,7 @@ SimpleDiagramFunction::SimpleDiagramFunction(QWidget *parent) :
     connect(ui->comboBoxSelectSheet, SIGNAL(currentIndexChanged(int)), this, SLOT(clearDaysEntries(int)));
 }
 
-SimpleDiagramFunction::~SimpleDiagramFunction()
-{
+SimpleDiagramFunction::~SimpleDiagramFunction() {
     delete ui;
 }
 

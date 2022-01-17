@@ -4,7 +4,6 @@
 #include <QWidget>
 #include <vector>
 
-#include "xlsxdocument.h"
 
 namespace Ui {
 class SimpleDiagramFunction;
