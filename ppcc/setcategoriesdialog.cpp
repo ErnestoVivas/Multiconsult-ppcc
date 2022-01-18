@@ -45,7 +45,7 @@ SetCategoriesDialog::SetCategoriesDialog(QWidget *parent, Categories &docCategor
     subIndustrialGroup.addButton(ui->radioButtonTextiles, 4);
     subIndustrialGroup.addButton(ui->radioButtonOtherIndustrial, 5);
     frequencyGroup.addButton(ui->radioButton15min, 0);
-    frequencyGroup.addButton(ui->radioButton1h, 0);
+    frequencyGroup.addButton(ui->radioButton1h, 1);
 
     // set date format entries in comboBox
     ui->comboBoxDateFormat->addItem("dd mm aaaa");

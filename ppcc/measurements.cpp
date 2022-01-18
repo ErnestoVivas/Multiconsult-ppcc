@@ -224,10 +224,11 @@ bool MeasurementsDocument::parseDocumentData() {
 
 
         }
-        else if(maxCol == 3) {
+        else { //if(maxCol == 3) {                                  // TODO: implement correct feedback
             QVariant currentCellValue;
             for(int row = 0; row < maxRow; ++row) {
-                for(int col = 0; col < maxCol; ++col) {
+                //for(int col = 0; col < maxCol; ++col) {
+                for(int col = 0; col < 3; ++col) {
                     currentCellValue = measurementsDoc->read(row+1,col+1);
                     if(row == 0) {
                         if(col == 1) {
@@ -277,4 +278,82 @@ int MeasurementsDocument::getSubCategory() {
         subCat = this->docSubIndustrial;
     }
     return subCat;
+}
+
+void MeasurementsDocument::setSector(int newSector) {
+    if(newSector == 0) {
+        this->docSector = Sector::residential;
+    } else if(newSector == 1) {
+        this->docSector = Sector::commercial;
+    } else if(newSector == 2) {
+        this->docSector = Sector::industrial;
+    } else if(newSector == 3) {
+        this->docSector = Sector::pumping;
+    } else if(newSector == 4) {
+        this->docSector = Sector::publicLighting;
+    }
+}
+
+void MeasurementsDocument::setSubCategory(int subCat) {
+    if(this->docSector == Sector::residential) {
+        if(subCat == 0) {
+            this->docResRange = ResidentialRange::A;
+        } else if(subCat == 1) {
+            this->docResRange = ResidentialRange::B;
+        } else if(subCat == 2) {
+            this->docResRange = ResidentialRange::C;
+        } else if(subCat == 3) {
+            this->docResRange = ResidentialRange::D;
+        } else if(subCat == 4) {
+            this->docResRange = ResidentialRange::E;
+        } else if(subCat == 5) {
+            this->docResRange = ResidentialRange::F;
+        } else {
+            this->docResRange = ResidentialRange::X;
+        }
+        this->docSubCommercial = Commercial::notCommercial;
+        this->docSubIndustrial = Industrial::notIndustrial;
+
+    } else if(this->docSector == Sector::commercial) {
+        this->docResRange = ResidentialRange::X;
+        this->docSubIndustrial = Industrial::notIndustrial;
+        if(subCat == 0) {
+            this->docSubCommercial = Commercial::finances;
+        } else if(subCat == 1) {
+            this->docSubCommercial = Commercial::wholesale;
+        } else if(subCat == 2) {
+            this->docSubCommercial = Commercial::retail;
+        } else if(subCat == 3) {
+            this->docSubCommercial = Commercial::government;
+        } else if(subCat == 4) {
+            this->docSubCommercial = Commercial::health;
+        } else if(subCat == 5) {
+            this->docSubCommercial = Commercial::hotels;
+        } else if(subCat == 6) {
+            this->docSubCommercial = Commercial::education;
+        } else if(subCat == 7) {
+            this->docSubCommercial = Commercial::otherCommercial;
+        }
+
+    } else if(this->docSector == Sector::industrial) {
+        this->docResRange = ResidentialRange::X;
+        this->docSubCommercial = Commercial::notCommercial;
+        if(subCat == 0) {
+            this->docSubIndustrial = Industrial::food;
+        } else if(subCat == 1) {
+            this->docSubIndustrial = Industrial::paper;
+        } else if(subCat == 2) {
+            this->docSubIndustrial = Industrial::plastics;
+        } else if(subCat == 3) {
+            this->docSubIndustrial = Industrial::chemistry;
+        } else if(subCat == 4) {
+            this->docSubIndustrial = Industrial::textiles;
+        } else if(subCat == 5) {
+            this->docSubIndustrial = Industrial::otherIndustrial;
+        }
+    } else {
+        this->docResRange = ResidentialRange::X;
+        this->docSubCommercial = Commercial::notCommercial;
+        this->docSubIndustrial = Industrial::notIndustrial;
+    }
 }

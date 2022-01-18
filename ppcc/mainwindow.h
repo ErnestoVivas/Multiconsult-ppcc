@@ -21,6 +21,7 @@
 #include "setcategoriesdialog.h"
 #include "simplediagramfunction.h"
 #include "siteanalysis.h"
+#include "sectordayanalysis.h"
 #include "xlsxdocument.h"
 //#include "QXlsx/header/xlsxdocument.h"
 //#include "QXlsx/header/xlsxchartsheet.h"
@@ -44,45 +45,65 @@ public:
     ~MainWindow();
 
 private:
+
+    // gui
     Ui::MainWindow* ui;
+    //QButtonGroup classificationVisTypeGroup;
+
+    // diagram function widgets
     SimpleDiagramFunction* simpleDiagramFunction;
     SiteAnalysis* siteAnalysis;
+    SectorDayAnalysis* sectorDayAnalysis;
 
-    QButtonGroup classificationVisTypeGroup;
-
-    std::vector<MeasurementsDocument> documents;
-    std::shared_ptr<QDateTimeAxis> xAxisDateTime;
-    std::shared_ptr<QValueAxis> xAxisValue;
-    std::shared_ptr<QValueAxis> yAxis;
+    // chart parameters
+    //std::shared_ptr<QDateTimeAxis> xAxisDateTime;
+    QValueAxis* xAxis;
+    QValueAxis* yAxis;
     std::shared_ptr<QChart> measurementsChart;      // holds the official chart with the correct data
     std::shared_ptr<QChart> auxiliaryUpdateChart;   // pseudo chart to which chartView is set while official chart is being updated
     QList<QLineSeries*> displayedSeries;            // holds only the series currently displayed in the chart
 
+    // File management parameters
+    std::vector<MeasurementsDocument> documents;
+    int fileManagerSelectedFile;
+
+    // file management functions (not used as slots)
+    void setupComboBoxesFileCategories();
     void readDocument(QXlsx::Document*);
 
+    // sub functions for diagram generation
+    bool compareDates(QDate&, QString&, DateFormat&, bool&);
+    std::vector<int> findWeekdays(int&, int&, int&);
     QList<QLineSeries*> getAverageFromSeries(QList<QLineSeries*>&);
     QList<QLineSeries*> getSumFromSeries(QList<QLineSeries*>&);
 
 private slots:
-    bool compareDates(QDate&, QString&, DateFormat&, bool&);
-    std::vector<int> findWeekdays(int&, int&, int&);
 
-    //int generateClassifiedDiagram();
-    void importDocument();
-
-    void saveDiagram();
+    // general gui / program functions
     void exitProgram();
 
+    // file management functions
+    void importDocument();
+    void saveDiagram();
+    void updateFileSubCatComboBox(int);
+    void getFileCategories(int);
+    void setFileCategory(int);
+    void setFileSubCategory(int);
+    void setFileFreq(int);
 
+    //int generateClassifiedDiagram();
+
+    // Functions to communicate with diagram function widgets
     void selectFunction(int);
-
     void updateSheetListSimpleDiagramFunction(int);
     void updateDaysSimpleDiagramFunction(int, int);
     void updateSheetListSiteAnalysis(int);
 
+    // Diagram generation functions
     int generateDiagram();
     int generateSimpleDiagram();
     int generateSiteAnalysisDiagram();
+    int generateSectorWeekdayDiagram();
 };
 
 #endif // MAINWINDOW_H

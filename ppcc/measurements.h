@@ -62,6 +62,8 @@ public:
     DateFormat docDateFormat;
 
     int getSubCategory();
+    void setSector(int);
+    void setSubCategory(int);
 
 private:
     bool parseDocumentData();

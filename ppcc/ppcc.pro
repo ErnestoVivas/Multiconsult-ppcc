@@ -18,6 +18,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     measurements.cpp \
+    sectordayanalysis.cpp \
     setcategoriesdialog.cpp \
     simplediagramfunction.cpp \
     siteanalysis.cpp
@@ -26,12 +27,14 @@ HEADERS += \
     enumerations.h \
     mainwindow.h \
     measurements.h \
+    sectordayanalysis.h \
     setcategoriesdialog.h \
     simplediagramfunction.h \
     siteanalysis.h
 
 FORMS += \
     mainwindow.ui \
+    sectordayanalysis.ui \
     setcategoriesdialog.ui \
     simplediagramfunction.ui \
     siteanalysis.ui
