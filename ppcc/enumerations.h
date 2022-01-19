@@ -1,6 +1,8 @@
 #ifndef ENUMERATIONS_H
 #define ENUMERATIONS_H
 
+#include <QString>
+
 // enumerations to classify measurements
 enum SystemVoltage {
     lowVoltage = 0,
@@ -69,5 +71,17 @@ struct Categories {
     Frequency frequency;
     DateFormat dateFormat;
 };
+
+namespace enumerations {
+    inline QString getStringFromFreq(int freq) {
+        QString freqString = "";
+        if(freq == 0) {
+            freqString = "15 min";
+        } else if(freq == 1) {
+            freqString = "1 h";
+        }
+        return freqString;
+    }
+}
 
 #endif // ENUMERATIONS_H

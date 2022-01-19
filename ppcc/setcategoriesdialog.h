@@ -25,7 +25,6 @@ private:
     QButtonGroup resRangeGroup;
     QButtonGroup subCommercialGroup;
     QButtonGroup subIndustrialGroup;
-    QButtonGroup frequencyGroup;
 
     SystemVoltage* currentSV;
     Sector* currentSector;

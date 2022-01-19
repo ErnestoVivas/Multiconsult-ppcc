@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>681</width>
-    <height>403</height>
+    <height>349</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>590</x>
-     <y>364</y>
+     <y>310</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -453,81 +453,6 @@
    </property>
    <property name="text">
     <string>Otros</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="labelSelectFrequency">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>310</y>
-     <width>231</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Seleccione frecuencia de las mediciones:</string>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="radioButton15min">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>340</y>
-     <width>89</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>15 min</string>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="radioButton1h">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>370</y>
-     <width>89</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>1 h</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="labelSelectDateFormat">
-   <property name="geometry">
-    <rect>
-     <x>260</x>
-     <y>310</y>
-     <width>251</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Seleccione formato de la fecha:</string>
-   </property>
-  </widget>
-  <widget class="QComboBox" name="comboBoxDateFormat">
-   <property name="geometry">
-    <rect>
-     <x>260</x>
-     <y>340</y>
-     <width>171</width>
-     <height>22</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="Line" name="line_4">
-   <property name="geometry">
-    <rect>
-     <x>230</x>
-     <y>310</y>
-     <width>21</width>
-     <height>81</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Vertical</enum>
    </property>
   </widget>
  </widget>

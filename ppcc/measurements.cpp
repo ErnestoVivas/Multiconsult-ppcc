@@ -8,6 +8,12 @@ SheetData::SheetData(const QString& currentSheetName) {
     this->sheetName = currentSheetName;
     this->numOfDays = 0;
     this->datesAreStrings = true;
+    this->sheetFreq = Frequency::hour;
+    this->firstDayIsComplete = false;
+    this->lastDayIsComplete = false;
+    this->oneDayOnly = false;
+    this->twoDaysOnly = false;
+    this->sheetIsPlottable = true;
 }
 
 SheetData::~SheetData() {
@@ -44,13 +50,44 @@ int SheetData::extractDays() {
             }
         }
 
-        // debugging
-        /*
+        // check if all days have the same number of measurements
+        int numMeasurementsFirstDay;
+        int numMeasurementsLastDay;
+        int numOfDailyMeasurements;
+        if(daysAndCounting.size() == 1) {
+            this->oneDayOnly = true;
+        } else if(daysAndCounting.size() == 2) {
+            this->twoDaysOnly = true;
+        } else if(daysAndCounting.size() > 2) {
+            numMeasurementsFirstDay = daysAndCounting[0].second;
+            numOfDailyMeasurements = daysAndCounting[1].second;
+            numMeasurementsLastDay = daysAndCounting[daysAndCounting.size() - 1].second;
+            if(numMeasurementsFirstDay == numOfDailyMeasurements) {
+                this->firstDayIsComplete = true;
+            }
+            if(numMeasurementsLastDay == numOfDailyMeasurements) {
+                this->lastDayIsComplete = true;
+            }
+            for(unsigned int i = 1; i < (daysAndCounting.size() - 1); ++i) {
+                if(numOfDailyMeasurements != daysAndCounting[i].second) {
+                    this->sheetIsPlottable = false;
+                }
+            }
+        } else {
+            this->sheetIsPlottable = false;
+        }
+
+        // debugging: print if first/last day are complete and if sheet is plottable
+        qDebug() << "First day is complete: " << firstDayIsComplete << ", ";
+        qDebug() << "Last day is complete: " << lastDayIsComplete << ", ";
+        qDebug() << "All days have the same size: " << sheetIsPlottable;
+
+        // debugging: print days and their count
         qDebug() << "Sheet: " << this->sheetName << ", numOfDays: " << this->numOfDays;
         for(unsigned short s = 0; s < daysAndCounting.size(); ++s) {
             qDebug() << daysAndCounting[s].first << ", measurements: " << daysAndCounting[s].second;
         }
-        */
+
         returnVal = 0;
     }
 
@@ -88,11 +125,15 @@ int SheetData::extractLineSeries() {
                     if(this->timestamps[measurementsCount+j].type() == 14) {
                         currentTimestamp = QTime(0,0,0);
                     }
-                    //currentTimeValue = currentTimestamp.msecsSinceStartOfDay();
                     currentTimeValue = (currentTimestamp.msecsSinceStartOfDay() / 86400000.0) * 24.0;   // map to 24 hours
                     currentDataValue = this->measurements[j + measurementsCount].toReal();
                     this->measurementSeries[i]->append(currentTimeValue, currentDataValue);
-                    // qDebug() << "(" << currentTimeValue << "," << currentDataValue << ")";
+                    //qDebug() << "(" << currentTimeValue << "," << currentDataValue << ")";
+
+                    double intPart;
+                    if(std::modf(currentTimeValue, &intPart) != 0.0) {
+                        this->sheetFreq = Frequency::quarterHour;
+                    }
                 }
             }
 
@@ -110,14 +151,18 @@ int SheetData::extractLineSeries() {
                         QString minuteString = currentTimeStr.section(":", 1, 1);
                         // qDebug() << hourString << ":" << minuteString;
                         QTime timeAsQTime = QTime(hourString.toInt(), minuteString.toInt());
-                        //currentTimeValue = timeAsQTime.msecsSinceStartOfDay();
                         currentTimeValue = (timeAsQTime.msecsSinceStartOfDay() / 86400000.0) * 24.0;   // map to 24 hours
                     } else {
                         currentTimeValue = this->timestamps[j + measurementsCount].toReal();
                     }
                     currentDataValue = this->measurements[j + measurementsCount].toReal();
                     this->measurementSeries[i]->append(currentTimeValue, currentDataValue);
-                    // qDebug() << "(" << currentTimeValue << "," << currentDataValue << ")";
+                    //qDebug() << "(" << currentTimeValue << "," << currentDataValue << ")";
+
+                    double intPart;
+                    if(std::modf(currentTimeValue, &intPart) != 0.0) {
+                        this->sheetFreq = Frequency::quarterHour;
+                    }
                 }
             }
             measurementsCount += numOfMeasurements;
@@ -136,6 +181,7 @@ MeasurementsDocument::MeasurementsDocument(const QString &docFileName) {
     this->docResRange = ResidentialRange::X;
     this->docSubCommercial = Commercial::notCommercial;
     this->docSubIndustrial = Industrial::notIndustrial;
+    this->docFreq = Frequency::hour;
 
     // get doc sheets and set up dataSheet objects
     foreach(QString currentSheetName, this->measurementsDoc->sheetNames()) {
@@ -179,8 +225,8 @@ bool MeasurementsDocument::parseDocumentData() {
             continue;
         }
 
-        QVector<QXlsx::CellLocation> clList = wsheet->getFullCells(&maxRow, &maxCol);
-        //QVector<QVector<QString> > cellValues;
+        //QVector<QXlsx::CellLocation> clList = wsheet->getFullCells(&maxRow, &maxCol);
+        wsheet->getFullCells(&maxRow, &maxCol);
 
         // iterate through the cells of the sheet and set values
         // sheet itself indexes like Matlab (0,1,2) -> (1,2,3)
@@ -263,6 +309,11 @@ bool MeasurementsDocument::parseDocumentData() {
         sheets[sheetIndexNumber]->extractDays();
         sheets[sheetIndexNumber]->extractLineSeries();
         ++sheetIndexNumber;
+    }
+
+    // set measurements frequency of the document (assuming all sheets have the same freq)
+    if(sheets.size() >= 1) {
+        this->docFreq = sheets[0]->sheetFreq;
     }
 
     return result;

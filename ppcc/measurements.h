@@ -3,6 +3,7 @@
 
 #include <QtCharts>
 #include <QtCharts/QLineSeries>
+#include <cmath>
 #include <memory>
 #include <vector>
 #include <list>
@@ -23,12 +24,23 @@ public:
     SheetData(const QString&);
     ~SheetData();
 
+    // general sheet information
     QString sheetName;
     QString xAxisLabel;
     QString yAxisLabel;
+
+    // aux variables needed for diagram generation
+    Frequency sheetFreq;
+    bool firstDayIsComplete;
+    bool lastDayIsComplete;
+    bool oneDayOnly;
+    bool twoDaysOnly;
+    bool sheetIsPlottable;
     bool xIsTime;
     bool datesAreStrings;
     short numOfDays;
+
+    // data storage
     std::vector<std::pair<QString, int> > daysAndCounting;
     std::vector<QVariant> allDays;
     std::vector<QVariant> timestamps;
@@ -49,10 +61,12 @@ public:
     MeasurementsDocument(const QString&);
     ~MeasurementsDocument();
 
+    // general document information
     QString docName;
     std::shared_ptr<QXlsx::Document> measurementsDoc;
     std::vector<std::shared_ptr<SheetData> > sheets;
 
+    // Classification of the document
     SystemVoltage docSystemVoltage;
     Sector docSector;
     ResidentialRange docResRange;
@@ -61,6 +75,7 @@ public:
     Frequency docFreq;
     DateFormat docDateFormat;
 
+    // getters and setters
     int getSubCategory();
     void setSector(int);
     void setSubCategory(int);

@@ -15,8 +15,6 @@ SetCategoriesDialog::SetCategoriesDialog(QWidget *parent, Categories &docCategor
     currentRR = &docCategories.resRange;
     currentSubCom = &docCategories.commercial;
     currentSubInd = &docCategories.industrial;
-    currentFreq = &docCategories.frequency;
-    currentDateFormat = &docCategories.dateFormat;
 
     // radio buttons ids are assigned ascending, as they appear on the dialog
     sectorGroup.addButton(ui->radioButtonRes, 0);
@@ -44,22 +42,12 @@ SetCategoriesDialog::SetCategoriesDialog(QWidget *parent, Categories &docCategor
     subIndustrialGroup.addButton(ui->radioButtonChemistry, 3);
     subIndustrialGroup.addButton(ui->radioButtonTextiles, 4);
     subIndustrialGroup.addButton(ui->radioButtonOtherIndustrial, 5);
-    frequencyGroup.addButton(ui->radioButton15min, 0);
-    frequencyGroup.addButton(ui->radioButton1h, 1);
-
-    // set date format entries in comboBox
-    ui->comboBoxDateFormat->addItem("dd mm aaaa");
-    ui->comboBoxDateFormat->addItem("mm dd aaaa");
-    ui->comboBoxDateFormat->addItem("aaaa mm dd");
-    ui->comboBoxDateFormat->addItem("aaaa dd mm");
-    ui->comboBoxDateFormat->setCurrentIndex(0);
 
     // toggle selected buttons
     ui->radioButtonRes->setChecked(true);
     ui->radioButtonResA->setChecked(true);
     ui->radioButtonFinances->setChecked(true);
     ui->radioButtonFood->setChecked(true);
-    ui->radioButton15min->setChecked(true);
 
     // toggle active buttons
     ui->radioButtonFinances->setDisabled(true);
@@ -92,7 +80,6 @@ void SetCategoriesDialog::exitCategoriesDialog() {
     int checkedRR = resRangeGroup.checkedId();
     int checkedCommercial = subCommercialGroup.checkedId();
     int checkedIndustrial = subIndustrialGroup.checkedId();
-    int checkedFreq = frequencyGroup.checkedId();
 
     if(checkedSector == 0) {
         *currentSector = Sector::residential;
@@ -156,22 +143,6 @@ void SetCategoriesDialog::exitCategoriesDialog() {
         *currentSubInd = Industrial::textiles;
     } else if(checkedIndustrial == 5) {
         *currentSubInd = Industrial::otherIndustrial;
-    }
-
-    if(checkedFreq == 0) {
-        *currentFreq = Frequency::quarterHour;
-    } else {
-        *currentFreq = Frequency::hour;
-    }
-
-    if(ui->comboBoxDateFormat->currentIndex() == 0) {
-        *currentDateFormat = DateFormat::dayMonthYear;
-    } else if(ui->comboBoxDateFormat->currentIndex() == 1) {
-        *currentDateFormat = DateFormat::monthDayYear;
-    } else if(ui->comboBoxDateFormat->currentIndex() == 2) {
-        *currentDateFormat = DateFormat::yearMonthDay;
-    } else if(ui->comboBoxDateFormat->currentIndex() == 3) {
-        *currentDateFormat = DateFormat::yearDayMonth;
     }
 
     this->close();

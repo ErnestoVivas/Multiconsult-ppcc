@@ -48,7 +48,6 @@ private:
 
     // gui
     Ui::MainWindow* ui;
-    //QButtonGroup classificationVisTypeGroup;
 
     // diagram function widgets
     SimpleDiagramFunction* simpleDiagramFunction;
@@ -56,9 +55,8 @@ private:
     SectorDayAnalysis* sectorDayAnalysis;
 
     // chart parameters
-    //std::shared_ptr<QDateTimeAxis> xAxisDateTime;
     QValueAxis* xAxis;
-    QValueAxis* yAxis;
+    QValueAxis* yAxis;                              // currently not used
     std::shared_ptr<QChart> measurementsChart;      // holds the official chart with the correct data
     std::shared_ptr<QChart> auxiliaryUpdateChart;   // pseudo chart to which chartView is set while official chart is being updated
     QList<QLineSeries*> displayedSeries;            // holds only the series currently displayed in the chart
@@ -76,6 +74,7 @@ private:
     std::vector<int> findWeekdays(int&, int&, int&);
     QList<QLineSeries*> getAverageFromSeries(QList<QLineSeries*>&);
     QList<QLineSeries*> getSumFromSeries(QList<QLineSeries*>&);
+    void displayDiagramDataAsText();
 
 private slots:
 
@@ -89,7 +88,7 @@ private slots:
     void getFileCategories(int);
     void setFileCategory(int);
     void setFileSubCategory(int);
-    void setFileFreq(int);
+    void setFileFreq(int);          // currently not used
 
     //int generateClassifiedDiagram();
 
