@@ -389,36 +389,51 @@ std::vector<int> MainWindow::findWeekdays(int &selectedDay, int &selectedDocInde
 
 QList<QLineSeries*> MainWindow::getAverageFromSeries(QList<QLineSeries*> &oldLineSeries) {
 
-
     QList<QLineSeries*> newLineSeries;
     newLineSeries.append(new QLineSeries());
-    double totalNumOfSeries = oldLineSeries.size();
+    double totalNumOfSeries = oldLineSeries.size();         // >= 1 (was checked before)
     double totalNumOfValues = oldLineSeries[0]->count();
+    bool dataIsRectangular = true;                          // rectangular == all series have the same num of values
 
     // Check, that oldLineSeries is rectangular and all dimensions >= 0
     for(int i = 0; i < oldLineSeries.size(); ++i) {
         double currentNumOfValues = oldLineSeries[i]->count();
         if(currentNumOfValues != totalNumOfValues) {
-            QMessageBox::warning(this, tr("No se puede generar el diagrama."),
-                      tr("No se puede calcular el promedio. Cada dia\n"
-                         "debe tener la misma cantidad de mediciones."),
-                      QMessageBox::Ok);
-            return newLineSeries;
+            dataIsRectangular = false;
         }
     }
 
     // TODO: implement average calculation for non rectangular line series
 
-
     // Calculate average and fill new line series (inverted traversion!)
-    for(int j = 0; j < totalNumOfValues; ++j) {
-        double currentSeriesSum = 0.0;
-        double currentAverageValue = 0.0;
-        for(int i = 0; i < totalNumOfSeries; ++i) {
-            currentSeriesSum += oldLineSeries[i]->at(j).y();
+    if(dataIsRectangular) {
+        for(int j = 0; j < totalNumOfValues; ++j) {
+            double currentSeriesSum = 0.0;
+            double currentAverageValue = 0.0;
+            for(int i = 0; i < totalNumOfSeries; ++i) {
+                currentSeriesSum += oldLineSeries[i]->at(j).y();
+            }
+            currentAverageValue = currentSeriesSum / totalNumOfSeries;
+            newLineSeries[0]->append(oldLineSeries[0]->at(j).x(), currentAverageValue);
         }
-        currentAverageValue = currentSeriesSum / totalNumOfSeries;
-        newLineSeries[0]->append(oldLineSeries[0]->at(j).x(), currentAverageValue);
+    } else {
+
+        // first: find maximum number of values, this will be the size of the <xVal, numVal> vector
+        int maxNumOfVal = 0;
+        int indexOfLongestSeries = 0;
+        for(int i = 0; i < oldLineSeries.size(); ++i) {
+            if(maxNumOfVal < oldLineSeries[i]->count()) {
+                maxNumOfVal = oldLineSeries[i]->count();
+                indexOfLongestSeries = i;
+            }
+        }
+        //qDebug << indexOfLongestSeries
+
+        QMessageBox::warning(this, tr("No se puede generar el diagrama."),
+                  tr("No se puede calcular el promedio. Cada dia\n"
+                     "debe tener la misma cantidad de mediciones."),
+                  QMessageBox::Ok);
+        return newLineSeries;
     }
     newLineSeries[0]->setName("Promedio");
 
@@ -435,8 +450,9 @@ QList<QLineSeries*> MainWindow::getSumFromSeries(QList<QLineSeries*> &oldLineSer
 
     QList<QLineSeries*> newLineSeries;
     newLineSeries.append(new QLineSeries());
-    double totalNumOfSeries = oldLineSeries.size();
+    double totalNumOfSeries = oldLineSeries.size();         // >= 1 (was checked before)
     double totalNumOfValues = oldLineSeries[0]->count();
+    bool dataIsRectangular = true;                          // rectangular == all series have the same num of values
 
     // Check, that oldLineSeries is rectangular and all dimensions >= 0
     for(int i = 0; i < oldLineSeries.size(); ++i) {
