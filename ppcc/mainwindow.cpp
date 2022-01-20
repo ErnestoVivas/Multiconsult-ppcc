@@ -312,10 +312,10 @@ int MainWindow::generateSiteAnalysisDiagram() {
 
     QString diagramTitle = "Consumo diario de energía";
     if(visType == 1) {
-        displayedSeries = getAverageFromSeries(displayedSeries);
+        displayedSeries = getAverageFromSeries(displayedSeries, documents[selectedDocIndex].docFreq, false);
         diagramTitle = "Promedio del consumo diario de energía";
     } else if(visType == 2) {
-        displayedSeries = getSumFromSeries(displayedSeries);
+        displayedSeries = getAverageFromSeries(displayedSeries, documents[selectedDocIndex].docFreq, true);
         diagramTitle = "Suma del consumo diario de energía";
     }
 
@@ -387,7 +387,9 @@ std::vector<int> MainWindow::findWeekdays(int &selectedDay, int &selectedDocInde
     return weekdayIndices;
 }
 
-QList<QLineSeries*> MainWindow::getAverageFromSeries(QList<QLineSeries*> &oldLineSeries) {
+QList<QLineSeries*> MainWindow::getAverageFromSeries(QList<QLineSeries*> &oldLineSeries, Frequency freq, bool sum) {
+
+    // sum == true: sum and not average is calculated
 
     QList<QLineSeries*> newLineSeries;
     newLineSeries.append(new QLineSeries());
@@ -413,70 +415,84 @@ QList<QLineSeries*> MainWindow::getAverageFromSeries(QList<QLineSeries*> &oldLin
             for(int i = 0; i < totalNumOfSeries; ++i) {
                 currentSeriesSum += oldLineSeries[i]->at(j).y();
             }
-            currentAverageValue = currentSeriesSum / totalNumOfSeries;
-            newLineSeries[0]->append(oldLineSeries[0]->at(j).x(), currentAverageValue);
+            if(!sum) {
+                currentAverageValue = currentSeriesSum / totalNumOfSeries;
+                newLineSeries[0]->append(oldLineSeries[0]->at(j).x(), currentAverageValue);
+            } else {
+                newLineSeries[0]->append(oldLineSeries[0]->at(j).x(), currentSeriesSum);
+            }
         }
     } else {
 
-        // first: find maximum number of values, this will be the size of the <xVal, numVal> vector
-        int maxNumOfVal = 0;
-        int indexOfLongestSeries = 0;
-        for(int i = 0; i < oldLineSeries.size(); ++i) {
-            if(maxNumOfVal < oldLineSeries[i]->count()) {
-                maxNumOfVal = oldLineSeries[i]->count();
-                indexOfLongestSeries = i;
+        // setup grid
+        std::vector<std::pair<double, double> > gridPointsAndCount;
+        std::vector<double> gridPointsValueSum;
+        double currentGridPoint = 0.0;
+        if(freq == Frequency::hour) {
+            for(int i = 0; i < 24; ++i, currentGridPoint += 1.0) {
+                gridPointsAndCount.emplace_back(std::make_pair(currentGridPoint, 0.0));
+            }
+        } else {
+            for(int i = 0; i < 96; ++i, currentGridPoint += 0.25) {
+                gridPointsAndCount.emplace_back(std::make_pair(currentGridPoint, 0.0));
             }
         }
-        //qDebug << indexOfLongestSeries
+        gridPointsValueSum.resize(gridPointsAndCount.size(), 0.0);
 
-        QMessageBox::warning(this, tr("No se puede generar el diagrama."),
-                  tr("No se puede calcular el promedio. Cada dia\n"
-                     "debe tener la misma cantidad de mediciones."),
-                  QMessageBox::Ok);
-        return newLineSeries;
+        // count number of values of each grid point
+        for(int i = 0; i < oldLineSeries.size(); ++i) {
+            for(int j = 0; j < oldLineSeries[i]->count(); ++j) {
+                for(unsigned int k = 0; k < gridPointsAndCount.size(); ++k) {
+                    if(oldLineSeries[i]->at(j).x() == gridPointsAndCount[k].first) {
+                        gridPointsAndCount[k].second += 1.0;
+                    }
+                }
+            }
+        }
+
+        // debug
+        for(unsigned int i = 0; i < gridPointsAndCount.size(); ++i) {
+            qDebug() << "(" << gridPointsAndCount[i].first << "," << gridPointsAndCount[i].second << ")";
+        }
+
+        // Calculate average and fill new line series
+
+        // traverse through grid
+        for(unsigned int i = 0; i < gridPointsAndCount.size(); ++i) {
+
+            // traverse through line series
+            for(int j = 0; j < oldLineSeries.size(); ++j) {
+                for(int k = 0; k < oldLineSeries[j]->count(); ++k) {
+                    //qDebug() << "I am here, " << i << "," << j << "," << k;
+                    if(oldLineSeries[j]->at(k).x() == gridPointsAndCount[i].first) {
+                        gridPointsValueSum[i] += oldLineSeries[j]->at(k).y();
+                    }
+                }
+            }
+        }
+
+        // debug print out vaule sum
+        for(unsigned int i = 0; i < gridPointsValueSum.size(); ++i) {
+            qDebug() << "Point: " << gridPointsAndCount[i].first << ", value sum: " << gridPointsValueSum[i];
+        }
+
+        // calculate average value or sum for each point and append it to new line series
+        for(unsigned int i = 0; i < gridPointsValueSum.size(); ++i) {
+            if(!sum) {
+                double currentAverageValue = gridPointsValueSum[i] / gridPointsAndCount[i].second;
+                newLineSeries[0]->append(gridPointsAndCount[i].first, currentAverageValue);
+            } else {
+                newLineSeries[0]->append(gridPointsAndCount[i].first, gridPointsValueSum[i]);
+            }
+        }
+
+        //QMessageBox::warning(this, tr("No se puede generar el diagrama."),
+        //          tr("No se puede calcular el promedio. Cada dia\n"
+        //             "debe tener la misma cantidad de mediciones."),
+        //          QMessageBox::Ok);
+        //return newLineSeries;
     }
     newLineSeries[0]->setName("Promedio");
-
-    // delete old line series
-    for(int i = 0; i < oldLineSeries.size(); ++i) {
-        delete oldLineSeries[i];
-    }
-    oldLineSeries.clear();
-
-    return newLineSeries;
-}
-
-QList<QLineSeries*> MainWindow::getSumFromSeries(QList<QLineSeries*> &oldLineSeries) {
-
-    QList<QLineSeries*> newLineSeries;
-    newLineSeries.append(new QLineSeries());
-    double totalNumOfSeries = oldLineSeries.size();         // >= 1 (was checked before)
-    double totalNumOfValues = oldLineSeries[0]->count();
-    bool dataIsRectangular = true;                          // rectangular == all series have the same num of values
-
-    // Check, that oldLineSeries is rectangular and all dimensions >= 0
-    for(int i = 0; i < oldLineSeries.size(); ++i) {
-        double currentNumOfValues = oldLineSeries[i]->count();
-        if(currentNumOfValues != totalNumOfValues) {
-            QMessageBox::warning(this, tr("No se puede generar el diagrama."),
-                      tr("No se puede calcular la suma. Cada dia\n"
-                         "debe tener la misma cantidad de mediciones."),
-                      QMessageBox::Ok);
-            return newLineSeries;
-        }
-    }
-
-    // TODO: implement average calculation for non rectangular line series
-
-    // Inverted traversion!
-    for(int j = 0; j < totalNumOfValues; ++j) {
-        double currentSeriesSum = 0.0;
-        for(int i = 0; i < totalNumOfSeries; ++i) {
-            currentSeriesSum += oldLineSeries[i]->at(j).y();
-        }
-        newLineSeries[0]->append(oldLineSeries[0]->at(j).x(), currentSeriesSum);
-    }
-    newLineSeries[0]->setName("Suma");
 
     // delete old line series
     for(int i = 0; i < oldLineSeries.size(); ++i) {
@@ -573,9 +589,10 @@ int MainWindow::generateSectorWeekdayDiagram() {
 
 
     if(visType == 1) {
-        displayedSeries = getAverageFromSeries(displayedSeries);
+        //displayedSeries = getAverageFromSeries(displayedSeries, documents[selectedDocIndex].docFreq, false);
+        qDebug() << "Method not implemented for this case";
     } else if(visType == 2) {
-        displayedSeries = getSumFromSeries(displayedSeries);
+        //displayedSeries = getAverageFromSeries(displayedSeries, documents[selectedDocIndex].docFreq, true);
     }
 
     for(int i = 0; i < displayedSeries.size(); ++i) {

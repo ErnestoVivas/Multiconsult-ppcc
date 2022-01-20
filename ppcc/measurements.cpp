@@ -78,15 +78,15 @@ int SheetData::extractDays() {
         }
 
         // debugging: print if first/last day are complete and if sheet is plottable
-        qDebug() << "First day is complete: " << firstDayIsComplete << ", ";
-        qDebug() << "Last day is complete: " << lastDayIsComplete << ", ";
-        qDebug() << "All days have the same size: " << sheetIsPlottable;
+        //qDebug() << "First day is complete: " << firstDayIsComplete << ", ";
+        //qDebug() << "Last day is complete: " << lastDayIsComplete << ", ";
+        //qDebug() << "All days have the same size: " << sheetIsPlottable;
 
         // debugging: print days and their count
-        qDebug() << "Sheet: " << this->sheetName << ", numOfDays: " << this->numOfDays;
-        for(unsigned short s = 0; s < daysAndCounting.size(); ++s) {
-            qDebug() << daysAndCounting[s].first << ", measurements: " << daysAndCounting[s].second;
-        }
+        //qDebug() << "Sheet: " << this->sheetName << ", numOfDays: " << this->numOfDays;
+        //for(unsigned short s = 0; s < daysAndCounting.size(); ++s) {
+        //    qDebug() << daysAndCounting[s].first << ", measurements: " << daysAndCounting[s].second;
+        //}
 
         returnVal = 0;
     }

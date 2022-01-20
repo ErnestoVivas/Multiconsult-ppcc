@@ -72,8 +72,7 @@ private:
     // sub functions for diagram generation
     bool compareDates(QDate&, QString&, DateFormat&, bool&);
     std::vector<int> findWeekdays(int&, int&, int&);
-    QList<QLineSeries*> getAverageFromSeries(QList<QLineSeries*>&);
-    QList<QLineSeries*> getSumFromSeries(QList<QLineSeries*>&);
+    QList<QLineSeries*> getAverageFromSeries(QList<QLineSeries*>&, Frequency, bool);
     void displayDiagramDataAsText();
 
 private slots:
