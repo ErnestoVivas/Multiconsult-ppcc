@@ -2,11 +2,11 @@
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent):
-    QMainWindow(parent), ui(new Ui::MainWindow) {
+    QMainWindow(parent), ui(new Ui::MainWindow), fileManagerSelectedFile(-1) {
 
     // setup ui elements
     ui->setupUi(this);
-    ui->textEditDisplaySheet->setReadOnly(true);
+    ui->textEditDisplayDocument->setReadOnly(true);
     setupComboBoxesFileCategories();
     updateFileSubCatComboBox(0);
     ui->lineEditFileFreq->setReadOnly(true);
@@ -19,8 +19,8 @@ MainWindow::MainWindow(QWidget *parent):
     ui->stackedWidgetDiagramFunctions->addWidget(siteAnalysis);
     ui->stackedWidgetDiagramFunctions->addWidget(sectorDayAnalysis);
     ui->comboBoxSelectFunction->addItem("Diagrama simple");
-    ui->comboBoxSelectFunction->addItem("Análisis de sitio");
-    ui->comboBoxSelectFunction->addItem("Análisis de sector por dia");
+    ui->comboBoxSelectFunction->addItem("Diagrama de sitio y día de semana");
+    ui->comboBoxSelectFunction->addItem("Diagrama de sector y dia de semana");
 
     // set pointers and smart pointers for correct resource management
     this->measurementsChart = std::make_shared<QChart>();
@@ -47,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent):
     // file management
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
     connect(ui->listWidgetDocuments, SIGNAL(currentRowChanged(int)), this, SLOT(getFileCategories(int)));
+    //connect(this, SIGNAL(updateTextEditDocumentData(int)), this, SLOT(displayDocumentDataAsText(int)));
     connect(ui->comboBoxFileCat, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFileSubCatComboBox(int)));
     connect(ui->comboBoxFileCat, SIGNAL(currentIndexChanged(int)), this, SLOT(setFileCategory(int)));
     connect(ui->comboBoxFileSubCat, SIGNAL(currentIndexChanged(int)), this, SLOT(setFileSubCategory(int)));
@@ -128,6 +129,8 @@ void MainWindow::getFileCategories(int selectedFile) {
     ui->comboBoxFileCat->setCurrentIndex(sector);
     ui->comboBoxFileSubCat->setCurrentIndex(subCat);
     ui->lineEditFileFreq->setText(freqString);
+    this->fileManagerSelectedFile = selectedFile;
+    //emit updateTextEditDocumentData(selectedFile);
 }
 
 void MainWindow::setFileCategory(int newSector) {
@@ -142,15 +145,6 @@ void MainWindow::setFileSubCategory(int newSubCat) {
     }
 }
 
-void MainWindow::setFileFreq(int newFreq) {
-    if(ui->listWidgetDocuments->currentRow() >= 0) {
-        if(newFreq == 0) {
-            documents[ui->listWidgetDocuments->currentRow()].docFreq = Frequency::quarterHour;
-        } else if(newFreq == 1) {
-            documents[ui->listWidgetDocuments->currentRow()].docFreq = Frequency::hour;
-        }
-    }
-}
 
 void MainWindow::importDocument() {
     QStringList docFileNames = QFileDialog::getOpenFileNames(this,
@@ -276,7 +270,7 @@ int MainWindow::generateSiteAnalysisDiagram() {
 
     if(weekdayIndices.size() == 0) {
         QMessageBox::warning(this, tr("No se puede generar el diagrama."),
-                  tr("No se han encontrado datos para el dia indicado."),
+                  tr("No se han encontrado datos para el día indicado."),
                   QMessageBox::Ok);
         return result;
     }
@@ -405,8 +399,6 @@ QList<QLineSeries*> MainWindow::getAverageFromSeries(QList<QLineSeries*> &oldLin
         }
     }
 
-    // TODO: implement average calculation for non rectangular line series
-
     // Calculate average and fill new line series (inverted traversion!)
     if(dataIsRectangular) {
         for(int j = 0; j < totalNumOfValues; ++j) {
@@ -471,7 +463,7 @@ QList<QLineSeries*> MainWindow::getAverageFromSeries(QList<QLineSeries*> &oldLin
             }
         }
 
-        // debug print out vaule sum
+        // debug print out value sum
         for(unsigned int i = 0; i < gridPointsValueSum.size(); ++i) {
             qDebug() << "Point: " << gridPointsAndCount[i].first << ", value sum: " << gridPointsValueSum[i];
         }
@@ -522,28 +514,49 @@ int MainWindow::generateSectorWeekdayDiagram() {
         }
     }
 
+    // check if all measurements have the same frequency; if not data needs to be prepared later
+    bool dataNeedsTransformation = false;
+    Frequency currentFreq;
+    if(correctFileIndices.size() >= 1) {
+        currentFreq = documents[correctFileIndices[0]].docFreq;
+    } else {
+        QMessageBox::warning(this, tr("No se puede generar el diagrama."),
+                  tr("No se han encontrado datos para las categorías indicadas."),
+                  QMessageBox::Ok);
+        return result;
+    }
+    for(unsigned int i = 0; i < correctFileIndices.size(); ++i) {
+        if(documents[correctFileIndices[i]].docFreq != currentFreq) {
+            currentFreq = Frequency::quarterHour;
+            dataNeedsTransformation = true;
+            qDebug() << "Data needs transformation.";
+            break;
+        }
+    }
+
     // Now: find the corresponding weekdays in the corresponding files
-    std::vector<std::tuple<int, int, int, int> > weekdayIndices;    // 0: doc, 1: sheet, 2: lineSeries, 3: freq
+    std::vector<std::tuple<int, int, int> > weekdayIndices;    // 0: doc, 1: sheet, 2: lineSeries, 3: freq
     int currentDoc;
     int currentSheet;
     int currentLineSeries;
-    int currentFreq;
+    //int currentFreq;
     for(unsigned int i = 0; i < correctFileIndices.size(); ++i) {
         for(unsigned int j = 0; j < documents[correctFileIndices[i]].sheets.size(); ++j) {
             currentDoc = correctFileIndices[i];
             currentSheet = j;
-            currentFreq = documents[correctFileIndices[i]].docFreq;
+            //currentFreq = documents[correctFileIndices[i]].docFreq;
             std::vector<int> currSheetWeekdayIndices = findWeekdays(selectedDay, correctFileIndices[i], currentSheet);
             for(unsigned int k = 0; k < currSheetWeekdayIndices.size(); ++k) {
                 currentLineSeries = currSheetWeekdayIndices[k];
-                weekdayIndices.emplace_back(std::make_tuple(currentDoc, currentSheet, currentLineSeries, currentFreq));
+                //weekdayIndices.emplace_back(std::make_tuple(currentDoc, currentSheet, currentLineSeries, currentFreq));
+                weekdayIndices.emplace_back(std::make_tuple(currentDoc, currentSheet, currentLineSeries));
             }
         }
     }
 
     if(weekdayIndices.size() == 0) {
         QMessageBox::warning(this, tr("No se puede generar el diagrama."),
-                  tr("No se han encontrado datos para el dia indicado."),
+                  tr("No se han encontrado datos para el día indicado."),
                   QMessageBox::Ok);
         return result;
     }
@@ -578,8 +591,8 @@ int MainWindow::generateSectorWeekdayDiagram() {
         int currSheetIndex = std::get<1>(weekdayIndices[i]);
         int currLineSeriesIndex = std::get<2>(weekdayIndices[i]);
         displayedSeries.append(new QLineSeries());
-    //    displayedSeries[i]->setName(
-    //            documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[weekdayIndices[i]]->name());
+        displayedSeries[i]->setName(
+                documents[currDocIndex].sheets[currSheetIndex]->measurementSeries[currLineSeriesIndex]->name());
         QVector<QPointF> dataPoints =
             documents[currDocIndex].sheets[currSheetIndex]->measurementSeries[currLineSeriesIndex]->pointsVector();
         for(int j = 0; j < dataPoints.size(); ++j) {
@@ -587,12 +600,20 @@ int MainWindow::generateSectorWeekdayDiagram() {
         }
     }
 
+    if(dataNeedsTransformation) {
+
+        // data will always be tranformed to 15 min ticks
+        displayedSeries = transformAllTo15MinTicks(displayedSeries);
+        if(displayedSeries.size() == 0) {
+            return result;
+        }
+    }
 
     if(visType == 1) {
-        //displayedSeries = getAverageFromSeries(displayedSeries, documents[selectedDocIndex].docFreq, false);
-        qDebug() << "Method not implemented for this case";
+        displayedSeries = getAverageFromSeries(displayedSeries, currentFreq, false);
+        //qDebug() << "Method not implemented for this case";
     } else if(visType == 2) {
-        //displayedSeries = getAverageFromSeries(displayedSeries, documents[selectedDocIndex].docFreq, true);
+        displayedSeries = getAverageFromSeries(displayedSeries, currentFreq, true);
     }
 
     for(int i = 0; i < displayedSeries.size(); ++i) {
@@ -621,6 +642,53 @@ int MainWindow::generateSectorWeekdayDiagram() {
 
     return result;
 }
+
+QList<QLineSeries*> MainWindow::transformAllTo15MinTicks(QList<QLineSeries*> &oldLineSeries) {
+    QList<QLineSeries*> newLineSeries;
+
+    // assumption: each lineSeries has at least 2 points
+    for(int i = 0; i < oldLineSeries.size(); ++i) {
+        double x0 = oldLineSeries[i]->at(0).x();
+        double x1 = oldLineSeries[i]->at(1).x();
+        if((x1 - x0) == 0.25) {
+
+            // lineSeries has already tick of 15 min, copy it to new line series list
+            newLineSeries.append(new QLineSeries());
+            for(int j = 0; j < oldLineSeries[i]->count(); ++j) {
+                double xVal = oldLineSeries[i]->at(j).x();
+                double yVal = oldLineSeries[i]->at(j).y();
+                newLineSeries[i]->append(xVal, yVal);
+                newLineSeries[i]->setName(oldLineSeries[i]->name());
+            }
+        } else {
+            newLineSeries.append(new QLineSeries());
+            for(int j = 1; j < oldLineSeries[i]->count(); ++j) {
+                double yDelta = oldLineSeries[i]->at(j).y() - oldLineSeries[i]->at(j-1).y();
+                double xValFirst = oldLineSeries[i]->at(j-1).x();
+                double yValFirst = oldLineSeries[i]->at(j-1).y();
+                newLineSeries[i]->append(xValFirst, yValFirst);
+                newLineSeries[i]->append(xValFirst + 0.25, yValFirst + 0.25 * yDelta);
+                newLineSeries[i]->append(xValFirst + 0.5, yValFirst + 0.5 * yDelta);
+                newLineSeries[i]->append(xValFirst + 0.75, yValFirst + 0.75 * yDelta);
+                if(j == (oldLineSeries[i]->count() - 1)) {
+                    double xValLast = oldLineSeries[i]->at(j-1).x();
+                    double yValLast = oldLineSeries[i]->at(j-1).y();
+                    newLineSeries[i]->append(xValLast, yValLast);
+                }
+            }
+            newLineSeries[i]->setName(oldLineSeries[i]->name());
+        }
+    }
+
+    // delete old line series
+    for(int i = 0; i < oldLineSeries.size(); ++i) {
+        delete oldLineSeries[i];
+    }
+    oldLineSeries.clear();
+
+    return newLineSeries;
+}
+
 /* commented out for testing, use it later again (method to find same dates on selected category)
 
     // get date and categories to be visualized in the diagram
@@ -736,6 +804,30 @@ void MainWindow::displayDiagramDataAsText() {
             ui->textEditDisplayDiagram->append(currentPoint);
         }
         ui->textEditDisplayDiagram->append("");
+    }
+}
+
+void MainWindow::displayDocumentDataAsText(int selectedFile) {
+    ui->textEditDisplayDocument->clear();
+    if(selectedFile >= 0) {
+        QString documentName = documents[selectedFile].docName;
+        ui->textEditDisplayDocument->append(documentName + "\n");
+
+        for(unsigned int i = 0; i < documents[selectedFile].sheets.size(); ++i) {
+            QString currentSheetName = documents[selectedFile].sheets[i]->sheetName;
+            ui->textEditDisplayDocument->append(currentSheetName);
+            QString xAxisLabel = documents[selectedFile].sheets[i]->xAxisLabel;
+            QString yAxisLabel = documents[selectedFile].sheets[i]->yAxisLabel;
+            ui->textEditDisplayDocument->append("Fecha " + xAxisLabel + " " + yAxisLabel);
+            for(unsigned int j = 0; j < documents[selectedFile].sheets[i]->allDays.size(); ++j) {
+                QString currentDay = documents[selectedFile].sheets[i]->allDays[j].toString();
+                QString currentTime = documents[selectedFile].sheets[i]->timestamps[j].toString();
+                QString currentValue = documents[selectedFile].sheets[i]->measurements[j].toString();
+                ui->textEditDisplayDocument->append(currentDay + " " + currentTime + " " + currentValue);
+            }
+            ui->textEditDisplayDocument->append("\n");
+        }
+        ui->textEditDisplayDocument->scrollToAnchor(documentName);
     }
 }
 

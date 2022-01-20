@@ -15,6 +15,7 @@ QXLSX_SOURCEPATH=./QXlsx/source/  # current QXlsx source path is ./source/
 include(./QXlsx/QXlsx.pri)
 
 SOURCES += \
+    enumerations.cpp \
     main.cpp \
     mainwindow.cpp \
     measurements.cpp \

@@ -73,15 +73,9 @@ struct Categories {
 };
 
 namespace enumerations {
-    inline QString getStringFromFreq(int freq) {
-        QString freqString = "";
-        if(freq == 0) {
-            freqString = "15 min";
-        } else if(freq == 1) {
-            freqString = "1 h";
-        }
-        return freqString;
-    }
+    QString getStringFromSector(int);
+    QString getStringFromSubSector(int, int);
+    QString getStringFromFreq(int);
 }
 
 #endif // ENUMERATIONS_H

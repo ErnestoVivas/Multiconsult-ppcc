@@ -44,6 +44,9 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+signals:
+    void updateTextEditDocumentData(int);
+
 private:
 
     // gui
@@ -73,6 +76,7 @@ private:
     bool compareDates(QDate&, QString&, DateFormat&, bool&);
     std::vector<int> findWeekdays(int&, int&, int&);
     QList<QLineSeries*> getAverageFromSeries(QList<QLineSeries*>&, Frequency, bool);
+    QList<QLineSeries*> transformAllTo15MinTicks(QList<QLineSeries*>&);
     void displayDiagramDataAsText();
 
 private slots:
@@ -87,7 +91,8 @@ private slots:
     void getFileCategories(int);
     void setFileCategory(int);
     void setFileSubCategory(int);
-    void setFileFreq(int);          // currently not used
+    void displayDocumentDataAsText(int);
+    //void setFileFreq(int);          // currently not used
 
     //int generateClassifiedDiagram();
 
