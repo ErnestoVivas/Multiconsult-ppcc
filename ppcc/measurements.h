@@ -1,3 +1,10 @@
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+//  Author: Ernesto Vivas, Multiconsult Nicaragua
+//  Date: January 2022
+//
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 #ifndef MEASUREMENTS_H
 #define MEASUREMENTS_H
 

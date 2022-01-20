@@ -20,6 +20,7 @@ SOURCES += \
     mainwindow.cpp \
     measurements.cpp \
     sectordayanalysis.cpp \
+    sectorweekanalysis.cpp \
     setcategoriesdialog.cpp \
     simplediagramfunction.cpp \
     siteanalysis.cpp
@@ -29,6 +30,7 @@ HEADERS += \
     mainwindow.h \
     measurements.h \
     sectordayanalysis.h \
+    sectorweekanalysis.h \
     setcategoriesdialog.h \
     simplediagramfunction.h \
     siteanalysis.h
@@ -36,6 +38,7 @@ HEADERS += \
 FORMS += \
     mainwindow.ui \
     sectordayanalysis.ui \
+    sectorweekanalysis.ui \
     setcategoriesdialog.ui \
     simplediagramfunction.ui \
     siteanalysis.ui

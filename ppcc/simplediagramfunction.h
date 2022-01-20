@@ -1,3 +1,10 @@
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+//  Author: Ernesto Vivas, Multiconsult Nicaragua
+//  Date: January 2022
+//
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 #ifndef SIMPLEDIAGRAMFUNCTION_H
 #define SIMPLEDIAGRAMFUNCTION_H
 

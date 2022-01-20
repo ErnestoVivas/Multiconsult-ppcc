@@ -5,8 +5,8 @@
 //
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#ifndef SECTORDAYANALYSIS_H
-#define SECTORDAYANALYSIS_H
+#ifndef SECTORWEEKANALYSIS_H
+#define SECTORWEEKANALYSIS_H
 
 #include <QWidget>
 #include <QButtonGroup>
@@ -14,24 +14,23 @@
 #include "enumerations.h"
 
 namespace Ui {
-class SectorDayAnalysis;
+class SectorWeekAnalysis;
 }
 
-class SectorDayAnalysis : public QWidget
+class SectorWeekAnalysis : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit SectorDayAnalysis(QWidget *parent = nullptr);
-    ~SectorDayAnalysis();
+    explicit SectorWeekAnalysis(QWidget *parent = nullptr);
+    ~SectorWeekAnalysis();
 
     int getSelectedSector();
     int getSelectedSubCat();
-    int getDay();
     int getVisType();
 
 private:
-    Ui::SectorDayAnalysis *ui;
+    Ui::SectorWeekAnalysis *ui;
     QButtonGroup visualizationGroup;
 
     Categories selectedCategories;
@@ -42,4 +41,4 @@ private slots:
     void updateSelectSubCatComboBox(int);
 };
 
-#endif // SECTORDAYANALYSIS_H
+#endif // SECTORWEEKANALYSIS_H

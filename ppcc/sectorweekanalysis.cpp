@@ -5,37 +5,28 @@
 //
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#include "sectordayanalysis.h"
-#include "ui_sectordayanalysis.h"
+#include "sectorweekanalysis.h"
+#include "ui_sectorweekanalysis.h"
 
-SectorDayAnalysis::SectorDayAnalysis(QWidget *parent) :
-    QWidget(parent), ui(new Ui::SectorDayAnalysis) {
+SectorWeekAnalysis::SectorWeekAnalysis(QWidget *parent) :
+    QWidget(parent), ui(new Ui::SectorWeekAnalysis) {
     ui->setupUi(this);
 
-    visualizationGroup.addButton(ui->radioButtonComparison, 0);
+    visualizationGroup.addButton(ui->radioButtonAverageDisag, 0);
     visualizationGroup.addButton(ui->radioButtonAverage, 1);
-    visualizationGroup.addButton(ui->radioButtonSum, 2);
-    ui->radioButtonComparison->setChecked(true);
+    ui->radioButtonAverageDisag->setChecked(true);
 
     this->setupComboBoxSector();
     this->updateSelectSubCatComboBox(0);
 
-    ui->comboBoxSelectDay->addItem("Lunes");
-    ui->comboBoxSelectDay->addItem("Martes");
-    ui->comboBoxSelectDay->addItem("Miercoles");
-    ui->comboBoxSelectDay->addItem("Jueves");
-    ui->comboBoxSelectDay->addItem("Viernes");
-    ui->comboBoxSelectDay->addItem("Sabado");
-    ui->comboBoxSelectDay->addItem("Domingo");
-
     connect(ui->comboBoxSelectSector, SIGNAL(currentIndexChanged(int)), this, SLOT(updateSelectSubCatComboBox(int)));
 }
 
-SectorDayAnalysis::~SectorDayAnalysis() {
+SectorWeekAnalysis::~SectorWeekAnalysis() {
     delete ui;
 }
 
-void SectorDayAnalysis::setupComboBoxSector() {
+void SectorWeekAnalysis::setupComboBoxSector() {
     ui->comboBoxSelectSector->addItem("Residencial");
     ui->comboBoxSelectSector->addItem("Comercial");
     ui->comboBoxSelectSector->addItem("Industrial");
@@ -43,7 +34,7 @@ void SectorDayAnalysis::setupComboBoxSector() {
     ui->comboBoxSelectSector->addItem("Alumbrado público");
 }
 
-void SectorDayAnalysis::updateSelectSubCatComboBox(int sectorIndex) {
+void SectorWeekAnalysis::updateSelectSubCatComboBox(int sectorIndex) {
     ui->comboBoxSelectSubCategory->clear();
     if(sectorIndex == 0) {
         ui->comboBoxSelectSubCategory->addItem("50 kWh/mes");
@@ -71,18 +62,14 @@ void SectorDayAnalysis::updateSelectSubCatComboBox(int sectorIndex) {
     }
 }
 
-int SectorDayAnalysis::getSelectedSector() {
+int SectorWeekAnalysis::getSelectedSector() {
     return ui->comboBoxSelectSector->currentIndex();
 }
 
-int SectorDayAnalysis::getSelectedSubCat() {
+int SectorWeekAnalysis::getSelectedSubCat() {
     return ui->comboBoxSelectSubCategory->currentIndex();
 }
 
-int SectorDayAnalysis::getDay() {
-    return ui->comboBoxSelectDay->currentIndex();
-}
-
-int SectorDayAnalysis::getVisType() {
+int SectorWeekAnalysis::getVisType() {
     return visualizationGroup.checkedId();
 }

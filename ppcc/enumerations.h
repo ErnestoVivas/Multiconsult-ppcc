@@ -76,6 +76,7 @@ namespace enumerations {
     QString getStringFromSector(int);
     QString getStringFromSubSector(int, int);
     QString getStringFromFreq(int);
+    QString getStringFromDay(int);
 }
 
 #endif // ENUMERATIONS_H

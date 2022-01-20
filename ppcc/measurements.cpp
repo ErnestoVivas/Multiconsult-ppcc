@@ -1,3 +1,10 @@
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+//  Author: Ernesto Vivas, Multiconsult Nicaragua
+//  Date: January 2022
+//
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 #include "measurements.h"
 
 SheetData::SheetData() {

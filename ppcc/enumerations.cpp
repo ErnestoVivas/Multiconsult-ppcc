@@ -1,3 +1,10 @@
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+//  Author: Ernesto Vivas, Multiconsult Nicaragua
+//  Date: January 2022
+//
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 #include "enumerations.h"
 
 QString enumerations::getStringFromSector(int sector) {
@@ -76,4 +83,24 @@ QString enumerations::getStringFromFreq(int freq) {
         freqString = "1 h";
     }
     return freqString;
+}
+
+QString enumerations::getStringFromDay(int day) {
+    QString dayString = "";
+    if(day == 1) {
+        dayString = "lunes";
+    } else if(day == 2) {
+        dayString = "martes";
+    } else if(day == 3) {
+        dayString = "miércoles";
+    } else if(day == 4) {
+        dayString = "jueves";
+    } else if(day == 5) {
+        dayString = "viernes";
+    } else if(day == 6) {
+        dayString = "sábado";
+    } else if(day == 7) {
+        dayString = "domingo";
+    }
+    return dayString;
 }

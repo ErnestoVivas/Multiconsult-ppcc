@@ -1,3 +1,10 @@
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+//  Author: Ernesto Vivas, Multiconsult Nicaragua
+//  Date: January 2022
+//
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -22,6 +29,7 @@
 #include "simplediagramfunction.h"
 #include "siteanalysis.h"
 #include "sectordayanalysis.h"
+#include "sectorweekanalysis.h"
 #include "xlsxdocument.h"
 //#include "QXlsx/header/xlsxdocument.h"
 //#include "QXlsx/header/xlsxchartsheet.h"
@@ -56,6 +64,7 @@ private:
     SimpleDiagramFunction* simpleDiagramFunction;
     SiteAnalysis* siteAnalysis;
     SectorDayAnalysis* sectorDayAnalysis;
+    SectorWeekAnalysis* sectorWeekAnalysis;
 
     // chart parameters
     QValueAxis* xAxis;
@@ -107,6 +116,7 @@ private slots:
     int generateSimpleDiagram();
     int generateSiteAnalysisDiagram();
     int generateSectorWeekdayDiagram();
+    int generateSectorWeekDiagram();
 };
 
 #endif // MAINWINDOW_H

@@ -1,3 +1,10 @@
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+//  Author: Ernesto Vivas, Multiconsult Nicaragua
+//  Date: January 2022
+//
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -15,12 +22,15 @@ MainWindow::MainWindow(QWidget *parent):
     simpleDiagramFunction = new SimpleDiagramFunction(this);
     siteAnalysis = new SiteAnalysis(this);
     sectorDayAnalysis = new SectorDayAnalysis(this);
+    sectorWeekAnalysis = new SectorWeekAnalysis(this);
     ui->stackedWidgetDiagramFunctions->addWidget(simpleDiagramFunction);
     ui->stackedWidgetDiagramFunctions->addWidget(siteAnalysis);
     ui->stackedWidgetDiagramFunctions->addWidget(sectorDayAnalysis);
+    ui->stackedWidgetDiagramFunctions->addWidget(sectorWeekAnalysis);
     ui->comboBoxSelectFunction->addItem("Diagrama simple");
     ui->comboBoxSelectFunction->addItem("Diagrama de sitio y día de semana");
     ui->comboBoxSelectFunction->addItem("Diagrama de sector y dia de semana");
+    ui->comboBoxSelectFunction->addItem("Diagrama de sector y semana laboral");
 
     // set pointers and smart pointers for correct resource management
     this->measurementsChart = std::make_shared<QChart>();
@@ -184,6 +194,8 @@ void MainWindow::selectFunction(int functionIndex) {
         ui->stackedWidgetDiagramFunctions->setCurrentWidget(siteAnalysis);
     } else if(functionIndex == 2) {
         ui->stackedWidgetDiagramFunctions->setCurrentWidget(sectorDayAnalysis);
+    } else if(functionIndex == 3) {
+        ui->stackedWidgetDiagramFunctions->setCurrentWidget(sectorWeekAnalysis);
     }
 }
 
@@ -258,6 +270,7 @@ int MainWindow::generateSimpleDiagram() {
     return returnVal;
 }
 
+
 int MainWindow::generateSiteAnalysisDiagram() {
     int result = -1;
 
@@ -304,7 +317,7 @@ int MainWindow::generateSiteAnalysisDiagram() {
         }
     }
 
-    QString diagramTitle = "Consumo diario de energía";
+    QString diagramTitle = "Consumo de energía días " + enumerations::getStringFromDay(selectedDay);
     if(visType == 1) {
         displayedSeries = getAverageFromSeries(displayedSeries, documents[selectedDocIndex].docFreq, false);
         diagramTitle = "Promedio del consumo diario de energía";
@@ -471,8 +484,10 @@ QList<QLineSeries*> MainWindow::getAverageFromSeries(QList<QLineSeries*> &oldLin
         // calculate average value or sum for each point and append it to new line series
         for(unsigned int i = 0; i < gridPointsValueSum.size(); ++i) {
             if(!sum) {
-                double currentAverageValue = gridPointsValueSum[i] / gridPointsAndCount[i].second;
-                newLineSeries[0]->append(gridPointsAndCount[i].first, currentAverageValue);
+                if(gridPointsAndCount[i].second != 0) {                 // avoid division by 0
+                    double currentAverageValue = gridPointsValueSum[i] / gridPointsAndCount[i].second;
+                    newLineSeries[0]->append(gridPointsAndCount[i].first, currentAverageValue);
+                }
             } else {
                 newLineSeries[0]->append(gridPointsAndCount[i].first, gridPointsValueSum[i]);
             }
@@ -579,10 +594,6 @@ int MainWindow::generateSectorWeekdayDiagram() {
     measurementsChart.reset();
     this->measurementsChart = std::make_shared<QChart>();
 
-
-    // TODO: Prepare Series for different Frequencies!!!!!!!!!!!
-    // CURRENTLY: Segfault if Series do not have the same Frequency
-
     // copy by value corresponding series from sheets to current displayed series
     for(unsigned short i = 0; i < weekdayIndices.size(); ++i) {
 
@@ -687,6 +698,172 @@ QList<QLineSeries*> MainWindow::transformAllTo15MinTicks(QList<QLineSeries*> &ol
     oldLineSeries.clear();
 
     return newLineSeries;
+}
+
+int MainWindow::generateSectorWeekDiagram() {
+    int result = -1;
+
+    // get categories and visualization type
+    int sector = sectorWeekAnalysis->getSelectedSector();
+    int subCat = sectorWeekAnalysis->getSelectedSubCat();
+    int visType = sectorWeekAnalysis->getVisType();
+
+    // find measurementDocs corresponding to the selected Category and store indices
+    std::vector<int> correctFileIndices;
+    for(unsigned int i = 0; i < this->documents.size(); ++i) {
+        if((documents[i].docSector == sector) && (documents[i].getSubCategory() == subCat)) {
+            correctFileIndices.emplace_back(i);
+        }
+    }
+
+    // check if all measurements have the same frequency; if not data needs to be prepared later
+    bool dataNeedsTransformation = false;
+    Frequency currentFreq;
+    if(correctFileIndices.size() >= 1) {
+        currentFreq = documents[correctFileIndices[0]].docFreq;
+    } else {
+        QMessageBox::warning(this, tr("No se puede generar el diagrama."),
+                  tr("No se han encontrado datos para las categorías indicadas."),
+                  QMessageBox::Ok);
+        return result;
+    }
+    for(unsigned int i = 0; i < correctFileIndices.size(); ++i) {
+        if(documents[correctFileIndices[i]].docFreq != currentFreq) {
+            currentFreq = Frequency::quarterHour;
+            dataNeedsTransformation = true;
+            qDebug() << "Data needs transformation.";
+            break;
+        }
+    }
+
+    // find the corresponding weekdays in the corresponding files
+    std::vector<std::vector<std::tuple<int, int, int> > > weekdayIndices;
+    weekdayIndices.resize(5);
+    int currentDoc;
+    int currentSheet;
+    int currentLineSeries;
+    //int currentFreq;
+    for(unsigned int i = 0; i < correctFileIndices.size(); ++i) {
+        for(unsigned int j = 0; j < documents[correctFileIndices[i]].sheets.size(); ++j) {
+            currentDoc = correctFileIndices[i];
+            currentSheet = j;
+            //currentFreq = documents[correctFileIndices[i]].docFreq;
+            for(int k = 0; k < 5; ++k) {
+                int weekDay = k + 1;
+                std::vector<int> currSheetWeekdayIndices = findWeekdays(weekDay, correctFileIndices[i], currentSheet);
+                for(unsigned int l = 0; l < currSheetWeekdayIndices.size(); ++l) {
+                    currentLineSeries = currSheetWeekdayIndices[l];
+                    weekdayIndices[k].emplace_back(std::make_tuple(currentDoc, currentSheet, currentLineSeries));
+                }
+            }
+        }
+    }
+
+    qDebug() << "I am here";
+
+    //for(int i = 0; i < 5; ++i) {
+    //    if(weekdayIndices[i].size() == 0) {
+    //        QMessageBox::warning(this, tr("No se puede generar el diagrama."),
+    //                  tr("No se han encontrado datos para los días indicados."),
+    //                  QMessageBox::Ok);
+    //        return result;
+    //    }
+    //}
+
+
+    // set to AuxChart while updating main chart
+    ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
+
+    // delete QLineSeries from old chart, empty series list
+    for(int i = 0; i < this->displayedSeries.size(); ++i) {
+        displayedSeries[i]->detachAxis(xAxis);
+        delete displayedSeries[i];
+    }
+    displayedSeries.clear();
+
+    // reset measurementsChart to create new clean chart
+    measurementsChart->removeAxis(xAxis);
+    measurementsChart.reset();
+    this->measurementsChart = std::make_shared<QChart>();
+
+    // setup line series for each day
+    QVector<QList<QLineSeries*> > weekdaySeries;
+    weekdaySeries.resize(5);
+
+    // copy by value corresponding series from sheets to the 5 current weekday line series
+    for(int i = 0; i < 5; ++i) {
+        for(unsigned short j = 0; j < weekdayIndices[i].size(); ++j) {
+
+            // get indices
+            int currDocIndex = std::get<0>(weekdayIndices[i][j]);
+            int currSheetIndex = std::get<1>(weekdayIndices[i][j]);
+            int currLineSeriesIndex = std::get<2>(weekdayIndices[i][j]);
+            weekdaySeries[i].append(new QLineSeries());
+            weekdaySeries[i][j]->setName(
+                    documents[currDocIndex].sheets[currSheetIndex]->measurementSeries[currLineSeriesIndex]->name());
+            QVector<QPointF> dataPoints =
+                documents[currDocIndex].sheets[currSheetIndex]->measurementSeries[currLineSeriesIndex]->pointsVector();
+            for(int k = 0; k < dataPoints.size(); ++k) {
+                weekdaySeries[i][j]->append(dataPoints[k]);
+            }
+        }
+    }
+
+    if(dataNeedsTransformation) {
+
+        // data will always be tranformed to 15 min ticks
+        for(int i = 0; i < 5; ++i) {
+            weekdaySeries[i] = transformAllTo15MinTicks(weekdaySeries[i]);
+            if(weekdaySeries[i].size() == 0) {
+                return result;
+            }
+        }
+    }
+
+    // calculate average of each weekday
+    for(int i = 0; i < 5; ++i) {
+        weekdaySeries[i] = getAverageFromSeries(weekdaySeries[i], currentFreq, false);
+    }
+
+    // copy by value to displayedSeries
+    for(int i = 0; i < 5; ++i) {
+        displayedSeries.append(new QLineSeries());
+        QVector<QPointF> dataPoints = weekdaySeries[i][0]->pointsVector();
+        for(int j = 0; j < dataPoints.size(); ++j) {
+            displayedSeries[i]->append(dataPoints[j]);
+        }
+    }
+
+    if(visType == 1) {
+        displayedSeries = getAverageFromSeries(displayedSeries, currentFreq, false);
+        //qDebug() << "Method not implemented for this case";
+    }
+
+    for(int i = 0; i < displayedSeries.size(); ++i) {
+        measurementsChart->addSeries(displayedSeries[i]);
+    }
+
+    // setup axes
+    xAxis->setTitleText("Hora");
+    measurementsChart->createDefaultAxes();
+    QList<QAbstractAxis*> defaultChartAxes = measurementsChart->axes();
+    measurementsChart->removeAxis(defaultChartAxes[0]);
+    defaultChartAxes[1]->setTitleText("kW");
+    measurementsChart->addAxis(xAxis, Qt::AlignBottom);
+    for(int i = 0; i < displayedSeries.size(); ++i) {
+        displayedSeries[i]->attachAxis(xAxis);
+    }
+
+    // setup and display chart
+    measurementsChart->legend()->setVisible(true);
+    measurementsChart->legend()->setAlignment(Qt::AlignBottom);
+    measurementsChart->setTitle("Promedio del consumo de energia durante días laborales");
+    ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
+    ui->graphicsViewChart->setChart(measurementsChart.get());
+    this->displayDiagramDataAsText();
+    result = 0;
+
+    return result;
 }
 
 /* commented out for testing, use it later again (method to find same dates on selected category)
@@ -874,6 +1051,8 @@ int MainWindow::generateDiagram() {
         this->generateSiteAnalysisDiagram();
     } else if(selectedFunction == 2) {
         this->generateSectorWeekdayDiagram();
+    } else if(selectedFunction == 3) {
+        this->generateSectorWeekDiagram();
     }
     return 0;
 }
