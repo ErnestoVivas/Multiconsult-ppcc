@@ -21,6 +21,7 @@ public:
     int selectedDocIndex;
     int selectedSheetIndex;
     void updateSheetList(const QString&);
+    void removeDocument(int);
     int getDay();
     int getVisType();
 

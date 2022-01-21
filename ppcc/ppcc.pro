@@ -16,6 +16,7 @@ include(./QXlsx/QXlsx.pri)
 
 SOURCES += \
     enumerations.cpp \
+    exportdiagramdialog.cpp \
     main.cpp \
     mainwindow.cpp \
     measurements.cpp \
@@ -27,6 +28,7 @@ SOURCES += \
 
 HEADERS += \
     enumerations.h \
+    exportdiagramdialog.h \
     mainwindow.h \
     measurements.h \
     sectordayanalysis.h \
@@ -36,6 +38,7 @@ HEADERS += \
     siteanalysis.h
 
 FORMS += \
+    exportdiagramdialog.ui \
     mainwindow.ui \
     sectordayanalysis.ui \
     sectorweekanalysis.ui \

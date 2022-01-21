@@ -81,7 +81,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Promedio</string>
+     <string>Promedio total</string>
     </property>
    </widget>
   </widget>

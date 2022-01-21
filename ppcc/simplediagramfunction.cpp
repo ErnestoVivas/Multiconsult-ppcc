@@ -38,6 +38,10 @@ std::vector<int> SimpleDiagramFunction::getSelectedDays() {
     return selectedDaysIndices;
 }
 
+void SimpleDiagramFunction::removeDocument(int docToRemove) {
+    ui->comboBoxSelectDoc->removeItem(docToRemove);
+}
+
 void SimpleDiagramFunction::clearSheetList(int newDocIndex) {
     ui->comboBoxSelectSheet->clear();
     this->selectedDocIndex = newDocIndex;

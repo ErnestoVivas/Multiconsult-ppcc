@@ -8,6 +8,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+// Qt library
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QPixmap>
@@ -20,17 +21,24 @@
 #include <QtCharts/QLineSeries>
 #include <QDate>
 #include <QDebug>
+#include <QFile>
+#include <QTextStream>
+
+// C++ STL
 #include <vector>
 #include <tuple>
 #include <memory>
 
+// custom classes, widgets
 #include "measurements.h"
 #include "setcategoriesdialog.h"
 #include "simplediagramfunction.h"
 #include "siteanalysis.h"
 #include "sectordayanalysis.h"
 #include "sectorweekanalysis.h"
+#include "exportdiagramdialog.h"
 #include "xlsxdocument.h"
+
 //#include "QXlsx/header/xlsxdocument.h"
 //#include "QXlsx/header/xlsxchartsheet.h"
 //#include "QXlsx/header/xlsxcellrange.h"
@@ -80,6 +88,8 @@ private:
     // file management functions (not used as slots)
     void setupComboBoxesFileCategories();
     void readDocument(QXlsx::Document*);
+    void saveAsExcel(QString&);
+    void saveAsCSV(QString&);
 
     // sub functions for diagram generation
     bool compareDates(QDate&, QString&, DateFormat&, bool&);
@@ -95,12 +105,14 @@ private slots:
 
     // file management functions
     void importDocument();
+    void exportDiagram();
     void saveDiagram();
     void updateFileSubCatComboBox(int);
     void getFileCategories(int);
     void setFileCategory(int);
     void setFileSubCategory(int);
     void displayDocumentDataAsText(int);
+    void removeDocument();
     //void setFileFreq(int);          // currently not used
 
     //int generateClassifiedDiagram();

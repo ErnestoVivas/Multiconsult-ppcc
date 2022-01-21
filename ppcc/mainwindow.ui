@@ -221,6 +221,19 @@
       <enum>Qt::NoFocus</enum>
      </property>
     </widget>
+    <widget class="QPushButton" name="buttonRemoveDocument">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>470</y>
+       <width>141</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Quitar</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QTextEdit" name="textEditDisplayDiagram">
     <property name="geometry">

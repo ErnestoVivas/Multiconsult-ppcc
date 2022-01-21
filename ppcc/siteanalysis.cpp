@@ -36,6 +36,11 @@ void SiteAnalysis::updateSheetList(const QString& newSheetEntry) {
     ui->comboBoxSelectSheet->addItem(newSheetEntry);
 }
 
+void SiteAnalysis::removeDocument(int docToRemove) {
+    ui->comboBoxSelectDoc->removeItem(docToRemove);
+}
+
+
 int SiteAnalysis::getDay() {
     return ui->comboBoxSelectDay->currentIndex();
 }

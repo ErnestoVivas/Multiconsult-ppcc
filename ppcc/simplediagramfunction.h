@@ -32,6 +32,7 @@ public:
     void addEntryComboBoxSelectDoc(const QString&);
     void updateSheetList(const QString&);
     void updateDays(const QString&);
+    void removeDocument(int);
     std::vector<int> getSelectedDays();
 
 
