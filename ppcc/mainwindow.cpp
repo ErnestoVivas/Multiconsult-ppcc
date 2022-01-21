@@ -125,7 +125,7 @@ void MainWindow::updateFileSubCatComboBox(int sectorIndex) {
     } else if(sectorIndex == 2) {
         ui->comboBoxFileSubCat->addItem("Alimentos y bebidas");
         ui->comboBoxFileSubCat->addItem("Papel, cartón");
-        ui->comboBoxFileSubCat->addItem("Caucho, plastico");
+        ui->comboBoxFileSubCat->addItem("Caucho, plástico");
         ui->comboBoxFileSubCat->addItem("Quimica");
         ui->comboBoxFileSubCat->addItem("Textil");
         ui->comboBoxFileSubCat->addItem("Otros");
@@ -133,15 +133,20 @@ void MainWindow::updateFileSubCatComboBox(int sectorIndex) {
 }
 
 void MainWindow::getFileCategories(int selectedFile) {
-    int sector = documents[selectedFile].docSector;
-    int subCat = documents[selectedFile].getSubCategory();
-    int freq = documents[selectedFile].docFreq;
-    QString freqString = enumerations::getStringFromFreq(freq);
-    ui->comboBoxFileCat->setCurrentIndex(sector);
-    ui->comboBoxFileSubCat->setCurrentIndex(subCat);
-    ui->lineEditFileFreq->setText(freqString);
-    this->fileManagerSelectedFile = selectedFile;
-    //emit updateTextEditDocumentData(selectedFile);
+    if(selectedFile >= 0) {
+        int sector = documents[selectedFile].docSector;
+        int subCat = documents[selectedFile].getSubCategory();
+        int freq = documents[selectedFile].docFreq;
+        QString freqString = enumerations::getStringFromFreq(freq);
+        ui->comboBoxFileCat->setCurrentIndex(sector);
+        ui->comboBoxFileSubCat->setCurrentIndex(subCat);
+        ui->lineEditFileFreq->setText(freqString);
+        this->fileManagerSelectedFile = selectedFile;
+        //emit updateTextEditDocumentData(selectedFile);
+    } else {
+        ui->lineEditFileFreq->setText("");
+        ui->comboBoxFileCat->setCurrentIndex(0);
+    }
 }
 
 void MainWindow::setFileCategory(int newSector) {

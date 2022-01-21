@@ -37,7 +37,7 @@
    </property>
    <property name="text">
     <string>Imágen
-(*.csv)</string>
+(*.png)</string>
    </property>
   </widget>
   <widget class="QPushButton" name="buttonExcel">
@@ -65,8 +65,8 @@ Excel
     </rect>
    </property>
    <property name="text">
-    <string>Archivo
-CSV (*.csv)</string>
+    <string>Archivo CSV
+(*.csv)</string>
    </property>
   </widget>
  </widget>
