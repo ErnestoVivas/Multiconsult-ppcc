@@ -119,9 +119,10 @@ private slots:
 
     // Functions to communicate with diagram function widgets
     void selectFunction(int);
-    void updateSheetListSimpleDiagramFunction(int);
-    void updateDaysSimpleDiagramFunction(int, int);
-    void updateSheetListSiteAnalysis(int);
+    //void updateSheetListSimpleDiagramFunction(int);
+    void updateDaysSimpleDiagramFunction(int);
+    //void updateDaysSimpleDiagramFunction(int, int);
+    //void updateSheetListSiteAnalysis(int);
 
     // Diagram generation functions
     int generateDiagram();

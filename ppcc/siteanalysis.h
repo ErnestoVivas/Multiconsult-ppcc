@@ -10,6 +10,7 @@
 
 #include <QWidget>
 #include <QButtonGroup>
+#include <QDebug>
 
 namespace Ui {
 class SiteAnalysis;
@@ -26,8 +27,8 @@ public:
     void addEntryComboBoxSelectDoc(const QString&);
 
     int selectedDocIndex;
-    int selectedSheetIndex;
-    void updateSheetList(const QString&);
+    //int selectedSheetIndex;                             // not used anymore
+    //void updateSheetList(const QString&);               // not used anymore
     void removeDocument(int);
     int getDay();
     int getVisType();
@@ -35,8 +36,8 @@ public:
     // signals and slots to communicate with the
     // main window and handle user inputs
 public slots:
-    void clearSheetList(int);
-    void setCurrentSheet(int);
+    //void clearSheetList(int);
+    void setCurrentDoc(int);
 
 signals:
     void selectedDocChanged(int);

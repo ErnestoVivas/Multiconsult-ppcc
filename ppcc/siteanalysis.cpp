@@ -4,6 +4,7 @@
 SiteAnalysis::SiteAnalysis(QWidget *parent) :
     QWidget(parent), ui(new Ui::SiteAnalysis) {
     ui->setupUi(this);
+    this->selectedDocIndex = -1;
 
     visualizationGroup.addButton(ui->radioButtonComparison, 0);
     visualizationGroup.addButton(ui->radioButtonAverage, 1);
@@ -18,8 +19,8 @@ SiteAnalysis::SiteAnalysis(QWidget *parent) :
     ui->comboBoxSelectDay->addItem("Sabado");
     ui->comboBoxSelectDay->addItem("Domingo");
 
-    connect(ui->comboBoxSelectDoc, SIGNAL(currentIndexChanged(int)), this, SLOT(clearSheetList(int)));
-    connect(ui->comboBoxSelectSheet, SIGNAL(currentIndexChanged(int)), this, SLOT(setCurrentSheet(int)));
+    connect(ui->comboBoxSelectDoc, SIGNAL(currentIndexChanged(int)), this, SLOT(setCurrentDoc(int)));
+    //connect(ui->comboBoxSelectSheet, SIGNAL(currentIndexChanged(int)), this, SLOT(setCurrentSheet(int)));
 }
 
 SiteAnalysis::~SiteAnalysis() {
@@ -32,9 +33,9 @@ void SiteAnalysis::addEntryComboBoxSelectDoc(const QString &newDocument) {
     ui->comboBoxSelectDoc->setCurrentIndex(lastItemIndex);
 }
 
-void SiteAnalysis::updateSheetList(const QString& newSheetEntry) {
-    ui->comboBoxSelectSheet->addItem(newSheetEntry);
-}
+//void SiteAnalysis::updateSheetList(const QString& newSheetEntry) {
+//    ui->comboBoxSelectSheet->addItem(newSheetEntry);
+//}
 
 void SiteAnalysis::removeDocument(int docToRemove) {
     ui->comboBoxSelectDoc->removeItem(docToRemove);
@@ -49,12 +50,12 @@ int SiteAnalysis::getVisType() {
     return visualizationGroup.checkedId();
 }
 
-void SiteAnalysis::clearSheetList(int newDocIndex) {
-    ui->comboBoxSelectSheet->clear();
-    this->selectedDocIndex = newDocIndex;
-    emit selectedDocChanged(newDocIndex);
-}
+//void SiteAnalysis::clearSheetList(int newDocIndex) {
+//    ui->comboBoxSelectSheet->clear();
+//    this->selectedDocIndex = newDocIndex;
+//    emit selectedDocChanged(newDocIndex);
+//}
 
-void SiteAnalysis::setCurrentSheet(int currentSheet) {
-    this->selectedSheetIndex = currentSheet;
+void SiteAnalysis::setCurrentDoc(int newDocIndex) {
+    this->selectedDocIndex = newDocIndex;
 }

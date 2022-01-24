@@ -23,7 +23,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Cómo desea exportar el diagrama?</string>
+    <string>Seleccione formato de exportación:</string>
    </property>
   </widget>
   <widget class="QPushButton" name="buttonImage">

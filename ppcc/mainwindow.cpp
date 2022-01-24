@@ -64,9 +64,9 @@ MainWindow::MainWindow(QWidget *parent):
 
     // functions
     connect(ui->comboBoxSelectFunction, SIGNAL(currentIndexChanged(int)), this, SLOT(selectFunction(int)));
-    connect(simpleDiagramFunction, SIGNAL(selectedDocChanged(int)), this, SLOT(updateSheetListSimpleDiagramFunction(int)));
-    connect(simpleDiagramFunction, SIGNAL(selectedSheetChanged(int, int)), this, SLOT(updateDaysSimpleDiagramFunction(int, int)));
-    connect(siteAnalysis, SIGNAL(selectedDocChanged(int)), this, SLOT(updateSheetListSiteAnalysis(int)));
+    connect(simpleDiagramFunction, SIGNAL(selectedDocChanged(int)), this, SLOT(updateDaysSimpleDiagramFunction(int)));
+    //connect(simpleDiagramFunction, SIGNAL(selectedSheetChanged(int, int)), this, SLOT(updateDaysSimpleDiagramFunction(int, int)));
+    //connect(siteAnalysis, SIGNAL(selectedDocChanged(int)), this, SLOT(updateSheetListSiteAnalysis(int)));
     connect(ui->buttonGenerateDiagram, SIGNAL(clicked()), this, SLOT(generateDiagram()));
     connect(ui->buttonExportDiagram, SIGNAL(clicked()), this, SLOT(exportDiagram()));
 }
@@ -213,7 +213,8 @@ int MainWindow::generateSimpleDiagram() {
     // get inputs from the user
     std::vector<int> selectedDaysIndices = simpleDiagramFunction->getSelectedDays();
     int selectedDocIndex = simpleDiagramFunction->selectedDocIndex;
-    int selectedSheetIndex = simpleDiagramFunction->selectedSheetIndex;
+    int selectedSheetIndex = 0;
+    //int selectedSheetIndex = simpleDiagramFunction->selectedSheetIndex; // not used anymore
 
     // update diagram only if there are valid entries
     if(selectedDaysIndices.size() > 0) {
@@ -287,77 +288,83 @@ int MainWindow::generateSiteAnalysisDiagram() {
     int selectedSheetIndex = 0;                        // update 24 jan: all documents have 1 sheet
     int selectedDay = siteAnalysis->getDay() + 1;      // to compare with QDate: 1=mon,...,7=sun
     int visType = siteAnalysis->getVisType();
-    std::vector<int> weekdayIndices = findWeekdays(selectedDay, selectedDocIndex, selectedSheetIndex);
 
-    if(weekdayIndices.size() == 0) {
-        QMessageBox::warning(this, tr("No se puede generar el diagrama."),
-                  tr("No se han encontrado datos para el día indicado."),
-                  QMessageBox::Ok);
-        return result;
-    }
+    if(selectedDocIndex >= 0) {
+        std::vector<int> weekdayIndices = findWeekdays(selectedDay, selectedDocIndex, selectedSheetIndex);
 
-    // set to AuxChart while updating main chart
-    ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
-
-
-    // delete QLineSeries from old chart, empty series list
-    for(int i = 0; i < this->displayedSeries.size(); ++i) {
-        displayedSeries[i]->detachAxis(xAxis);
-        delete displayedSeries[i];
-    }
-    displayedSeries.clear();
-
-    // reset measurementsChart to create new clean chart
-    measurementsChart->removeAxis(xAxis);
-    measurementsChart.reset();
-    this->measurementsChart = std::make_shared<QChart>();
-
-
-    // copy by value corresponding series from sheets to current displayed series
-    for(unsigned short i = 0; i < weekdayIndices.size(); ++i) {
-        displayedSeries.append(new QLineSeries());
-        displayedSeries[i]->setName(
-                documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[weekdayIndices[i]]->name());
-        QVector<QPointF> dataPoints =
-            documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[weekdayIndices[i]]->pointsVector();
-        for(int j = 0; j < dataPoints.size(); ++j) {
-            displayedSeries[i]->append(dataPoints[j]);
+        if(weekdayIndices.size() == 0) {
+            QMessageBox::warning(this, tr("No se puede generar el diagrama."),
+                      tr("No se han encontrado datos para el día indicado."),
+                      QMessageBox::Ok);
+            return result;
         }
+
+        // set to AuxChart while updating main chart
+        ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
+
+
+        // delete QLineSeries from old chart, empty series list
+        for(int i = 0; i < this->displayedSeries.size(); ++i) {
+            displayedSeries[i]->detachAxis(xAxis);
+            delete displayedSeries[i];
+        }
+        displayedSeries.clear();
+
+        // reset measurementsChart to create new clean chart
+        measurementsChart->removeAxis(xAxis);
+        measurementsChart.reset();
+        this->measurementsChart = std::make_shared<QChart>();
+
+
+        // copy by value corresponding series from sheets to current displayed series
+        for(unsigned short i = 0; i < weekdayIndices.size(); ++i) {
+            displayedSeries.append(new QLineSeries());
+            displayedSeries[i]->setName(
+                    documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[weekdayIndices[i]]->name());
+            QVector<QPointF> dataPoints =
+                documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[weekdayIndices[i]]->pointsVector();
+            for(int j = 0; j < dataPoints.size(); ++j) {
+                displayedSeries[i]->append(dataPoints[j]);
+            }
+        }
+
+        QString diagramTitle = "Consumo de energía días " + enumerations::getStringFromDay(selectedDay);
+        if(visType == 1) {
+            displayedSeries = getAverageFromSeries(displayedSeries, documents[selectedDocIndex].docFreq, false);
+            diagramTitle = "Promedio del consumo diario de energía";
+        } else if(visType == 2) {
+            displayedSeries = getAverageFromSeries(displayedSeries, documents[selectedDocIndex].docFreq, true);
+            diagramTitle = "Suma del consumo diario de energía";
+        }
+
+        for(int i = 0; i < displayedSeries.size(); ++i) {
+            measurementsChart->addSeries(displayedSeries[i]);
+        }
+
+        // configure axes
+        xAxis->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel);
+        measurementsChart->createDefaultAxes();
+        QList<QAbstractAxis*> defaultChartAxes = measurementsChart->axes();
+        measurementsChart->removeAxis(defaultChartAxes[0]);
+        defaultChartAxes[1]->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel);
+        measurementsChart->addAxis(xAxis, Qt::AlignBottom);
+        for(int i = 0; i < displayedSeries.size(); ++i) {
+            displayedSeries[i]->attachAxis(xAxis);
+        }
+
+        // setup and display chart
+        measurementsChart->legend()->setVisible(true);
+        measurementsChart->legend()->setAlignment(Qt::AlignBottom);
+        measurementsChart->setTitle(diagramTitle);
+        ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
+        ui->graphicsViewChart->setChart(measurementsChart.get());
+        this->displayDiagramDataAsText();
+        result = 0;
+    } else {
+        QMessageBox::information(this, tr("No se puede generar el diagrama."),
+                tr("No se han encontrado archivos."),
+                QMessageBox::Ok);
     }
-
-    QString diagramTitle = "Consumo de energía días " + enumerations::getStringFromDay(selectedDay);
-    if(visType == 1) {
-        displayedSeries = getAverageFromSeries(displayedSeries, documents[selectedDocIndex].docFreq, false);
-        diagramTitle = "Promedio del consumo diario de energía";
-    } else if(visType == 2) {
-        displayedSeries = getAverageFromSeries(displayedSeries, documents[selectedDocIndex].docFreq, true);
-        diagramTitle = "Suma del consumo diario de energía";
-    }
-
-    for(int i = 0; i < displayedSeries.size(); ++i) {
-        measurementsChart->addSeries(displayedSeries[i]);
-    }
-
-    // configure axes
-    xAxis->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel);
-    measurementsChart->createDefaultAxes();
-    QList<QAbstractAxis*> defaultChartAxes = measurementsChart->axes();
-    measurementsChart->removeAxis(defaultChartAxes[0]);
-    defaultChartAxes[1]->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel);
-    measurementsChart->addAxis(xAxis, Qt::AlignBottom);
-    for(int i = 0; i < displayedSeries.size(); ++i) {
-        displayedSeries[i]->attachAxis(xAxis);
-    }
-
-    // setup and display chart
-    measurementsChart->legend()->setVisible(true);
-    measurementsChart->legend()->setAlignment(Qt::AlignBottom);
-    measurementsChart->setTitle(diagramTitle);
-    ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
-    ui->graphicsViewChart->setChart(measurementsChart.get());
-    this->displayDiagramDataAsText();
-    result = 0;
-
     return result;
 }
 
@@ -464,9 +471,9 @@ QList<QLineSeries*> MainWindow::getAverageFromSeries(QList<QLineSeries*> &oldLin
         }
 
         // debug
-        for(unsigned int i = 0; i < gridPointsAndCount.size(); ++i) {
-            qDebug() << "(" << gridPointsAndCount[i].first << "," << gridPointsAndCount[i].second << ")";
-        }
+        //for(unsigned int i = 0; i < gridPointsAndCount.size(); ++i) {
+        //    qDebug() << "(" << gridPointsAndCount[i].first << "," << gridPointsAndCount[i].second << ")";
+        //}
 
         // Calculate average and fill new line series
 
@@ -485,9 +492,9 @@ QList<QLineSeries*> MainWindow::getAverageFromSeries(QList<QLineSeries*> &oldLin
         }
 
         // debug print out value sum
-        for(unsigned int i = 0; i < gridPointsValueSum.size(); ++i) {
-            qDebug() << "Point: " << gridPointsAndCount[i].first << ", value sum: " << gridPointsValueSum[i];
-        }
+        //for(unsigned int i = 0; i < gridPointsValueSum.size(); ++i) {
+        //    qDebug() << "Point: " << gridPointsAndCount[i].first << ", value sum: " << gridPointsValueSum[i];
+        //}
 
         // calculate average value or sum for each point and append it to new line series
         for(unsigned int i = 0; i < gridPointsValueSum.size(); ++i) {
@@ -821,21 +828,6 @@ int MainWindow::generateSectorWeekDiagram() {
         }
     }
 
-    // At this point: weekdaySeries contains for each weekday (i = 1,...,5) a number of line series; for
-    // some weekdays there might be no series, so the corresponding index is empty, check for this case
-
-    //if(dataNeedsTransformation) {
-
-        // data will always be tranformed to 15 min ticks
-        //for(int i = 0; i < 5; ++i) {
-            //if(weekdaySeries[i].size() >= 1) {                      // segfault if size == 0 ?
-                //weekdaySeries[i] = transformAllTo15MinTicks(weekdaySeries[i]);
-                //if(weekdaySeries[i].size() == 0) {
-                //    return result;
-                //}
-            //}
-        //}
-    //}
 
     // calculate average of each weekday copy by value to displayedSeries
     for(int i = 0; i < 5; ++i) {
@@ -847,7 +839,6 @@ int MainWindow::generateSectorWeekDiagram() {
             weekdaySeries[i] = getAverageFromSeries(weekdaySeries[i], currentFreq, false);
             displayedSeries.append(new QLineSeries());
             displayedSeries.last()->setName(weekdaySeriesLabel);
-            qDebug() << "Name set.";
             QVector<QPointF> dataPoints = weekdaySeries[i][0]->pointsVector();
             for(int j = 0; j < dataPoints.size(); ++j) {
                 displayedSeries.last()->append(dataPoints[j]);
@@ -858,7 +849,6 @@ int MainWindow::generateSectorWeekDiagram() {
     if(visType == 1) {
         displayedSeries = getAverageFromSeries(displayedSeries, currentFreq, false);
         displayedSeries[0]->setName("Promedio días lunes a viernes");
-        //qDebug() << "Method not implemented for this case";
     }
 
     for(int i = 0; i < displayedSeries.size(); ++i) {
@@ -1025,7 +1015,6 @@ QString MainWindow::parseDocumentDataAsText(int selectedFile) {
             }
             documentDataAsText.append("\n");
         }
-        //ui->textEditDisplayDocument->scrollToAnchor(documentName);
     }
     return documentDataAsText;
 }
@@ -1038,8 +1027,9 @@ void MainWindow::saveDiagram() {
 }
 
 void MainWindow::exportDiagram() {
-    short exportMethod = 0;
+    short exportMethod = -1;
     ExportDiagramDialog* exportDiagramDialog = new ExportDiagramDialog(this, exportMethod);
+    exportDiagramDialog->setWindowTitle("Exportar diagrama");
     exportDiagramDialog->exec();
     delete exportDiagramDialog;
     if(exportMethod == 0) {
@@ -1087,31 +1077,31 @@ void MainWindow::saveAsCSV(QString &saveFileName) {
 }
 
 
-void MainWindow::updateSheetListSimpleDiagramFunction(int newDocIndex) {
-    if(newDocIndex >= 0) {
-        for(unsigned short i = 0; i < documents[newDocIndex].sheets.size(); ++i) {
-            simpleDiagramFunction->updateSheetList(documents[newDocIndex].sheets[i]->sheetName);
-        }
-    }
-}
+//void MainWindow::updateSheetListSimpleDiagramFunction(int newDocIndex) {
+//    if(newDocIndex >= 0) {
+//        for(unsigned short i = 0; i < documents[newDocIndex].sheets.size(); ++i) {
+//            simpleDiagramFunction->updateSheetList(documents[newDocIndex].sheets[i]->sheetName);
+//        }
+//    }
+//}
 
-void MainWindow::updateDaysSimpleDiagramFunction(int newSheetIndex, int currDocIndex) {
-    if(newSheetIndex >= 0) {
-        short numOfDays = documents[currDocIndex].sheets[newSheetIndex]->daysAndCounting.size();
+void MainWindow::updateDaysSimpleDiagramFunction(int newDocIndex) {
+    if(newDocIndex >= 0) {
+        short numOfDays = documents[newDocIndex].sheets[0]->daysAndCounting.size();
         for(short i = 0; i < numOfDays; ++i) {
             this->simpleDiagramFunction->updateDays(
-                        documents[currDocIndex].sheets[newSheetIndex]->daysAndCounting[i].first);
+                        documents[newDocIndex].sheets[0]->daysAndCounting[i].first);
         }
     }
 }
 
-void MainWindow::updateSheetListSiteAnalysis(int newDocIndex) {
-    if(newDocIndex >= 0) {
-        for(unsigned short i = 0; i < documents[newDocIndex].sheets.size(); ++i) {
-            siteAnalysis->updateSheetList(documents[newDocIndex].sheets[i]->sheetName);
-        }
-    }
-}
+//void MainWindow::updateSheetListSiteAnalysis(int newDocIndex) {
+//    if(newDocIndex >= 0) {
+//        for(unsigned short i = 0; i < documents[newDocIndex].sheets.size(); ++i) {
+//            siteAnalysis->updateSheetList(documents[newDocIndex].sheets[i]->sheetName);
+//        }
+//    }
+//}
 
 void MainWindow::removeDocument() {
     int docToRemove = ui->listWidgetDocuments->currentRow();
@@ -1124,6 +1114,7 @@ void MainWindow::removeDocument() {
         QListWidgetItem* itemToRemove = ui->listWidgetDocuments->takeItem(docToRemove);
         simpleDiagramFunction->removeDocument(docToRemove);
         siteAnalysis->removeDocument(docToRemove);
+        ui->textEditDisplayDocument->clear();
         delete itemToRemove;
     }
 }
