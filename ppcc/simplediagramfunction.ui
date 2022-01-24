@@ -33,7 +33,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Seleccione Archivo:</string>
+      <string>Seleccione archivo</string>
      </property>
     </widget>
    </item>

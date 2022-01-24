@@ -96,7 +96,11 @@ private:
     std::vector<int> findWeekdays(int&, int&, int&);
     QList<QLineSeries*> getAverageFromSeries(QList<QLineSeries*>&, Frequency, bool);
     QList<QLineSeries*> transformAllTo15MinTicks(QList<QLineSeries*>&);
+
+    // Diagram display functions
     void displayDiagramDataAsText();
+    void displaySimpleDiagramAsText();
+    void displaySectorWeekDiagramAsText();
 
 private slots:
 
@@ -130,6 +134,8 @@ private slots:
     int generateSiteAnalysisDiagram();
     int generateSectorWeekdayDiagram();
     int generateSectorWeekDiagram();
+
+
 };
 
 #endif // MAINWINDOW_H

@@ -193,6 +193,7 @@ MeasurementsDocument::MeasurementsDocument(const QString &docFileName) {
     // get doc sheets and set up dataSheet objects
     foreach(QString currentSheetName, this->measurementsDoc->sheetNames()) {
         sheets.emplace_back(std::make_shared<SheetData>(currentSheetName));
+        break;  // update jan 24: only one sheet per document
     }
 
     // get Data from sheets and write it to the sheet objects
@@ -290,6 +291,9 @@ bool MeasurementsDocument::parseDocumentData() {
                 for(int col = 0; col < 3; ++col) {
                     currentCellValue = measurementsDoc->read(row+1,col+1);
                     if(row == 0) {
+                        if(col == 0) {
+                            sheets[sheetIndexNumber]->dateLabel = currentCellValue.toString();
+                        }
                         if(col == 1) {
                             sheets[sheetIndexNumber]->xAxisLabel = currentCellValue.toString();
                         }

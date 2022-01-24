@@ -33,6 +33,7 @@ public:
 
     // general sheet information
     QString sheetName;
+    QString dateLabel;
     QString xAxisLabel;
     QString yAxisLabel;
 

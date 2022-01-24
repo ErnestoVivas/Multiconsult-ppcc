@@ -324,10 +324,21 @@
      <string>Archivo</string>
     </property>
     <addaction name="menuImportDocuments"/>
+    <addaction name="actionQuitar"/>
     <addaction name="separator"/>
     <addaction name="menuQuit"/>
    </widget>
+   <widget class="QMenu" name="menuDiagrama">
+    <property name="title">
+     <string>Diagrama</string>
+    </property>
+    <addaction name="actionElegir_funci_n"/>
+    <addaction name="actionGenerar_Diagrama"/>
+    <addaction name="actionConfigurar"/>
+    <addaction name="actionExportar"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuDiagrama"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="menuImportDocuments">
@@ -338,6 +349,31 @@
   <action name="menuQuit">
    <property name="text">
     <string>Salir</string>
+   </property>
+  </action>
+  <action name="actionElegir_funci_n">
+   <property name="text">
+    <string>Elegir función</string>
+   </property>
+  </action>
+  <action name="actionGenerar_Diagrama">
+   <property name="text">
+    <string>Generar Diagrama</string>
+   </property>
+  </action>
+  <action name="actionConfigurar">
+   <property name="text">
+    <string>Configuración</string>
+   </property>
+  </action>
+  <action name="actionExportar">
+   <property name="text">
+    <string>Exportar</string>
+   </property>
+  </action>
+  <action name="actionQuitar">
+   <property name="text">
+    <string>Quitar</string>
    </property>
   </action>
  </widget>

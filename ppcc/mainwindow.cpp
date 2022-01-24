@@ -40,7 +40,8 @@ MainWindow::MainWindow(QWidget *parent):
     // setup xAxis: always stays the same, only label changes on each chart
     xAxis->setMin(0.0);
     xAxis->setMax(24.0);
-    xAxis->setTickCount(13);
+    xAxis->setLabelFormat("%i");
+    xAxis->setTickCount(25);
     xAxis->setTitleText("Hora");
 
     // set auxChart parameters
@@ -974,39 +975,76 @@ bool MainWindow::compareDates(QDate &selectedDate, QString &candidateDate, DateF
 }
 
 void MainWindow::displayDiagramDataAsText() {
+
+    // the way data is displayed (and exported) depends on the selected function
+    int selectedFunction = ui->comboBoxSelectFunction->currentIndex();
+    if(selectedFunction == 0) {
+        this->displaySimpleDiagramAsText();
+    } else if(selectedFunction == 1) {
+        //this->generateSiteAnalysisDiagram();
+    } else if(selectedFunction == 2) {
+        //this->generateSectorWeekdayDiagram();
+    } else if(selectedFunction == 3) {
+        this->displaySectorWeekDiagramAsText();
+    }
+}
+
+void MainWindow::displaySimpleDiagramAsText() {
     QString diagramTitle = measurementsChart->title();
     QString seriesName = "";
     ui->textEditDisplayDiagram->clear();
     ui->textEditDisplayDiagram->append(diagramTitle + "\n");
+    ui->textEditDisplayDiagram->append("Date\tTime\tkW");
 
     for(int i = 0; i < displayedSeries.size(); ++i) {
         seriesName = displayedSeries[i]->name();
-        ui->textEditDisplayDiagram->append(seriesName);
         QString currentX;
         QString currentY;
-        QString currentPoint;
+        QString currentLine;
         QVector<QPointF> dataPoints = displayedSeries[i]->pointsVector();
         for(int j = 0; j < dataPoints.size(); ++j) {
             currentX = QString::number(dataPoints[j].x());
             currentY = QString::number(dataPoints[j].y());
-            currentPoint = currentX + " , " + currentY;
-            ui->textEditDisplayDiagram->append(currentPoint);
+            currentLine = seriesName + "\t" + currentX + "\t" + currentY;
+            ui->textEditDisplayDiagram->append(currentLine);
         }
-        ui->textEditDisplayDiagram->append("");
     }
 }
 
+void MainWindow::displaySectorWeekDiagramAsText() {
+    QString diagramTitle = measurementsChart->title();
+    QString seriesName = "";
+    ui->textEditDisplayDiagram->clear();
+    ui->textEditDisplayDiagram->append(diagramTitle + "\n");
+    ui->textEditDisplayDiagram->append("Día\tHora\tPromedio kW");
+
+    for(int i = 0; i < displayedSeries.size(); ++i) {
+        seriesName = displayedSeries[i]->name();
+        QString currentX;
+        QString currentY;
+        QString currentLine;
+        QVector<QPointF> dataPoints = displayedSeries[i]->pointsVector();
+        for(int j = 0; j < dataPoints.size(); ++j) {
+            currentX = QString::number(dataPoints[j].x());
+            currentY = QString::number(dataPoints[j].y());
+            currentLine = seriesName + "\t" + currentX + "\t" + currentY;
+            ui->textEditDisplayDiagram->append(currentLine);
+        }
+    }
+
+}
+
 QString MainWindow::parseDocumentDataAsText(int selectedFile) {
-    //ui->textEditDisplayDocument->clear();
     QString documentDataAsText;
     if(selectedFile >= 0) {
         QString documentName = documents[selectedFile].docName;
         documentDataAsText.append(documentName + "\n\n");
 
         for(unsigned int i = 0; i < documents[selectedFile].sheets.size(); ++i) {
+            QString dateLabel = documents[selectedFile].sheets[i]->dateLabel;
             QString xAxisLabel = documents[selectedFile].sheets[i]->xAxisLabel;
             QString yAxisLabel = documents[selectedFile].sheets[i]->yAxisLabel;
-            documentDataAsText.append("Fecha\t" + xAxisLabel + "\t" + yAxisLabel + "\n");
+            documentDataAsText.append(dateLabel + "\t" + xAxisLabel + "\t" + yAxisLabel + "\n");
             for(unsigned int j = 0; j < documents[selectedFile].sheets[i]->allDays.size(); ++j) {
                 QString currentDay = documents[selectedFile].sheets[i]->allDays[j].toString();
                 QString currentTime = documents[selectedFile].sheets[i]->timestamps[j].toString();
@@ -1069,7 +1107,6 @@ void MainWindow::saveAsCSV(QString &saveFileName) {
         QString dataText = ui->textEditDisplayDiagram->toPlainText();
         QStringList dataLines = dataText.split("\n");
         for(int i = 0; i < dataLines.size(); ++i) {
-            QString currentDataLine = dataLines[i];
             dataStream << dataLines[i] << Qt::endl;
         }
         docToSave.close();
