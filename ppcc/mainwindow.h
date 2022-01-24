@@ -111,7 +111,7 @@ private slots:
     void getFileCategories(int);
     void setFileCategory(int);
     void setFileSubCategory(int);
-    void displayDocumentDataAsText(int);
+    QString parseDocumentDataAsText(int);
     void removeDocument();
     //void setFileFreq(int);          // currently not used
 

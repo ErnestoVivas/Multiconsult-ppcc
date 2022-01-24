@@ -18,7 +18,7 @@ MainWindow::MainWindow(QWidget *parent):
     updateFileSubCatComboBox(0);
     ui->lineEditFileFreq->setReadOnly(true);
 
-    // setup widgets containting the different functions to generate diagrams
+    // setup widgets containing the different functions to generate diagrams
     simpleDiagramFunction = new SimpleDiagramFunction(this);
     siteAnalysis = new SiteAnalysis(this);
     sectorDayAnalysis = new SectorDayAnalysis(this);
@@ -57,7 +57,6 @@ MainWindow::MainWindow(QWidget *parent):
     // file management
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
     connect(ui->listWidgetDocuments, SIGNAL(currentRowChanged(int)), this, SLOT(getFileCategories(int)));
-    //connect(this, SIGNAL(updateTextEditDocumentData(int)), this, SLOT(displayDocumentDataAsText(int)));
     connect(ui->comboBoxFileCat, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFileSubCatComboBox(int)));
     connect(ui->comboBoxFileCat, SIGNAL(currentIndexChanged(int)), this, SLOT(setFileCategory(int)));
     connect(ui->comboBoxFileSubCat, SIGNAL(currentIndexChanged(int)), this, SLOT(setFileSubCategory(int)));
@@ -142,7 +141,8 @@ void MainWindow::getFileCategories(int selectedFile) {
         ui->comboBoxFileSubCat->setCurrentIndex(subCat);
         ui->lineEditFileFreq->setText(freqString);
         this->fileManagerSelectedFile = selectedFile;
-        //emit updateTextEditDocumentData(selectedFile);
+        ui->textEditDisplayDocument->clear();
+        ui->textEditDisplayDocument->setText(documents[selectedFile].documentDataAsText);
     } else {
         ui->lineEditFileFreq->setText("");
         ui->comboBoxFileCat->setCurrentIndex(0);
@@ -181,6 +181,7 @@ void MainWindow::importDocument() {
             documents.back().docResRange = docCategories.resRange;
             documents.back().docSubCommercial = docCategories.commercial;
             documents.back().docSubIndustrial = docCategories.industrial;
+            documents.back().documentDataAsText = parseDocumentDataAsText(documents.size() - 1);
 
             // add corresponding entries to the function widgets
             simpleDiagramFunction->addEntryComboBoxSelectDoc(fileNameOnly);
@@ -282,7 +283,8 @@ int MainWindow::generateSiteAnalysisDiagram() {
 
     // get inputs from the user and find weekdays
     int selectedDocIndex = siteAnalysis->selectedDocIndex;
-    int selectedSheetIndex = siteAnalysis->selectedSheetIndex;
+    //int selectedSheetIndex = siteAnalysis->selectedSheetIndex;
+    int selectedSheetIndex = 0;                        // update 24 jan: all documents have 1 sheet
     int selectedDay = siteAnalysis->getDay() + 1;      // to compare with QDate: 1=mon,...,7=sun
     int visType = siteAnalysis->getVisType();
     std::vector<int> weekdayIndices = findWeekdays(selectedDay, selectedDocIndex, selectedSheetIndex);
@@ -1004,28 +1006,28 @@ void MainWindow::displayDiagramDataAsText() {
     }
 }
 
-void MainWindow::displayDocumentDataAsText(int selectedFile) {
-    ui->textEditDisplayDocument->clear();
+QString MainWindow::parseDocumentDataAsText(int selectedFile) {
+    //ui->textEditDisplayDocument->clear();
+    QString documentDataAsText;
     if(selectedFile >= 0) {
         QString documentName = documents[selectedFile].docName;
-        ui->textEditDisplayDocument->append(documentName + "\n");
+        documentDataAsText.append(documentName + "\n\n");
 
         for(unsigned int i = 0; i < documents[selectedFile].sheets.size(); ++i) {
-            QString currentSheetName = documents[selectedFile].sheets[i]->sheetName;
-            ui->textEditDisplayDocument->append(currentSheetName);
             QString xAxisLabel = documents[selectedFile].sheets[i]->xAxisLabel;
             QString yAxisLabel = documents[selectedFile].sheets[i]->yAxisLabel;
-            ui->textEditDisplayDocument->append("Fecha " + xAxisLabel + " " + yAxisLabel);
+            documentDataAsText.append("Fecha\t" + xAxisLabel + "\t" + yAxisLabel + "\n");
             for(unsigned int j = 0; j < documents[selectedFile].sheets[i]->allDays.size(); ++j) {
                 QString currentDay = documents[selectedFile].sheets[i]->allDays[j].toString();
                 QString currentTime = documents[selectedFile].sheets[i]->timestamps[j].toString();
-                QString currentValue = documents[selectedFile].sheets[i]->measurements[j].toString();
-                ui->textEditDisplayDocument->append(currentDay + " " + currentTime + " " + currentValue);
+                QString currentValue = documents[selectedFile].sheets[i]->measurements[j].toString().left(8);
+                documentDataAsText.append(currentDay + "\t" + currentTime + "\t" + currentValue + "\n");
             }
-            ui->textEditDisplayDocument->append("\n");
+            documentDataAsText.append("\n");
         }
-        ui->textEditDisplayDocument->scrollToAnchor(documentName);
+        //ui->textEditDisplayDocument->scrollToAnchor(documentName);
     }
+    return documentDataAsText;
 }
 
 void MainWindow::saveDiagram() {

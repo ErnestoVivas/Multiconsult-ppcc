@@ -70,6 +70,7 @@ public:
 
     // general document information
     QString docName;
+    QString documentDataAsText;
     std::shared_ptr<QXlsx::Document> measurementsDoc;
     std::vector<std::shared_ptr<SheetData> > sheets;
 

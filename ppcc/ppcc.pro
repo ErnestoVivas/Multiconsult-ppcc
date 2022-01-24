@@ -46,6 +46,8 @@ FORMS += \
     simplediagramfunction.ui \
     siteanalysis.ui
 
+RC_ICONS = logo_multiconsult.ico
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin

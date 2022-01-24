@@ -217,6 +217,12 @@ bool MeasurementsDocument::parseDocumentData() {
     int sheetIndexNumber = 0;
     foreach(QString currentSheetName, this->measurementsDoc->sheetNames()) {
 
+        // petition of the customer: only ever read 1 sheet,
+        // input format have one sheet only
+        if(sheetIndexNumber == 1) {
+            break;
+        }
+
         // get the current sheet
         QXlsx::AbstractSheet* currentSheet = measurementsDoc->sheet(currentSheetName);
         if(currentSheet == NULL) {
