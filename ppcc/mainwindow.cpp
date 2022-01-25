@@ -14,9 +14,12 @@ MainWindow::MainWindow(QWidget *parent):
     // setup ui elements
     ui->setupUi(this);
     ui->textEditDisplayDocument->setReadOnly(true);
-    setupComboBoxesFileCategories();
-    updateFileSubCatComboBox(0);
     ui->lineEditFileFreq->setReadOnly(true);
+    ui->lineEditFileCat->setReadOnly(true);
+    ui->lineEditFileSubCat->setReadOnly(true);
+    //setupComboBoxesFileCategories();
+    //updateFileSubCatComboBox(0);
+
 
     // setup widgets containing the different functions to generate diagrams
     simpleDiagramFunction = new SimpleDiagramFunction(this);
@@ -58,9 +61,9 @@ MainWindow::MainWindow(QWidget *parent):
     // file management
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
     connect(ui->listWidgetDocuments, SIGNAL(currentRowChanged(int)), this, SLOT(getFileCategories(int)));
-    connect(ui->comboBoxFileCat, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFileSubCatComboBox(int)));
-    connect(ui->comboBoxFileCat, SIGNAL(currentIndexChanged(int)), this, SLOT(setFileCategory(int)));
-    connect(ui->comboBoxFileSubCat, SIGNAL(currentIndexChanged(int)), this, SLOT(setFileSubCategory(int)));
+    //connect(ui->comboBoxFileCat, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFileSubCatComboBox(int)));
+    //connect(ui->comboBoxFileCat, SIGNAL(currentIndexChanged(int)), this, SLOT(setFileCategory(int)));
+    //connect(ui->comboBoxFileSubCat, SIGNAL(currentIndexChanged(int)), this, SLOT(setFileSubCategory(int)));
     connect(ui->buttonRemoveDocument, SIGNAL(clicked()), this, SLOT(removeDocument()));
 
     // functions
@@ -96,14 +99,17 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
-void MainWindow::setupComboBoxesFileCategories() {
-    ui->comboBoxFileCat->addItem("Residencial");
-    ui->comboBoxFileCat->addItem("Comercial");
-    ui->comboBoxFileCat->addItem("Industrial");
-    ui->comboBoxFileCat->addItem("Bombeo");
-    ui->comboBoxFileCat->addItem("Alumbrado público");
-}
+// function can be used later
+//void MainWindow::setupComboBoxesFileCategories() {
+//    ui->comboBoxFileCat->addItem("Residencial");
+//    ui->comboBoxFileCat->addItem("Comercial");
+//    ui->comboBoxFileCat->addItem("Industrial");
+//    ui->comboBoxFileCat->addItem("Bombeo");
+//    ui->comboBoxFileCat->addItem("Alumbrado público");
+//}
 
+// function can be used later
+/*
 void MainWindow::updateFileSubCatComboBox(int sectorIndex) {
     ui->comboBoxFileSubCat->clear();
     if(sectorIndex == 0) {
@@ -131,22 +137,34 @@ void MainWindow::updateFileSubCatComboBox(int sectorIndex) {
         ui->comboBoxFileSubCat->addItem("Otros");
     }
 }
+*/
 
 void MainWindow::getFileCategories(int selectedFile) {
     if(selectedFile >= 0) {
         int sector = documents[selectedFile].docSector;
         int subCat = documents[selectedFile].getSubCategory();
         int freq = documents[selectedFile].docFreq;
+        QString catString = enumerations::getStringFromSector(sector);
+        QString subCatString = enumerations::getStringFromSubSector(sector, subCat);
         QString freqString = enumerations::getStringFromFreq(freq);
-        ui->comboBoxFileCat->setCurrentIndex(sector);
-        ui->comboBoxFileSubCat->setCurrentIndex(subCat);
+        if(sector == -2) {
+            catString = documents[selectedFile].customSectorStr;
+        }
+        if(subCat == -2) {
+            subCatString = documents[selectedFile].customSubSectorStr;
+        }
+        ui->lineEditFileCat->setText(catString);
+        ui->lineEditFileSubCat->setText(subCatString);
         ui->lineEditFileFreq->setText(freqString);
         this->fileManagerSelectedFile = selectedFile;
         ui->textEditDisplayDocument->clear();
         ui->textEditDisplayDocument->setText(documents[selectedFile].documentDataAsText);
     } else {
+        this->fileManagerSelectedFile = selectedFile;
+        ui->lineEditFileCat->setText("");
+        ui->lineEditFileSubCat->setText("");
         ui->lineEditFileFreq->setText("");
-        ui->comboBoxFileCat->setCurrentIndex(0);
+        //ui->comboBoxFileCat->setCurrentIndex(0);
     }
 }
 
@@ -174,7 +192,7 @@ void MainWindow::importDocument() {
         if(!docFileNames[i].isEmpty()) {
             SetCategoriesDialog* selectCategories =
                     new SetCategoriesDialog(this, docCategories, fileNameOnly);
-
+            selectCategories->setWindowTitle("Importar archivo");
             selectCategories->exec();
             delete selectCategories;
             documents.emplace_back(MeasurementsDocument(docFileNames[i]));
@@ -182,7 +200,79 @@ void MainWindow::importDocument() {
             documents.back().docResRange = docCategories.resRange;
             documents.back().docSubCommercial = docCategories.commercial;
             documents.back().docSubIndustrial = docCategories.industrial;
+            documents.back().docCustomSubSector = docCategories.customSubSec;
+            documents.back().customSectorStr = docCategories.customSectorStr;
             documents.back().documentDataAsText = parseDocumentDataAsText(documents.size() - 1);
+
+            if(documents.back().docResRange == -2) {
+                documents.back().customSubSectorStr = docCategories.customResRangeStr;
+                bool resRangeDoesNotExist = true;
+                for(int i = 0; i < sectorDayAnalysis->customResRanges.size(); ++i) {
+                    if(documents.back().customSubSectorStr == sectorDayAnalysis->customResRanges[i]) {
+                        resRangeDoesNotExist = false;
+                        break;
+                    }
+                }
+                if(resRangeDoesNotExist) {
+                    sectorDayAnalysis->customResRanges.append(documents.back().customSubSectorStr);
+                    sectorWeekAnalysis->customResRanges.append(documents.back().customSubSectorStr);
+                }
+            } else if(documents.back().docSubCommercial == -2) {
+                documents.back().customSubSectorStr = docCategories.customCommercialStr;
+                bool commercialDoesNotExist = true;
+                for(int i = 0; i < sectorDayAnalysis->customCommercials.size(); ++i) {
+                    if(documents.back().customSubSectorStr == sectorDayAnalysis->customCommercials[i]) {
+                        commercialDoesNotExist = false;
+                        break;
+                    }
+                }
+                if(commercialDoesNotExist) {
+                    sectorDayAnalysis->customCommercials.append(documents.back().customSubSectorStr);
+                    sectorWeekAnalysis->customCommercials.append(documents.back().customSubSectorStr);
+                }
+            } else if(documents.back().docSubIndustrial == -2) {
+                documents.back().customSubSectorStr = docCategories.customIndustrialStr;
+                bool industrialDoesNotExist = true;
+                for(int i = 0; i < sectorDayAnalysis->customIndustrials.size(); ++i) {
+                    if(documents.back().customSubSectorStr == sectorDayAnalysis->customIndustrials[i]) {
+                        industrialDoesNotExist = false;
+                        break;
+                    }
+                }
+                if(industrialDoesNotExist) {
+                    sectorDayAnalysis->customIndustrials.append(documents.back().customSubSectorStr);
+                    sectorWeekAnalysis->customIndustrials.append(documents.back().customSubSectorStr);
+                }
+            } else if(documents.back().docCustomSubSector == -2) {
+                documents.back().customSubSectorStr = docCategories.customSubSectorStr;
+                bool subSecDoesNotExist = true;
+                for(int i = 0; i < sectorDayAnalysis->customSubSectors.size(); ++i) {
+                    if(documents.back().customSubSectorStr == sectorDayAnalysis->customSubSectors[i]) {
+                        subSecDoesNotExist = false;
+                        break;
+                    }
+                }
+                if(subSecDoesNotExist) {
+                    sectorDayAnalysis->customSubSectors.append(documents.back().customSubSectorStr);
+                    sectorWeekAnalysis->customSubSectors.append(documents.back().customSubSectorStr);
+                }
+            }
+
+            if(documents.back().docSector == -2) {
+                bool sectorDoesNotExist = true;
+                for(int i = 0; i < sectorDayAnalysis->customSectors.size(); ++i) {
+                    if(documents.back().customSectorStr == sectorDayAnalysis->customSectors[i]) {
+                        sectorDoesNotExist = false;
+                        break;
+                    }
+                }
+                if(sectorDoesNotExist) {
+                    sectorDayAnalysis->customSectors.append(documents.back().customSectorStr);
+                    sectorWeekAnalysis->customSectors.append(documents.back().customSectorStr);
+                }
+            }
+            sectorDayAnalysis->setupComboBoxSector();
+            sectorWeekAnalysis->setupComboBoxSector();
 
             // add corresponding entries to the function widgets
             simpleDiagramFunction->addEntryComboBoxSelectDoc(fileNameOnly);
@@ -539,9 +629,33 @@ int MainWindow::generateSectorWeekdayDiagram() {
 
     // First: find measurementDocs corresponding to the selected Category and store indices
     std::vector<int> correctFileIndices;
-    for(unsigned int i = 0; i < this->documents.size(); ++i) {
-        if((documents[i].docSector == sector) && (documents[i].getSubCategory() == subCat)) {
-            correctFileIndices.emplace_back(i);
+    if((sector == -2) && (subCat == -2)) {
+        QString sectorStr = sectorDayAnalysis->getSelectedSectorString();
+        QString subCatStr = sectorDayAnalysis->getSelectedSubCatString();
+        for(unsigned int i = 0; i < this->documents.size(); ++i) {
+            if((documents[i].customSectorStr == sectorStr) && (documents[i].customSubSectorStr == subCatStr)) {
+                correctFileIndices.emplace_back(i);
+            }
+        }
+    } else if(sector == -2) {
+        QString sectorStr = sectorDayAnalysis->getSelectedSectorString();
+        for(unsigned int i = 0; i < this->documents.size(); ++i) {
+            if((documents[i].customSectorStr == sectorStr) && (documents[i].getSubCategory() == subCat)) {
+                correctFileIndices.emplace_back(i);
+            }
+        }
+    } else if(subCat == -2) {
+        QString subCatStr = sectorDayAnalysis->getSelectedSubCatString();
+        for(unsigned int i = 0; i < this->documents.size(); ++i) {
+            if((documents[i].docSector == sector) && (documents[i].customSubSectorStr == subCatStr)) {
+                correctFileIndices.emplace_back(i);
+            }
+        }
+    } else {
+        for(unsigned int i = 0; i < this->documents.size(); ++i) {
+            if((documents[i].docSector == sector) && (documents[i].getSubCategory() == subCat)) {
+                correctFileIndices.emplace_back(i);
+            }
         }
     }
 
@@ -722,18 +836,44 @@ QList<QLineSeries*> MainWindow::transformAllTo15MinTicks(QList<QLineSeries*> &ol
 int MainWindow::generateSectorWeekDiagram() {
     int result = -1;
 
-    // get categories and visualization type
+    // get categories and weekday that will be visualized
     int sector = sectorWeekAnalysis->getSelectedSector();
     int subCat = sectorWeekAnalysis->getSelectedSubCat();
     int visType = sectorWeekAnalysis->getVisType();
 
-    // find measurementDocs corresponding to the selected Category and store indices
+    // First: find measurementDocs corresponding to the selected Category and store indices
     std::vector<int> correctFileIndices;
-    for(unsigned int i = 0; i < this->documents.size(); ++i) {
-        if((documents[i].docSector == sector) && (documents[i].getSubCategory() == subCat)) {
-            correctFileIndices.emplace_back(i);
+    qDebug() << sector << ", " << subCat;
+    if((sector == -2) && (subCat == -2)) {
+        QString sectorStr = sectorWeekAnalysis->getSelectedSectorString();
+        QString subCatStr = sectorWeekAnalysis->getSelectedSubCatString();
+        for(unsigned int i = 0; i < this->documents.size(); ++i) {
+            if((documents[i].customSectorStr == sectorStr) && (documents[i].customSubSectorStr == subCatStr)) {
+                correctFileIndices.emplace_back(i);
+            }
+        }
+    } else if(sector == -2) {
+        QString sectorStr = sectorWeekAnalysis->getSelectedSectorString();
+        for(unsigned int i = 0; i < this->documents.size(); ++i) {
+            if((documents[i].customSectorStr == sectorStr) && (documents[i].getSubCategory() == subCat)) {
+                correctFileIndices.emplace_back(i);
+            }
+        }
+    } else if(subCat == -2) {
+        QString subCatStr = sectorWeekAnalysis->getSelectedSubCatString();
+        for(unsigned int i = 0; i < this->documents.size(); ++i) {
+            if((documents[i].docSector == sector) && (documents[i].customSubSectorStr == subCatStr)) {
+                correctFileIndices.emplace_back(i);
+            }
+        }
+    } else {
+        for(unsigned int i = 0; i < this->documents.size(); ++i) {
+            if((documents[i].docSector == sector) && (documents[i].getSubCategory() == subCat)) {
+                correctFileIndices.emplace_back(i);
+            }
         }
     }
+
 
     // check if all measurements have the same frequency; if not data needs to be prepared later
     bool dataNeedsTransformation = false;

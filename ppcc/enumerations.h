@@ -22,7 +22,9 @@ enum Sector {
     commercial = 1,
     industrial = 2,
     pumping = 3,
-    publicLighting = 4
+    publicLighting = 4,
+    otherSector = 5,
+    customSector = -2
 };
 
 enum ResidentialRange {
@@ -32,6 +34,8 @@ enum ResidentialRange {
     D = 3,                  // 151 to 250 kWh/month
     E = 4,                  // 251 to 500 kWh/month
     F = 5,                  // > 500 kWh/month
+    otherResRange = 6,
+    customResRange = -2,
     X = -1                  // site is not residential
 };
 
@@ -44,6 +48,7 @@ enum Commercial {
     hotels = 5,
     education = 6,
     otherCommercial = 7,
+    customCommercial = -2,
     notCommercial = -1
 };
 
@@ -54,7 +59,14 @@ enum Industrial {
     chemistry = 3,
     textiles = 4,
     otherIndustrial = 5,
+    customIndustrial = -2,
     notIndustrial = -1
+};
+
+enum CustomSubSector {
+    otherCustomSubSector = 0,
+    customSubSector = -2,
+    notCustomSubSector = -1
 };
 
 enum Frequency {
@@ -75,8 +87,15 @@ struct Categories {
     ResidentialRange resRange;
     Commercial commercial;
     Industrial industrial;
+    CustomSubSector customSubSec;
     Frequency frequency;
     DateFormat dateFormat;
+
+    QString customSectorStr;
+    QString customResRangeStr;
+    QString customCommercialStr;
+    QString customIndustrialStr;
+    QString customSubSectorStr;
 };
 
 namespace enumerations {

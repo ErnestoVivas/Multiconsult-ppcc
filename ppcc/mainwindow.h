@@ -84,9 +84,14 @@ private:
     // File management parameters
     std::vector<MeasurementsDocument> documents;
     int fileManagerSelectedFile;
+    //QList<QString> customSectors;
+    //QList<QString> customResRanges;
+    //QList<QString> customCommercials;
+    //QList<QString> customIndustrials;
+    //QList<QString> customSubSectors;
 
     // file management functions (not used as slots)
-    void setupComboBoxesFileCategories();
+    //void setupComboBoxesFileCategories();
     void readDocument(QXlsx::Document*);
     void saveAsExcel(QString&);
     void saveAsCSV(QString&);
@@ -111,7 +116,7 @@ private slots:
     void importDocument();
     void exportDiagram();
     void saveDiagram();
-    void updateFileSubCatComboBox(int);
+    //void updateFileSubCatComboBox(int);
     void getFileCategories(int);
     void setFileCategory(int);
     void setFileSubCategory(int);

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>681</width>
-    <height>349</height>
+    <width>851</width>
+    <height>377</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,8 +16,8 @@
   <widget class="QPushButton" name="buttonOk">
    <property name="geometry">
     <rect>
-     <x>590</x>
-     <y>310</y>
+     <x>765</x>
+     <y>340</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -31,7 +31,7 @@
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>661</width>
+     <width>821</width>
      <height>16</height>
     </rect>
    </property>
@@ -149,7 +149,7 @@
      <x>150</x>
      <y>40</y>
      <width>21</width>
-     <height>261</height>
+     <height>291</height>
     </rect>
    </property>
    <property name="orientation">
@@ -227,7 +227,7 @@
      <x>320</x>
      <y>40</y>
      <width>21</width>
-     <height>261</height>
+     <height>291</height>
     </rect>
    </property>
    <property name="orientation">
@@ -342,7 +342,7 @@
    <property name="geometry">
     <rect>
      <x>350</x>
-     <y>280</y>
+     <y>310</y>
      <width>151</width>
      <height>20</height>
     </rect>
@@ -357,7 +357,7 @@
      <x>500</x>
      <y>40</y>
      <width>21</width>
-     <height>261</height>
+     <height>291</height>
     </rect>
    </property>
    <property name="orientation">
@@ -446,8 +446,188 @@
    <property name="geometry">
     <rect>
      <x>530</x>
-     <y>220</y>
+     <y>250</y>
      <width>131</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Otros</string>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="radioButtonCustomSector">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>220</y>
+     <width>21</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditCustomSector">
+   <property name="geometry">
+    <rect>
+     <x>29</x>
+     <y>220</y>
+     <width>113</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="radioButtonOtherResRange">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>280</y>
+     <width>89</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Otros</string>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="radioButtonCustomResRange">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>250</y>
+     <width>21</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditCustomResRange">
+   <property name="geometry">
+    <rect>
+     <x>199</x>
+     <y>250</y>
+     <width>113</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="radioButtonCustomCommercial">
+   <property name="geometry">
+    <rect>
+     <x>350</x>
+     <y>280</y>
+     <width>21</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditCustomCommercial">
+   <property name="geometry">
+    <rect>
+     <x>369</x>
+     <y>280</y>
+     <width>121</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="radioButtonCustomIndustrial">
+   <property name="geometry">
+    <rect>
+     <x>530</x>
+     <y>220</y>
+     <width>21</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditCustomIndustrial">
+   <property name="geometry">
+    <rect>
+     <x>549</x>
+     <y>220</y>
+     <width>113</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="Line" name="line_4">
+   <property name="geometry">
+    <rect>
+     <x>673</x>
+     <y>40</y>
+     <width>16</width>
+     <height>291</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Vertical</enum>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>700</x>
+     <y>40</y>
+     <width>141</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Subcatgoría personalizada</string>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="radioButtonCustomSubCat">
+   <property name="geometry">
+    <rect>
+     <x>700</x>
+     <y>70</y>
+     <width>21</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditCustomSubCat">
+   <property name="geometry">
+    <rect>
+     <x>719</x>
+     <y>70</y>
+     <width>113</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="radioButtonOtherCustomSubCat">
+   <property name="geometry">
+    <rect>
+     <x>700</x>
+     <y>100</y>
+     <width>131</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Otros</string>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="radioButtonOtherSector">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>250</y>
+     <width>89</width>
      <height>20</height>
     </rect>
    </property>

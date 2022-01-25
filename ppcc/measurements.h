@@ -76,11 +76,14 @@ public:
     std::vector<std::shared_ptr<SheetData> > sheets;
 
     // Classification of the document
+    QString customSectorStr;
+    QString customSubSectorStr;
     SystemVoltage docSystemVoltage;
     Sector docSector;
     ResidentialRange docResRange;
     Commercial docSubCommercial;
     Industrial docSubIndustrial;
+    CustomSubSector docCustomSubSector;
     Frequency docFreq;
     DateFormat docDateFormat;
 

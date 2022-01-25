@@ -27,8 +27,18 @@ public:
 
     int getSelectedSector();
     int getSelectedSubCat();
+    QString getSelectedSectorString();
+    QString getSelectedSubCatString();
     int getDay();
     int getVisType();
+
+    void setupComboBoxSector();
+
+    QList<QString> customSectors;
+    QList<QString> customResRanges;
+    QList<QString> customCommercials;
+    QList<QString> customIndustrials;
+    QList<QString> customSubSectors;
 
 private:
     Ui::SectorDayAnalysis *ui;
@@ -36,7 +46,7 @@ private:
 
     Categories selectedCategories;
 
-    void setupComboBoxSector();
+
 
 private slots:
     void updateSelectSubCatComboBox(int);

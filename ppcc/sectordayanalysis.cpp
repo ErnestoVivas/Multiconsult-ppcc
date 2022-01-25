@@ -36,11 +36,16 @@ SectorDayAnalysis::~SectorDayAnalysis() {
 }
 
 void SectorDayAnalysis::setupComboBoxSector() {
+    ui->comboBoxSelectSector->clear();
     ui->comboBoxSelectSector->addItem("Residencial");
     ui->comboBoxSelectSector->addItem("Comercial");
     ui->comboBoxSelectSector->addItem("Industrial");
     ui->comboBoxSelectSector->addItem("Bombeo");
     ui->comboBoxSelectSector->addItem("Alumbrado público");
+    ui->comboBoxSelectSector->addItem("Otros");
+    for(int i = 0; i < customSectors.size(); ++i) {
+        ui->comboBoxSelectSector->addItem(customSectors[i]);
+    }
 }
 
 void SectorDayAnalysis::updateSelectSubCatComboBox(int sectorIndex) {
@@ -52,6 +57,10 @@ void SectorDayAnalysis::updateSelectSubCatComboBox(int sectorIndex) {
         ui->comboBoxSelectSubCategory->addItem("151 - 250 kWh/mes");
         ui->comboBoxSelectSubCategory->addItem("251 - 500 kWh/mes");
         ui->comboBoxSelectSubCategory->addItem(">500 kWh/mes");
+        ui->comboBoxSelectSubCategory->addItem("Otros");
+        for(int i = 0; i < customResRanges.size(); ++i) {
+            ui->comboBoxSelectSubCategory->addItem(customResRanges[i]);
+        }
     } else if(sectorIndex == 1) {
         ui->comboBoxSelectSubCategory->addItem("Financieras");
         ui->comboBoxSelectSubCategory->addItem("Comercio al por mayor");
@@ -61,6 +70,9 @@ void SectorDayAnalysis::updateSelectSubCatComboBox(int sectorIndex) {
         ui->comboBoxSelectSubCategory->addItem("Hoteles");
         ui->comboBoxSelectSubCategory->addItem("Educación");
         ui->comboBoxSelectSubCategory->addItem("Otros");
+        for(int i = 0; i < customCommercials.size(); ++i) {
+            ui->comboBoxSelectSubCategory->addItem(customCommercials[i]);
+        }
     } else if(sectorIndex == 2) {
         ui->comboBoxSelectSubCategory->addItem("Alimentos y bebidas");
         ui->comboBoxSelectSubCategory->addItem("Papel, cartón");
@@ -68,15 +80,45 @@ void SectorDayAnalysis::updateSelectSubCatComboBox(int sectorIndex) {
         ui->comboBoxSelectSubCategory->addItem("Quimica");
         ui->comboBoxSelectSubCategory->addItem("Textil");
         ui->comboBoxSelectSubCategory->addItem("Otros");
+        for(int i = 0; i < customIndustrials.size(); ++i) {
+            ui->comboBoxSelectSubCategory->addItem(customIndustrials[i]);
+        }
+    } else if(sectorIndex > 5) {
+        ui->comboBoxSelectSubCategory->addItem("Otros");
+        for(int i = 0; i < customSubSectors.size(); ++i) {
+            ui->comboBoxSelectSubCategory->addItem(customSubSectors[i]);
+        }
     }
 }
 
 int SectorDayAnalysis::getSelectedSector() {
-    return ui->comboBoxSelectSector->currentIndex();
+    int currentIndex = ui->comboBoxSelectSector->currentIndex();
+    if(currentIndex > 5) {
+        currentIndex = -2;
+    }
+    return currentIndex;
+}
+
+QString SectorDayAnalysis::getSelectedSectorString() {
+    int currentItem = ui->comboBoxSelectSector->currentIndex();
+    return ui->comboBoxSelectSector->itemText(currentItem);
 }
 
 int SectorDayAnalysis::getSelectedSubCat() {
-    return ui->comboBoxSelectSubCategory->currentIndex();
+    int currentSec = ui->comboBoxSelectSector->currentIndex();
+    int currentSubSecIndex = ui->comboBoxSelectSubCategory->currentIndex();
+    if( ((currentSec == 0) && (currentSubSecIndex > 6)) ||
+        ((currentSec == 1) && (currentSubSecIndex > 7)) ||
+        ((currentSec == 2) && (currentSubSecIndex > 5)) ||
+        ((currentSec > 5) && (currentSubSecIndex > 0)) ) {
+        currentSubSecIndex = -2;
+    }
+    return currentSubSecIndex;
+}
+
+QString SectorDayAnalysis::getSelectedSubCatString() {
+    int currentItem = ui->comboBoxSelectSubCategory->currentIndex();
+    return ui->comboBoxSelectSubCategory->itemText(currentItem);
 }
 
 int SectorDayAnalysis::getDay() {

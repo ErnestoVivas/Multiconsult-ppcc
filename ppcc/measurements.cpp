@@ -188,6 +188,7 @@ MeasurementsDocument::MeasurementsDocument(const QString &docFileName) {
     this->docResRange = ResidentialRange::X;
     this->docSubCommercial = Commercial::notCommercial;
     this->docSubIndustrial = Industrial::notIndustrial;
+    this->docCustomSubSector = CustomSubSector::notCustomSubSector;
     this->docFreq = Frequency::hour;
 
     // get doc sheets and set up dataSheet objects
@@ -202,7 +203,6 @@ MeasurementsDocument::MeasurementsDocument(const QString &docFileName) {
         qDebug() << "Could not read Excel file.";
         sheets.resize(0);
     }
-
 }
 
 MeasurementsDocument::~MeasurementsDocument() {}
@@ -344,6 +344,8 @@ int MeasurementsDocument::getSubCategory() {
         subCat = this->docSubCommercial;
     } else if(this->docSubIndustrial != Industrial::notIndustrial) {
         subCat = this->docSubIndustrial;
+    } else if(this->docCustomSubSector != CustomSubSector::notCustomSubSector) {
+        subCat = this->docCustomSubSector;
     }
     return subCat;
 }
