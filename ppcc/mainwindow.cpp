@@ -684,7 +684,6 @@ int MainWindow::generateSectorWeekdayDiagram() {
     int currentDoc;
     int currentSheet;
     int currentLineSeries;
-    //int currentFreq;
     for(unsigned int i = 0; i < correctFileIndices.size(); ++i) {
         for(unsigned int j = 0; j < documents[correctFileIndices[i]].sheets.size(); ++j) {
             currentDoc = correctFileIndices[i];
@@ -843,7 +842,6 @@ int MainWindow::generateSectorWeekDiagram() {
 
     // First: find measurementDocs corresponding to the selected Category and store indices
     std::vector<int> correctFileIndices;
-    qDebug() << sector << ", " << subCat;
     if((sector == -2) && (subCat == -2)) {
         QString sectorStr = sectorWeekAnalysis->getSelectedSectorString();
         QString subCatStr = sectorWeekAnalysis->getSelectedSubCatString();
@@ -989,7 +987,7 @@ int MainWindow::generateSectorWeekDiagram() {
 
     if(visType == 1) {
         displayedSeries = getAverageFromSeries(displayedSeries, currentFreq, false);
-        displayedSeries[0]->setName("Promedio días lunes a viernes");
+        displayedSeries[0]->setName("Lunes a viernes");
     }
 
     for(int i = 0; i < displayedSeries.size(); ++i) {
@@ -1001,7 +999,7 @@ int MainWindow::generateSectorWeekDiagram() {
     measurementsChart->createDefaultAxes();
     QList<QAbstractAxis*> defaultChartAxes = measurementsChart->axes();
     measurementsChart->removeAxis(defaultChartAxes[0]);
-    defaultChartAxes[1]->setTitleText("kW");
+    defaultChartAxes[1]->setTitleText("Promedio kW");
     measurementsChart->addAxis(xAxis, Qt::AlignBottom);
     for(int i = 0; i < displayedSeries.size(); ++i) {
         displayedSeries[i]->attachAxis(xAxis);
@@ -1121,9 +1119,9 @@ void MainWindow::displayDiagramDataAsText() {
     if(selectedFunction == 0) {
         this->displaySimpleDiagramAsText();
     } else if(selectedFunction == 1) {
-        //this->generateSiteAnalysisDiagram();
+        this->displaySiteAnalysisDiagramAsText();
     } else if(selectedFunction == 2) {
-        //this->generateSectorWeekdayDiagram();
+        this->displaySectorWeekdayDiagramAsText();
     } else if(selectedFunction == 3) {
         this->displaySectorWeekDiagramAsText();
     }
@@ -1151,13 +1149,67 @@ void MainWindow::displaySimpleDiagramAsText() {
     }
 }
 
+void MainWindow::displaySiteAnalysisDiagramAsText() {
+    QString diagramTitle = measurementsChart->title();
+    QString seriesName = "";
+    ui->textEditDisplayDiagram->clear();
+    ui->textEditDisplayDiagram->append(diagramTitle + "\n");
+    ui->textEditDisplayDiagram->append("Date\tTime\tkW");
+
+    for(int i = 0; i < displayedSeries.size(); ++i) {
+        seriesName = displayedSeries[i]->name();
+        QString currentX;
+        QString currentY;
+        QString currentLine;
+        QVector<QPointF> dataPoints = displayedSeries[i]->pointsVector();
+        for(int j = 0; j < dataPoints.size(); ++j) {
+            currentX = QString::number(dataPoints[j].x());
+            currentY = QString::number(dataPoints[j].y());
+            currentLine = seriesName + "\t" + currentX + "\t" + currentY;
+            ui->textEditDisplayDiagram->append(currentLine);
+        }
+    }
+}
+
+void MainWindow::displaySectorWeekdayDiagramAsText() {
+    QString diagramTitle = measurementsChart->title();
+    QString seriesName = "";
+    ui->textEditDisplayDiagram->clear();
+    ui->textEditDisplayDiagram->append(diagramTitle + "\n");
+
+    QString sectorStr = sectorDayAnalysis->getSelectedSectorString();
+    QString subCatStr = sectorDayAnalysis->getSelectedSubCatString();
+    ui->textEditDisplayDiagram->append("Sector\t" + sectorStr);
+    ui->textEditDisplayDiagram->append("Subsector\t" + subCatStr + "\n");
+
+    ui->textEditDisplayDiagram->append("Día\tHora\tkW");
+    for(int i = 0; i < displayedSeries.size(); ++i) {
+        seriesName = displayedSeries[i]->name();
+        QString currentX;
+        QString currentY;
+        QString currentLine;
+        QVector<QPointF> dataPoints = displayedSeries[i]->pointsVector();
+        for(int j = 0; j < dataPoints.size(); ++j) {
+            currentX = QString::number(dataPoints[j].x());
+            currentY = QString::number(dataPoints[j].y());
+            currentLine = seriesName + "\t" + currentX + "\t" + currentY;
+            ui->textEditDisplayDiagram->append(currentLine);
+        }
+    }
+}
+
 void MainWindow::displaySectorWeekDiagramAsText() {
     QString diagramTitle = measurementsChart->title();
     QString seriesName = "";
     ui->textEditDisplayDiagram->clear();
     ui->textEditDisplayDiagram->append(diagramTitle + "\n");
-    ui->textEditDisplayDiagram->append("Día\tHora\tPromedio kW");
 
+    QString sectorStr = sectorWeekAnalysis->getSelectedSectorString();
+    QString subCatStr = sectorWeekAnalysis->getSelectedSubCatString();
+    ui->textEditDisplayDiagram->append("Sector\t" + sectorStr);
+    ui->textEditDisplayDiagram->append("Subsector\t" + subCatStr + "\n");
+
+    ui->textEditDisplayDiagram->append("Día\tHora\tPromedio kW");
     for(int i = 0; i < displayedSeries.size(); ++i) {
         seriesName = displayedSeries[i]->name();
         QString currentX;

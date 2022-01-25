@@ -84,11 +84,6 @@ private:
     // File management parameters
     std::vector<MeasurementsDocument> documents;
     int fileManagerSelectedFile;
-    //QList<QString> customSectors;
-    //QList<QString> customResRanges;
-    //QList<QString> customCommercials;
-    //QList<QString> customIndustrials;
-    //QList<QString> customSubSectors;
 
     // file management functions (not used as slots)
     //void setupComboBoxesFileCategories();
@@ -105,6 +100,8 @@ private:
     // Diagram display functions
     void displayDiagramDataAsText();
     void displaySimpleDiagramAsText();
+    void displaySiteAnalysisDiagramAsText();
+    void displaySectorWeekdayDiagramAsText();
     void displaySectorWeekDiagramAsText();
 
 private slots:
