@@ -1047,6 +1047,36 @@ int MainWindow::generateSectorSubCatsDiagram() {
 
     int result = -1;
 
+    // get selected parameters
+    int sector = sectorSubCatsAnalysis->getSelectedSector();
+    int dayType = sectorSubCatsAnalysis->getDay();
+    int visType = sectorSubCatsAnalysis->getVisType();
+
+    // find all documents corresponding to the selected sector
+    std::vector<int> correctFileIndices;
+    qDebug() << sector;
+    if(sector == -2) {
+        QString sectorStr = sectorSubCatsAnalysis->getSelectedSectorString();
+        for(unsigned int i = 0; i < this->documents.size(); ++i) {
+            if(documents[i].customSectorStr == sectorStr) {
+                correctFileIndices.emplace_back(i);
+            }
+        }
+    } else if(sector >= 0) {
+        for(unsigned int i = 0; i < this->documents.size(); ++i) {
+            if(documents[i].docSector == sector) {
+                correctFileIndices.emplace_back(i);
+            }
+        }
+    }
+
+    // find number of subcategories, name of subcategories and number of lineseries for each subcat
+    //QList<
+    //QVector<QPair<int, int> > regularSubCategories;
+    //QVector<QPair<QString, int> > customSubCategories;
+    //if(sector == -2)
+
+
     return result;
 }
 
@@ -1054,7 +1084,7 @@ int MainWindow::generateSectorSubCatsDiagram() {
 
     // get date and categories to be visualized in the diagram
     int sector = ui->comboBoxSelectSector->currentIndex();
-    int subCategory = ui->comboBoxSelectSubCategory->currentIndex();
+    int subCategory = ui->combo111BoxSelectSubCategory->currentIndex();
     QDate selectedDate = ui->dateEditSelectDate->date();
     qDebug() << sector << ", " << subCategory << ", " << selectedDate.toString();
 
@@ -1404,7 +1434,7 @@ int MainWindow::generateDiagram() {
         this->generateSectorWeekdayDiagram();
     } else if(selectedFunction == 3) {
         this->generateSectorWeekDiagram();
-    } else if(selectedFunction == 3) {
+    } else if(selectedFunction == 4) {
         this->generateSectorSubCatsDiagram();
     }
     return 0;
