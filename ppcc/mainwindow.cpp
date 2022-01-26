@@ -17,37 +17,40 @@ MainWindow::MainWindow(QWidget *parent):
     ui->lineEditFileFreq->setReadOnly(true);
     ui->lineEditFileCat->setReadOnly(true);
     ui->lineEditFileSubCat->setReadOnly(true);
-    //setupComboBoxesFileCategories();
-    //updateFileSubCatComboBox(0);
-
+    ui->spinBoxYMin->setRange(0, 99999);
+    ui->spinBoxYMax->setRange(0, 99999);
 
     // setup widgets containing the different functions to generate diagrams
     simpleDiagramFunction = new SimpleDiagramFunction(this);
     siteAnalysis = new SiteAnalysis(this);
     sectorDayAnalysis = new SectorDayAnalysis(this);
     sectorWeekAnalysis = new SectorWeekAnalysis(this);
+    sectorSubCatsAnalysis = new SectorSubCatsAnalysis(this);
     ui->stackedWidgetDiagramFunctions->addWidget(simpleDiagramFunction);
     ui->stackedWidgetDiagramFunctions->addWidget(siteAnalysis);
     ui->stackedWidgetDiagramFunctions->addWidget(sectorDayAnalysis);
     ui->stackedWidgetDiagramFunctions->addWidget(sectorWeekAnalysis);
-    ui->comboBoxSelectFunction->addItem("Diagrama simple");
-    ui->comboBoxSelectFunction->addItem("Diagrama de sitio y día de semana");
-    ui->comboBoxSelectFunction->addItem("Diagrama de sector y dia de semana");
-    ui->comboBoxSelectFunction->addItem("Diagrama de sector y semana laboral");
+    ui->stackedWidgetDiagramFunctions->addWidget(sectorSubCatsAnalysis);
+    ui->comboBoxSelectFunction->addItem("Curvas de fechas específicas");
+    ui->comboBoxSelectFunction->addItem("Promedio días de semana, sitio");
+    ui->comboBoxSelectFunction->addItem("Promedio días de semana, sector");
+    ui->comboBoxSelectFunction->addItem("Promedio semana laboral, sector");
+    ui->comboBoxSelectFunction->addItem("Promedio subcategorías de sector");
 
     // set pointers and smart pointers for correct resource management
     this->measurementsChart = std::make_shared<QChart>();
     this->auxiliaryUpdateChart = std::make_shared<QChart>();
     xAxis = new QValueAxis();
+    yAxis = new QValueAxis();
 
-    // setup xAxis: always stays the same, only label changes on each chart
+    // setup axes: a axis always stays the same, only label changes on each chart
     xAxis->setMin(0.0);
     xAxis->setMax(24.0);
     xAxis->setLabelFormat("%i");
     xAxis->setTickCount(25);
     xAxis->setTitleText("Hora");
 
-    // set auxChart parameters
+    // set auxChart parameters, display auxChart at startup
     this->auxiliaryUpdateChart->legend()->hide();
     this->auxiliaryUpdateChart->createDefaultAxes();
 
@@ -69,10 +72,11 @@ MainWindow::MainWindow(QWidget *parent):
     // functions
     connect(ui->comboBoxSelectFunction, SIGNAL(currentIndexChanged(int)), this, SLOT(selectFunction(int)));
     connect(simpleDiagramFunction, SIGNAL(selectedDocChanged(int)), this, SLOT(updateDaysSimpleDiagramFunction(int)));
-    //connect(simpleDiagramFunction, SIGNAL(selectedSheetChanged(int, int)), this, SLOT(updateDaysSimpleDiagramFunction(int, int)));
-    //connect(siteAnalysis, SIGNAL(selectedDocChanged(int)), this, SLOT(updateSheetListSiteAnalysis(int)));
     connect(ui->buttonGenerateDiagram, SIGNAL(clicked()), this, SLOT(generateDiagram()));
     connect(ui->buttonExportDiagram, SIGNAL(clicked()), this, SLOT(exportDiagram()));
+
+    // Diagram
+    connect(ui->buttonRefreshDiagram, SIGNAL(clicked()), this, SLOT(refreshDiagram()));
 }
 
 MainWindow::~MainWindow() {
@@ -89,10 +93,13 @@ MainWindow::~MainWindow() {
     ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
     for(int i = 0; i < this->displayedSeries.size(); ++i) {
         displayedSeries[i]->detachAxis(xAxis);
+        displayedSeries[i]->detachAxis(yAxis);
         delete displayedSeries[i];
     }
     measurementsChart->removeAxis(xAxis);
+    measurementsChart->removeAxis(yAxis);
     measurementsChart.reset();
+    delete yAxis;
     delete xAxis;
 
     // delete rest
@@ -269,10 +276,12 @@ void MainWindow::importDocument() {
                 if(sectorDoesNotExist) {
                     sectorDayAnalysis->customSectors.append(documents.back().customSectorStr);
                     sectorWeekAnalysis->customSectors.append(documents.back().customSectorStr);
+                    sectorSubCatsAnalysis->customSectors.append(documents.back().customSectorStr);
                 }
             }
             sectorDayAnalysis->setupComboBoxSector();
             sectorWeekAnalysis->setupComboBoxSector();
+            sectorSubCatsAnalysis->setupComboBoxSector();
 
             // add corresponding entries to the function widgets
             simpleDiagramFunction->addEntryComboBoxSelectDoc(fileNameOnly);
@@ -294,7 +303,47 @@ void MainWindow::selectFunction(int functionIndex) {
         ui->stackedWidgetDiagramFunctions->setCurrentWidget(sectorDayAnalysis);
     } else if(functionIndex == 3) {
         ui->stackedWidgetDiagramFunctions->setCurrentWidget(sectorWeekAnalysis);
+    } else if(functionIndex == 4) {
+        ui->stackedWidgetDiagramFunctions->setCurrentWidget(sectorSubCatsAnalysis);
     }
+}
+
+void MainWindow::resetMeasurementsChart() {
+
+    // while chart is being updated, auxChart is set in chartView to avoid crash
+    // (ownership of measurementsChart by chartView is released)
+    ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
+
+    // delete QLineSeries from old chart, empty series list
+    for(int i = 0; i < this->displayedSeries.size(); ++i) {
+        displayedSeries[i]->detachAxis(xAxis);
+        displayedSeries[i]->detachAxis(yAxis);
+        delete displayedSeries[i];
+    }
+    displayedSeries.clear();
+
+    // reset measurementsChart to create new clean chart
+    measurementsChart->removeAxis(xAxis);
+    measurementsChart->removeAxis(yAxis);
+    measurementsChart.reset();
+    this->measurementsChart = std::make_shared<QChart>();
+}
+
+void MainWindow::configureChartAxes(QString &xAxisTitle, QString &yAxisTitle, double &yMin, double &yMax) {
+
+    xAxis->setTitleText(xAxisTitle);
+    yAxis->setTitleText(yAxisTitle);
+    yAxis->setMin(yMin);
+    yAxis->setMax(yMax);
+    measurementsChart->addAxis(xAxis, Qt::AlignBottom);
+    measurementsChart->addAxis(yAxis, Qt::AlignLeft);
+    for(int i = 0; i < displayedSeries.size(); ++i) {
+        displayedSeries[i]->attachAxis(xAxis);
+        displayedSeries[i]->attachAxis(yAxis);
+    }
+    yAxis->applyNiceNumbers();
+    ui->spinBoxYMin->setValue(yMin);
+    ui->spinBoxYMax->setValue(yMax);
 }
 
 int MainWindow::generateSimpleDiagram() {
@@ -310,25 +359,11 @@ int MainWindow::generateSimpleDiagram() {
     // update diagram only if there are valid entries
     if(selectedDaysIndices.size() > 0) {
 
-        // while chart is being updated, auxChart is set in chartView to avoid crash
-        // (ownership of measurementsChart by chartView is released)
-        ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
+        this->resetMeasurementsChart();
 
-
-        // delete QLineSeries from old chart, empty series list
-        for(int i = 0; i < this->displayedSeries.size(); ++i) {
-            displayedSeries[i]->detachAxis(xAxis);
-            delete displayedSeries[i];
-        }
-        displayedSeries.clear();
-
-        // reset measurementsChart to create new clean chart
-        measurementsChart->removeAxis(xAxis);
-        measurementsChart.reset();
-
-        this->measurementsChart = std::make_shared<QChart>();
-
-        // copy by value series from sheets to current displayed series
+        // copy by value series from sheets to current displayed series, find yMin and yMax
+        double yMin = 0.0;
+        double yMax = 0.0;
         for(unsigned short i = 0; i < selectedDaysIndices.size(); ++i) {
             displayedSeries.append(new QLineSeries());
             displayedSeries[i]->setName(
@@ -336,26 +371,31 @@ int MainWindow::generateSimpleDiagram() {
             QVector<QPointF> dataPoints =
                 documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[selectedDaysIndices[i]]->pointsVector();
             for(int j = 0; j < dataPoints.size(); ++j) {
+                if((i == 0) && (j == 0)) {
+                    yMin = dataPoints[j].y();
+                    yMax = dataPoints[j].y();
+                }
+                if(yMin > dataPoints[j].y()) {
+                    yMin = dataPoints[j].y();
+                }
+                if(yMax < dataPoints[j].y()) {
+                    yMax = dataPoints[j].y();
+                }
                 displayedSeries[i]->append(dataPoints[j]);
             }
             measurementsChart->addSeries(displayedSeries[i]);
         }
 
         // configure axes
-        xAxis->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel);
-        measurementsChart->createDefaultAxes();
-        QList<QAbstractAxis*> defaultChartAxes = measurementsChart->axes();
-        measurementsChart->removeAxis(defaultChartAxes[0]);
-        defaultChartAxes[1]->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel);
-        measurementsChart->addAxis(xAxis, Qt::AlignBottom);
-        for(int i = 0; i < displayedSeries.size(); ++i) {
-            displayedSeries[i]->attachAxis(xAxis);
-        }
+        QString xAxisTitle = documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel;
+        QString yAxisTitle = documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel;
+        this->configureChartAxes(xAxisTitle, yAxisTitle, yMin, yMax);
 
         // setup and display chart
         measurementsChart->legend()->setVisible(true);
         measurementsChart->legend()->setAlignment(Qt::AlignBottom);
         measurementsChart->setTitle("Consumo diario de energía");
+        ui->lineEditDiagramTitle->setText(measurementsChart->title());
         ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
         ui->graphicsViewChart->setChart(measurementsChart.get());
         this->displayDiagramDataAsText();
@@ -390,24 +430,11 @@ int MainWindow::generateSiteAnalysisDiagram() {
             return result;
         }
 
-        // set to AuxChart while updating main chart
-        ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
-
-
-        // delete QLineSeries from old chart, empty series list
-        for(int i = 0; i < this->displayedSeries.size(); ++i) {
-            displayedSeries[i]->detachAxis(xAxis);
-            delete displayedSeries[i];
-        }
-        displayedSeries.clear();
-
-        // reset measurementsChart to create new clean chart
-        measurementsChart->removeAxis(xAxis);
-        measurementsChart.reset();
-        this->measurementsChart = std::make_shared<QChart>();
-
+        this->resetMeasurementsChart();
 
         // copy by value corresponding series from sheets to current displayed series
+        double yMin = 0.0;
+        double yMax = 0.0;
         for(unsigned short i = 0; i < weekdayIndices.size(); ++i) {
             displayedSeries.append(new QLineSeries());
             displayedSeries[i]->setName(
@@ -415,17 +442,29 @@ int MainWindow::generateSiteAnalysisDiagram() {
             QVector<QPointF> dataPoints =
                 documents[selectedDocIndex].sheets[selectedSheetIndex]->measurementSeries[weekdayIndices[i]]->pointsVector();
             for(int j = 0; j < dataPoints.size(); ++j) {
+                if((i == 0) && (j == 0)) {
+                    yMin = dataPoints[j].y();
+                    yMax = dataPoints[j].y();
+                }
+                if(yMin > dataPoints[j].y()) {
+                    yMin = dataPoints[j].y();
+                }
+                if(yMax < dataPoints[j].y()) {
+                    yMax = dataPoints[j].y();
+                }
                 displayedSeries[i]->append(dataPoints[j]);
             }
         }
 
-        QString diagramTitle = "Consumo de energía días " + enumerations::getStringFromDay(selectedDay);
+        QString diagramTitle = "Curvas de carga, días " + enumerations::getStringFromDay(selectedDay);
         if(visType == 1) {
             displayedSeries = getAverageFromSeries(displayedSeries, documents[selectedDocIndex].docFreq, false);
-            diagramTitle = "Promedio del consumo diario de energía";
+            diagramTitle = "Curva de carga promedio, días " + enumerations::getStringFromDay(selectedDay);
+            displayedSeries[0]->setName(enumerations::getStringFromDay(selectedDay));
         } else if(visType == 2) {
             displayedSeries = getAverageFromSeries(displayedSeries, documents[selectedDocIndex].docFreq, true);
-            diagramTitle = "Suma del consumo diario de energía";
+            diagramTitle = "Suma de las curvas de carga, días " + enumerations::getStringFromDay(selectedDay);
+            displayedSeries[0]->setName(enumerations::getStringFromDay(selectedDay));
         }
 
         for(int i = 0; i < displayedSeries.size(); ++i) {
@@ -433,20 +472,15 @@ int MainWindow::generateSiteAnalysisDiagram() {
         }
 
         // configure axes
-        xAxis->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel);
-        measurementsChart->createDefaultAxes();
-        QList<QAbstractAxis*> defaultChartAxes = measurementsChart->axes();
-        measurementsChart->removeAxis(defaultChartAxes[0]);
-        defaultChartAxes[1]->setTitleText(documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel);
-        measurementsChart->addAxis(xAxis, Qt::AlignBottom);
-        for(int i = 0; i < displayedSeries.size(); ++i) {
-            displayedSeries[i]->attachAxis(xAxis);
-        }
+        QString xAxisTitle = documents[selectedDocIndex].sheets[selectedSheetIndex]->xAxisLabel;
+        QString yAxisTitle = documents[selectedDocIndex].sheets[selectedSheetIndex]->yAxisLabel;
+        this->configureChartAxes(xAxisTitle, yAxisTitle, yMin, yMax);
 
         // setup and display chart
         measurementsChart->legend()->setVisible(true);
         measurementsChart->legend()->setAlignment(Qt::AlignBottom);
         measurementsChart->setTitle(diagramTitle);
+        ui->lineEditDiagramTitle->setText(measurementsChart->title());
         ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
         ui->graphicsViewChart->setChart(measurementsChart.get());
         this->displayDiagramDataAsText();
@@ -688,11 +722,9 @@ int MainWindow::generateSectorWeekdayDiagram() {
         for(unsigned int j = 0; j < documents[correctFileIndices[i]].sheets.size(); ++j) {
             currentDoc = correctFileIndices[i];
             currentSheet = j;
-            //currentFreq = documents[correctFileIndices[i]].docFreq;
             std::vector<int> currSheetWeekdayIndices = findWeekdays(selectedDay, correctFileIndices[i], currentSheet);
             for(unsigned int k = 0; k < currSheetWeekdayIndices.size(); ++k) {
                 currentLineSeries = currSheetWeekdayIndices[k];
-                //weekdayIndices.emplace_back(std::make_tuple(currentDoc, currentSheet, currentLineSeries, currentFreq));
                 weekdayIndices.emplace_back(std::make_tuple(currentDoc, currentSheet, currentLineSeries));
             }
         }
@@ -705,23 +737,7 @@ int MainWindow::generateSectorWeekdayDiagram() {
         return result;
     }
 
-    // debug (TODO: adapt to tuple)
-    //qDebug() << "File: " << correctFileIndices[i] << ", sheet: " << j << ", LineSeries: " << currSheetWeekdayIndices[k];
-
-    // set to AuxChart while updating main chart
-    ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
-
-    // delete QLineSeries from old chart, empty series list
-    for(int i = 0; i < this->displayedSeries.size(); ++i) {
-        displayedSeries[i]->detachAxis(xAxis);
-        delete displayedSeries[i];
-    }
-    displayedSeries.clear();
-
-    // reset measurementsChart to create new clean chart
-    measurementsChart->removeAxis(xAxis);
-    measurementsChart.reset();
-    this->measurementsChart = std::make_shared<QChart>();
+    this->resetMeasurementsChart();
 
     // copy by value corresponding series from sheets to current displayed series
     for(unsigned short i = 0; i < weekdayIndices.size(); ++i) {
@@ -744,19 +760,23 @@ int MainWindow::generateSectorWeekdayDiagram() {
 
         // data will always be tranformed to 15 min ticks
         displayedSeries = transformAllTo15MinTicks(displayedSeries);
-
-        // displayedSeries won't be empty, as this point is only reached when
-        // weekdayIndices is not empty
-        //if(displayedSeries.size() == 0) {
-        //    return result;
-        //}
     }
 
+    QString diagramTitle = "Curvas de carga del día " + enumerations::getStringFromDay(selectedDay)
+                           + ", " + enumerations::getStringFromSector(sector) + ", "
+                           + enumerations::getStringFromSubSector(sector, subCat);
     if(visType == 1) {
         displayedSeries = getAverageFromSeries(displayedSeries, currentFreq, false);
-        //qDebug() << "Method not implemented for this case";
+        diagramTitle = "Curva de carga promedio, días " + enumerations::getStringFromDay(selectedDay)
+                       + ", " + enumerations::getStringFromSector(sector) + ", "
+                       + enumerations::getStringFromSubSector(sector, subCat);
+        displayedSeries[0]->setName(enumerations::getStringFromDay(selectedDay));
     } else if(visType == 2) {
         displayedSeries = getAverageFromSeries(displayedSeries, currentFreq, true);
+        diagramTitle = "Suma de las curvas de carga, días " + enumerations::getStringFromDay(selectedDay)
+                       + ", " + enumerations::getStringFromSector(sector) + ", "
+                       + enumerations::getStringFromSubSector(sector, subCat);
+        displayedSeries[0]->setName(enumerations::getStringFromDay(selectedDay));
     }
 
     for(int i = 0; i < displayedSeries.size(); ++i) {
@@ -764,26 +784,42 @@ int MainWindow::generateSectorWeekdayDiagram() {
     }
 
     // setup axes
-    xAxis->setTitleText("Hora");
-    measurementsChart->createDefaultAxes();
-    QList<QAbstractAxis*> defaultChartAxes = measurementsChart->axes();
-    measurementsChart->removeAxis(defaultChartAxes[0]);
-    defaultChartAxes[1]->setTitleText("kW");
-    measurementsChart->addAxis(xAxis, Qt::AlignBottom);
-    for(int i = 0; i < displayedSeries.size(); ++i) {
-        displayedSeries[i]->attachAxis(xAxis);
-    }
+    double yMin = 0.0;
+    double yMax = 0.0;
+    findMinMaxDisplayedSeries(yMin, yMax);
+    QString xAxisTitle = "Hora";
+    QString yAxisTitle = "kW";
+    this->configureChartAxes(xAxisTitle, yAxisTitle, yMin, yMax);
 
     // setup and display chart
     measurementsChart->legend()->setVisible(true);
     measurementsChart->legend()->setAlignment(Qt::AlignBottom);
-    measurementsChart->setTitle("Consumo de energia");
+    measurementsChart->setTitle(diagramTitle);
+    ui->lineEditDiagramTitle->setText(diagramTitle);
     ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
     ui->graphicsViewChart->setChart(measurementsChart.get());
     this->displayDiagramDataAsText();
     result = 0;
 
     return result;
+}
+
+void MainWindow::findMinMaxDisplayedSeries(double &yMin, double &yMax) {
+    for(int i = 0; i < displayedSeries.size(); ++i) {
+        QVector<QPointF> dataPoints = displayedSeries[i]->pointsVector();
+        for(int j = 0; j < dataPoints.size(); ++j) {
+            if((i == 0) && (j == 0)) {
+                yMin = dataPoints[j].y();
+                yMax = dataPoints[j].y();
+            }
+            if(yMin > dataPoints[j].y()) {
+                yMin = dataPoints[j].y();
+            }
+            if(yMax < dataPoints[j].y()) {
+                yMax = dataPoints[j].y();
+            }
+        }
+    }
 }
 
 QList<QLineSeries*> MainWindow::transformAllTo15MinTicks(QList<QLineSeries*> &oldLineSeries) {
@@ -888,7 +924,6 @@ int MainWindow::generateSectorWeekDiagram() {
         if(documents[correctFileIndices[i]].docFreq != currentFreq) {
             currentFreq = Frequency::quarterHour;
             dataNeedsTransformation = true;
-            qDebug() << "Data needs transformation.";
             break;
         }
     }
@@ -929,20 +964,7 @@ int MainWindow::generateSectorWeekDiagram() {
         return result;
     }
 
-    // set to AuxChart while updating main chart
-    ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
-
-    // delete QLineSeries from old chart, empty series list
-    for(int i = 0; i < this->displayedSeries.size(); ++i) {
-        displayedSeries[i]->detachAxis(xAxis);
-        delete displayedSeries[i];
-    }
-    displayedSeries.clear();
-
-    // reset measurementsChart to create new clean chart
-    measurementsChart->removeAxis(xAxis);
-    measurementsChart.reset();
-    this->measurementsChart = std::make_shared<QChart>();
+    this->resetMeasurementsChart();
 
     // setup line series for each day
     QVector<QList<QLineSeries*> > weekdaySeries;
@@ -985,9 +1007,15 @@ int MainWindow::generateSectorWeekDiagram() {
         }
     }
 
+    QString diagramTitle = "Curvas de carga de los días laborales, "
+                           + enumerations::getStringFromSector(sector) + ", "
+                           + enumerations::getStringFromSubSector(sector, subCat);
     if(visType == 1) {
         displayedSeries = getAverageFromSeries(displayedSeries, currentFreq, false);
         displayedSeries[0]->setName("Lunes a viernes");
+        diagramTitle = "Curva de carga promedio de los días laborales, "
+                       + enumerations::getStringFromSector(sector) + ", "
+                       + enumerations::getStringFromSubSector(sector, subCat);
     }
 
     for(int i = 0; i < displayedSeries.size(); ++i) {
@@ -995,24 +1023,29 @@ int MainWindow::generateSectorWeekDiagram() {
     }
 
     // setup axes
-    xAxis->setTitleText("Hora");
-    measurementsChart->createDefaultAxes();
-    QList<QAbstractAxis*> defaultChartAxes = measurementsChart->axes();
-    measurementsChart->removeAxis(defaultChartAxes[0]);
-    defaultChartAxes[1]->setTitleText("Promedio kW");
-    measurementsChart->addAxis(xAxis, Qt::AlignBottom);
-    for(int i = 0; i < displayedSeries.size(); ++i) {
-        displayedSeries[i]->attachAxis(xAxis);
-    }
+    double yMin = 0.0;
+    double yMax = 0.0;
+    findMinMaxDisplayedSeries(yMin, yMax);
+    QString xAxisTitle = "Hora";
+    QString yAxisTitle = "Promedio kW";
+    this->configureChartAxes(xAxisTitle, yAxisTitle, yMin, yMax);
 
     // setup and display chart
     measurementsChart->legend()->setVisible(true);
     measurementsChart->legend()->setAlignment(Qt::AlignBottom);
-    measurementsChart->setTitle("Promedio del consumo de energia durante días laborales");
+    measurementsChart->setTitle(diagramTitle);
+    ui->lineEditDiagramTitle->setText(diagramTitle);
     ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
     ui->graphicsViewChart->setChart(measurementsChart.get());
     this->displayDiagramDataAsText();
     result = 0;
+
+    return result;
+}
+
+int MainWindow::generateSectorSubCatsDiagram() {
+
+    int result = -1;
 
     return result;
 }
@@ -1125,6 +1158,7 @@ void MainWindow::displayDiagramDataAsText() {
     } else if(selectedFunction == 3) {
         this->displaySectorWeekDiagramAsText();
     }
+    ui->textEditDisplayDiagram->moveCursor(QTextCursor::Start);
 }
 
 void MainWindow::displaySimpleDiagramAsText() {
@@ -1348,6 +1382,18 @@ void MainWindow::removeDocument() {
     }
 }
 
+void MainWindow::refreshDiagram() {
+    QString newTitleText = ui->lineEditDiagramTitle->text();
+    //ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
+    this->measurementsChart->setTitle(newTitleText);
+    //ui->graphicsViewChart->setChart(measurementsChart);
+
+    double yMin = ui->spinBoxYMin->value();
+    double yMax = ui->spinBoxYMax->value();
+    this->yAxis->setRange(yMin, yMax);
+    //this->yAxis->applyNiceNumbers();
+}
+
 int MainWindow::generateDiagram() {
     int selectedFunction = ui->comboBoxSelectFunction->currentIndex();
     if(selectedFunction == 0) {
@@ -1358,6 +1404,8 @@ int MainWindow::generateDiagram() {
         this->generateSectorWeekdayDiagram();
     } else if(selectedFunction == 3) {
         this->generateSectorWeekDiagram();
+    } else if(selectedFunction == 3) {
+        this->generateSectorSubCatsDiagram();
     }
     return 0;
 }

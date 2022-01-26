@@ -13,10 +13,10 @@ SiteAnalysis::SiteAnalysis(QWidget *parent) :
 
     ui->comboBoxSelectDay->addItem("Lunes");
     ui->comboBoxSelectDay->addItem("Martes");
-    ui->comboBoxSelectDay->addItem("Miercoles");
+    ui->comboBoxSelectDay->addItem("Miércoles");
     ui->comboBoxSelectDay->addItem("Jueves");
     ui->comboBoxSelectDay->addItem("Viernes");
-    ui->comboBoxSelectDay->addItem("Sabado");
+    ui->comboBoxSelectDay->addItem("Sábado");
     ui->comboBoxSelectDay->addItem("Domingo");
 
     connect(ui->comboBoxSelectDoc, SIGNAL(currentIndexChanged(int)), this, SLOT(setCurrentDoc(int)));

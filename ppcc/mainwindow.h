@@ -36,6 +36,7 @@
 #include "siteanalysis.h"
 #include "sectordayanalysis.h"
 #include "sectorweekanalysis.h"
+#include "sectorsubcatsanalysis.h"
 #include "exportdiagramdialog.h"
 #include "xlsxdocument.h"
 
@@ -73,10 +74,11 @@ private:
     SiteAnalysis* siteAnalysis;
     SectorDayAnalysis* sectorDayAnalysis;
     SectorWeekAnalysis* sectorWeekAnalysis;
+    SectorSubCatsAnalysis* sectorSubCatsAnalysis;
 
     // chart parameters
     QValueAxis* xAxis;
-    QValueAxis* yAxis;                              // currently not used
+    QValueAxis* yAxis;
     std::shared_ptr<QChart> measurementsChart;      // holds the official chart with the correct data
     std::shared_ptr<QChart> auxiliaryUpdateChart;   // pseudo chart to which chartView is set while official chart is being updated
     QList<QLineSeries*> displayedSeries;            // holds only the series currently displayed in the chart
@@ -86,12 +88,14 @@ private:
     int fileManagerSelectedFile;
 
     // file management functions (not used as slots)
-    //void setupComboBoxesFileCategories();
     void readDocument(QXlsx::Document*);
     void saveAsExcel(QString&);
     void saveAsCSV(QString&);
 
     // sub functions for diagram generation
+    void resetMeasurementsChart();
+    void findMinMaxDisplayedSeries(double&, double&);
+    void configureChartAxes(QString&, QString&, double&, double&);
     bool compareDates(QDate&, QString&, DateFormat&, bool&);
     std::vector<int> findWeekdays(int&, int&, int&);
     QList<QLineSeries*> getAverageFromSeries(QList<QLineSeries*>&, Frequency, bool);
@@ -136,8 +140,10 @@ private slots:
     int generateSiteAnalysisDiagram();
     int generateSectorWeekdayDiagram();
     int generateSectorWeekDiagram();
+    int generateSectorSubCatsDiagram();
 
-
+    // Diagram configuration functions
+    void refreshDiagram();
 };
 
 #endif // MAINWINDOW_H
