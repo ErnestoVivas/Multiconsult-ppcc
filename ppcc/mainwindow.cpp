@@ -827,6 +827,10 @@ QList<QLineSeries*> MainWindow::transformAllTo15MinTicks(QList<QLineSeries*> &ol
 
     // assumption: each lineSeries has at least 2 points
     for(int i = 0; i < oldLineSeries.size(); ++i) {
+        if(oldLineSeries[i]->count() <= 1) {
+            continue;
+        }
+
         double x0 = oldLineSeries[i]->at(0).x();
         double x1 = oldLineSeries[i]->at(1).x();
         if((x1 - x0) == 0.25) {
@@ -866,6 +870,61 @@ QList<QLineSeries*> MainWindow::transformAllTo15MinTicks(QList<QLineSeries*> &ol
     oldLineSeries.clear();
 
     return newLineSeries;
+}
+
+QList<QLineSeries*> MainWindow::getMeasurementDayLineSeries(int &measurementFile, int &selectedDay) {
+    QList<QLineSeries*> newLineSeriesList;
+
+    int sheet = 0;
+    std::vector<std::vector<int> > weekdayIndices;
+    std::vector<int> weekendIndices;
+    if(selectedDay == 0) {
+
+        // monday to friday
+        for(int i = 1; i <= 5; ++i) {
+            weekdayIndices.emplace_back(findWeekdays(i, measurementFile, sheet));
+        }
+        for(int i = 0; i < 5; ++i) {
+            for(unsigned short j = 0; j < weekdayIndices[i].size(); ++j) {
+
+                int currLineSeriesIndex = weekdayIndices[i][j];
+                newLineSeriesList.append(new QLineSeries());
+                newLineSeriesList.back()->setName(
+                        documents[measurementFile].sheets[0]->measurementSeries[currLineSeriesIndex]->name());
+                QVector<QPointF> dataPoints =
+                    documents[measurementFile].sheets[0]->measurementSeries[currLineSeriesIndex]->pointsVector();
+                for(int k = 0; k < dataPoints.size(); ++k) {
+                    newLineSeriesList.back()->append(dataPoints[k]);
+                }
+            }
+        }
+    } else if(selectedDay == 1) {
+
+        // saturday
+        int saturday = 6;
+        weekendIndices = findWeekdays(saturday, measurementFile, sheet);
+
+    } else if(selectedDay == 2) {
+
+        // sunday
+        int sunday = 7;
+        weekendIndices = findWeekdays(sunday, measurementFile, sheet);
+    }
+
+    if(selectedDay != 0) {
+        for(unsigned int i = 0; i < weekendIndices.size(); ++i) {
+
+            newLineSeriesList.append(new QLineSeries());
+            newLineSeriesList.back()->setName(
+                    documents[measurementFile].sheets[0]->measurementSeries[weekendIndices[i]]->name());
+            QVector<QPointF> dataPoints =
+                documents[measurementFile].sheets[0]->measurementSeries[weekendIndices[i]]->pointsVector();
+            for(int k = 0; k < dataPoints.size(); ++k) {
+                newLineSeriesList.back()->append(dataPoints[k]);
+            }
+        }
+    }
+    return newLineSeriesList;
 }
 
 int MainWindow::generateSectorWeekDiagram() {
@@ -1054,30 +1113,224 @@ int MainWindow::generateSectorSubCatsDiagram() {
 
     // find all documents corresponding to the selected sector
     std::vector<int> correctFileIndices;
-    qDebug() << sector;
+    //qDebug() << sector;
     if(sector == -2) {
         QString sectorStr = sectorSubCatsAnalysis->getSelectedSectorString();
+        //qDebug() << sectorStr;
         for(unsigned int i = 0; i < this->documents.size(); ++i) {
-            if(documents[i].customSectorStr == sectorStr) {
+            if((documents[i].docSector == sector) && (documents[i].customSectorStr == sectorStr)) {
                 correctFileIndices.emplace_back(i);
             }
         }
     } else if(sector >= 0) {
         for(unsigned int i = 0; i < this->documents.size(); ++i) {
             if(documents[i].docSector == sector) {
+                //qDebug() << sector << ", " << documents[i].docSector;
                 correctFileIndices.emplace_back(i);
             }
         }
     }
 
-    // find number of subcategories, name of subcategories and number of lineseries for each subcat
-    //QList<
-    //QVector<QPair<int, int> > regularSubCategories;
-    //QVector<QPair<QString, int> > customSubCategories;
-    //if(sector == -2)
+    // debug
+    //qDebug() << "\nCorrect files: ";
+    //for(int i = 0; i < correctFileIndices.size(); ++i) {
+    //    qDebug() << correctFileIndices[i];
+    //}
+    //qDebug() << "\n";
 
+    // find number of subcategories, name of subcategories and number of lineseries for each subcat
+    QVector<QPair<QPair<int, QString>, int> > subCatIndices;
+    QVector<QPair<QPair<int, QString>, QList<QLineSeries*> > > targetLineSeries;
+    QList<QLineSeries*> currentLineSeries;
+
+    //QVector<QString> subCatStrings;
+    if(sector == -2) {
+        for(unsigned int i = 0; i < correctFileIndices.size(); ++i) {
+            if(i == 0) {
+                //subCatStrings.push_back(documents[i].customSubSectorStr);
+                subCatIndices.push_back(qMakePair(qMakePair(-2, documents[correctFileIndices[i]].customSubSectorStr), 0));
+                targetLineSeries.push_back(
+                            qMakePair(qMakePair(-2, documents[correctFileIndices[i]].customSubSectorStr), QList<QLineSeries*>()));
+            }
+            bool subCatExistsAlready = false;
+            for(int j = 0; j < subCatIndices.size(); ++j) {
+                if(documents[correctFileIndices[i]].customSubSectorStr == subCatIndices[j].first.second) {
+                    ++subCatIndices[j].second;
+                    subCatExistsAlready = true;
+
+                    currentLineSeries = getMeasurementDayLineSeries(correctFileIndices[i], dayType);
+                    for(int k = 0; k < currentLineSeries.size(); ++k) {
+                        targetLineSeries[j].second.push_back(new QLineSeries());
+                        copyLineSeries(currentLineSeries[k], targetLineSeries[j].second.back());
+                    }
+                    currentLineSeries.clear();
+                }
+            }
+            if(!subCatExistsAlready) {
+                subCatIndices.push_back(qMakePair(qMakePair(-2, documents[correctFileIndices[i]].customSubSectorStr), 1));
+                targetLineSeries.push_back(
+                            qMakePair(qMakePair(-2, documents[correctFileIndices[i]].customSubSectorStr), QList<QLineSeries*>()));
+                targetLineSeries.back().second.push_back(new QLineSeries());
+
+                // copy to new QLine series
+                currentLineSeries = getMeasurementDayLineSeries(correctFileIndices[i], dayType);
+                for(int k = 0; k < currentLineSeries.size(); ++k) {
+                    targetLineSeries.back().second.push_back(new QLineSeries());
+                    copyLineSeries(currentLineSeries[k], targetLineSeries.back().second.back());
+                }
+                currentLineSeries.clear();
+            }
+        }
+    } else if(sector >= 0) {
+        for(unsigned int i = 0; i < correctFileIndices.size(); ++i) {
+            int subCatEnum = documents[correctFileIndices[i]].getSubCategory();
+            QString subCatString = enumerations::getStringFromSubSector(sector, subCatEnum);
+            if(subCatEnum == -2) {
+                subCatString = documents[correctFileIndices[i]].customSubSectorStr;
+            }
+            if(i == 0) {
+                subCatIndices.push_back(qMakePair(qMakePair(subCatEnum, subCatString), 0));
+                targetLineSeries.push_back(
+                            qMakePair(qMakePair(subCatEnum, subCatString), QList<QLineSeries*>()));
+            }
+            bool subCatExistsAlready = false;
+
+            for(int j = 0; j < subCatIndices.size(); ++j) {
+                if(subCatString == subCatIndices[j].first.second) {
+                    ++subCatIndices[j].second;
+                    subCatExistsAlready = true;
+                    targetLineSeries[j].second.push_back(new QLineSeries());
+
+                    // copy to new QLine series
+                    currentLineSeries = getMeasurementDayLineSeries(correctFileIndices[i], dayType);
+                    for(int k = 0; k < currentLineSeries.size(); ++k) {
+                        targetLineSeries[j].second.push_back(new QLineSeries());
+                        copyLineSeries(currentLineSeries[k], targetLineSeries[j].second.back());
+                    }
+                    currentLineSeries.clear();
+                }
+            }
+            if(!subCatExistsAlready) {
+                subCatIndices.push_back(qMakePair(qMakePair(subCatEnum, subCatString), 1));
+                targetLineSeries.push_back(
+                            qMakePair(qMakePair(subCatEnum, subCatString), QList<QLineSeries*>()));
+                targetLineSeries.back().second.push_back(new QLineSeries());
+
+                // copy to new QLine series
+                currentLineSeries = getMeasurementDayLineSeries(correctFileIndices[i], dayType);
+                for(int k = 0; k < currentLineSeries.size(); ++k) {
+                    targetLineSeries.back().second.push_back(new QLineSeries());
+                    copyLineSeries(currentLineSeries[k], targetLineSeries.back().second.back());
+                }
+                currentLineSeries.clear();
+            }
+        }
+    }
+
+    // Debug (keep for testing)
+    for(int i = 0; i < targetLineSeries.size(); ++i) {
+        qDebug() << "< (" << targetLineSeries[i].first.first << ", "
+                 << targetLineSeries[i].first.second << "), "
+                 << targetLineSeries[i].second.size() << ">";
+        for(int j = 0; j < targetLineSeries[i].second.size(); ++j) {
+            qDebug() << targetLineSeries[i].second[j]->name();
+            if((targetLineSeries[i].second[j]->name()).isEmpty()) {
+                qDebug() << "Empty Line Series";
+            }
+        }
+    }
+    qDebug() << "\n";
+
+    // fix bug: remove empty line series (reason unkown)
+    QVector<QPair<int, int> > emptyLineSeries;
+    for(int i = 0; i < targetLineSeries.size(); ++i) {
+        for(int j = 0; j < targetLineSeries[i].second.size(); ++j) {
+            QString currSeriesName = targetLineSeries[i].second[j]->name();
+            if(currSeriesName.isEmpty()) {
+                emptyLineSeries.push_back(qMakePair(i, j));
+            }
+        }
+    }
+    for(int i = 0; i < emptyLineSeries.size(); ++i) {
+        targetLineSeries[emptyLineSeries[i].first].second.removeAt(emptyLineSeries[i].second);
+        qDebug() << "Empty line series was removed";
+    }
+
+
+    if(targetLineSeries.size() == 0) {
+        QMessageBox::warning(this, tr("No se puede generar el diagrama."),
+                  tr("No se han encontrado datos para el sector indicado."),
+                  QMessageBox::Ok);
+        return result;
+    }
+
+    // calculate averages and transform (currently not checked whether it is necessary)
+    QList<QLineSeries*> targetAverageLineSeries;
+    for(int i = 0; i < targetLineSeries.size(); ++i) {
+        QList<QLineSeries*> currentLineSeries = transformAllTo15MinTicks(targetLineSeries[i].second);
+        currentLineSeries = getAverageFromSeries(currentLineSeries, Frequency::quarterHour, false);
+        currentLineSeries[0]->setName(targetLineSeries[i].first.second);
+        targetAverageLineSeries.push_back(currentLineSeries[0]);
+    }
+
+    // Debug
+    for(int i = 0; i < targetAverageLineSeries.size(); ++i) {
+        qDebug() << targetAverageLineSeries[i]->name();
+    }
+
+
+    // Setup and display Diagram
+    this->resetMeasurementsChart();
+
+    // copy by value series from sheets to current displayed series, find yMin and yMax
+    double yMin = 0.0;
+    double yMax = 0.0;
+    for(unsigned short i = 0; i < targetAverageLineSeries.size(); ++i) {
+
+        displayedSeries.append(new QLineSeries());
+        displayedSeries[i]->setName(targetAverageLineSeries[i]->name());
+        QVector<QPointF> dataPoints = targetAverageLineSeries[i]->pointsVector();
+        for(int j = 0; j < dataPoints.size(); ++j) {
+            if((i == 0) && (j == 0)) {
+                yMin = dataPoints[j].y();
+                yMax = dataPoints[j].y();
+            }
+            if(yMin > dataPoints[j].y()) {
+                yMin = dataPoints[j].y();
+            }
+            if(yMax < dataPoints[j].y()) {
+                yMax = dataPoints[j].y();
+            }
+            displayedSeries[i]->append(dataPoints[j]);
+        }
+        measurementsChart->addSeries(displayedSeries[i]);
+    }
+    QString xAxisTitle = "Hora";
+    QString yAxisTitle = "Promedio kW";
+    this->configureChartAxes(xAxisTitle, yAxisTitle, yMin, yMax);
+
+    QString sectorStr = sectorSubCatsAnalysis->getSelectedSectorString();
+    QString diagramTitle = "Curvas de carga promedio de las subcategorías del sector " + sectorStr;
+    measurementsChart->legend()->setVisible(true);
+    measurementsChart->legend()->setAlignment(Qt::AlignBottom);
+    measurementsChart->setTitle(diagramTitle);
+    ui->lineEditDiagramTitle->setText(diagramTitle);
+    ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
+    ui->graphicsViewChart->setChart(measurementsChart.get());
+    this->displayDiagramDataAsText();
+    result = 0;
 
     return result;
+}
+
+void MainWindow::copyLineSeries(QLineSeries* &oldLineSeries, QLineSeries* &newLineSeries) {
+
+    // this function copies oldLineSeries to the empty newLineSeries
+    newLineSeries->setName(oldLineSeries->name());
+    QVector<QPointF> dataPoints = oldLineSeries->pointsVector();
+    for(unsigned short i = 0; i < dataPoints.size(); ++i) {
+        newLineSeries->append(dataPoints[i]);
+    }
 }
 
 /* commented out for testing, use it later again (method to find same dates on selected category)

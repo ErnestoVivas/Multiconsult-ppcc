@@ -98,6 +98,8 @@ private:
     void configureChartAxes(QString&, QString&, double&, double&);
     bool compareDates(QDate&, QString&, DateFormat&, bool&);
     std::vector<int> findWeekdays(int&, int&, int&);
+    QList<QLineSeries*> getMeasurementDayLineSeries(int&, int&);
+    void copyLineSeries(QLineSeries*&, QLineSeries*&);
     QList<QLineSeries*> getAverageFromSeries(QList<QLineSeries*>&, Frequency, bool);
     QList<QLineSeries*> transformAllTo15MinTicks(QList<QLineSeries*>&);
 
