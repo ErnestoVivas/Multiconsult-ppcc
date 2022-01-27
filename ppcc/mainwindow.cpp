@@ -1267,10 +1267,12 @@ int MainWindow::generateSectorSubCatsDiagram() {
     // calculate averages and transform (currently not checked whether it is necessary)
     QList<QLineSeries*> targetAverageLineSeries;
     for(int i = 0; i < targetLineSeries.size(); ++i) {
-        QList<QLineSeries*> currentLineSeries = transformAllTo15MinTicks(targetLineSeries[i].second);
-        currentLineSeries = getAverageFromSeries(currentLineSeries, Frequency::quarterHour, false);
-        currentLineSeries[0]->setName(targetLineSeries[i].first.second);
-        targetAverageLineSeries.push_back(currentLineSeries[0]);
+        if(targetLineSeries[i].second.size() > 0) {
+            QList<QLineSeries*> currentLineSeries = transformAllTo15MinTicks(targetLineSeries[i].second);
+            currentLineSeries = getAverageFromSeries(currentLineSeries, Frequency::quarterHour, false);
+            currentLineSeries[0]->setName(targetLineSeries[i].first.second);
+            targetAverageLineSeries.push_back(currentLineSeries[0]);
+        }
     }
 
     // Debug
