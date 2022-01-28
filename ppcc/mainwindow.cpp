@@ -1562,6 +1562,24 @@ void MainWindow::displaySectorWeekDiagramAsText() {
 
 void MainWindow::displaySectorSubCatsDiagramAsText() {
     ui->textEditDisplayDiagram->clear();
+     ui->textEditDisplayDiagram->append(measurementsChart->title() + "\n");
+     int numberOfSeries = displayedSeries.size();
+     //int currentSeriesColumn = 0;
+     QString seriesName = "";
+     for(int i = 0; i < numberOfSeries; ++i) {
+         seriesName = displayedSeries[i]->name();
+         QString currentX;
+         QString currentY;
+         QString currentLine;
+         QVector<QPointF> dataPoints = displayedSeries[i]->pointsVector();
+         for(int j = 0; j < dataPoints.size(); ++j) {
+             currentX = QString::number(dataPoints[j].x());
+             currentY = QString::number(dataPoints[j].y());
+             currentLine = seriesName + "\t" + currentX + "\t" + currentY;
+             ui->textEditDisplayDiagram->append(currentLine);
+         }
+         ui->textEditDisplayDiagram->append("");
+    }
 }
 
 QString MainWindow::parseDocumentDataAsText(int selectedFile) {
@@ -1695,6 +1713,7 @@ void MainWindow::refreshDiagram() {
     double yMin = ui->spinBoxYMin->value();
     double yMax = ui->spinBoxYMax->value();
     this->yAxis->setRange(yMin, yMax);
+    this->yAxis->setTickCount(9);
     //this->yAxis->applyNiceNumbers();
 }
 
