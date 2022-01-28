@@ -827,8 +827,8 @@ QList<QLineSeries*> MainWindow::transformAllTo15MinTicks(QList<QLineSeries*> &ol
 
     // assumption: each lineSeries has at least 2 points
     for(int i = 0; i < oldLineSeries.size(); ++i) {
-        if(oldLineSeries[i]->count() <= 1) {
-            continue;
+        if(oldLineSeries[i]->count() <= 1) {        // JUST FOR TESTING, PROGRAM HAS NOT BEET ADJUSTED
+            continue;                               // FOR THIS CASE, WILL SEGFAULT IF COUNT <= 1
         }
 
         double x0 = oldLineSeries[i]->at(0).x();
@@ -1233,9 +1233,10 @@ int MainWindow::generateSectorSubCatsDiagram() {
                  << targetLineSeries[i].first.second << "), "
                  << targetLineSeries[i].second.size() << ">";
         for(int j = 0; j < targetLineSeries[i].second.size(); ++j) {
-            qDebug() << targetLineSeries[i].second[j]->name();
+            qDebug() << targetLineSeries[i].second[j]->name()
+                     << "num of data points: " << targetLineSeries[i].second[j]->count();
             if((targetLineSeries[i].second[j]->name()).isEmpty()) {
-                qDebug() << "Empty Line Series";
+                //qDebug() << "Empty Line Series";
             }
         }
     }
@@ -1248,11 +1249,20 @@ int MainWindow::generateSectorSubCatsDiagram() {
             QString currSeriesName = targetLineSeries[i].second[j]->name();
             if(currSeriesName.isEmpty()) {
                 emptyLineSeries.push_back(qMakePair(i, j));
+                qDebug() << "Remove indices: " << i << ", " << j;
             }
         }
     }
+    int removedCount = 0;
     for(int i = 0; i < emptyLineSeries.size(); ++i) {
-        targetLineSeries[emptyLineSeries[i].first].second.removeAt(emptyLineSeries[i].second);
+        if(emptyLineSeries[i].second == 0) {
+            removedCount = 0;
+        } else if(emptyLineSeries[i].second > 0) {
+            ++removedCount;
+        }
+        qDebug() << targetLineSeries[emptyLineSeries[i].first].second[emptyLineSeries[i].second - removedCount]->count();
+        targetLineSeries[emptyLineSeries[i].first].second.removeAt((emptyLineSeries[i].second) - removedCount);
+        //++removedCount;
         qDebug() << "Empty line series was removed";
     }
 
