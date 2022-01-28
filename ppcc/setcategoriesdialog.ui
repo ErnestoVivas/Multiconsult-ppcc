@@ -88,7 +88,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Comercio y Servicios</string>
+    <string>Comercial</string>
    </property>
   </widget>
   <widget class="QRadioButton" name="radioButtonIndustrial">

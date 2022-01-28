@@ -109,6 +109,7 @@ private:
     void displaySiteAnalysisDiagramAsText();
     void displaySectorWeekdayDiagramAsText();
     void displaySectorWeekDiagramAsText();
+    void displaySectorSubCatsDiagramAsText();
 
 private slots:
 

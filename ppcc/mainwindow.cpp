@@ -1290,6 +1290,11 @@ int MainWindow::generateSectorSubCatsDiagram() {
         qDebug() << targetAverageLineSeries[i]->name();
     }
 
+    // calculate average of all subcategories if visType == 1
+    if(visType == 1) {
+        targetAverageLineSeries = getAverageFromSeries(targetAverageLineSeries, Frequency::quarterHour, false);
+        targetAverageLineSeries[0]->setName("Promedio de todas las subcategorías");
+    }
 
     // Setup and display Diagram
     this->resetMeasurementsChart();
@@ -1329,7 +1334,7 @@ int MainWindow::generateSectorSubCatsDiagram() {
     ui->lineEditDiagramTitle->setText(diagramTitle);
     ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
     ui->graphicsViewChart->setChart(measurementsChart.get());
-    this->displayDiagramDataAsText();
+    this->displaySectorSubCatsDiagramAsText();
     result = 0;
 
     return result;
@@ -1553,6 +1558,10 @@ void MainWindow::displaySectorWeekDiagramAsText() {
         }
     }
 
+}
+
+void MainWindow::displaySectorSubCatsDiagramAsText() {
+    ui->textEditDisplayDiagram->clear();
 }
 
 QString MainWindow::parseDocumentDataAsText(int selectedFile) {
