@@ -15,6 +15,7 @@ QXLSX_SOURCEPATH=./QXlsx/source/  # current QXlsx source path is ./source/
 include(./QXlsx/QXlsx.pri)
 
 SOURCES += \
+    configdiagram.cpp \
     enumerations.cpp \
     exportdiagramdialog.cpp \
     main.cpp \
@@ -28,6 +29,7 @@ SOURCES += \
     siteanalysis.cpp
 
 HEADERS += \
+    configdiagram.h \
     enumerations.h \
     exportdiagramdialog.h \
     mainwindow.h \
@@ -40,6 +42,7 @@ HEADERS += \
     siteanalysis.h
 
 FORMS += \
+    configdiagram.ui \
     exportdiagramdialog.ui \
     mainwindow.ui \
     sectordayanalysis.ui \

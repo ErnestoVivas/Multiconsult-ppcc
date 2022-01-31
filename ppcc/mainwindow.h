@@ -37,6 +37,7 @@
 #include "sectordayanalysis.h"
 #include "sectorweekanalysis.h"
 #include "sectorsubcatsanalysis.h"
+#include "configdiagram.h"
 #include "exportdiagramdialog.h"
 #include "xlsxdocument.h"
 
@@ -77,6 +78,11 @@ private:
     SectorSubCatsAnalysis* sectorSubCatsAnalysis;
 
     // chart parameters
+    short currentDiagramType;
+    QString currentSelectedCategory;
+    QString currentSelectedSubCategory;
+    QString currentDayType;                         // used for both day and daytype
+    int currentVisType;
     QValueAxis* xAxis;
     QValueAxis* yAxis;
     std::shared_ptr<QChart> measurementsChart;      // holds the official chart with the correct data
@@ -89,7 +95,10 @@ private:
 
     // file management functions (not used as slots)
     void readDocument(QXlsx::Document*);
+    QString convertTimeToStr(double);
     void saveAsExcel(QString&);
+    void saveSectorDayDiagramAsExcel(QString&);
+    void saveSubCatsDiagramAsExcel(QString&);
     void saveAsCSV(QString&);
 
     // sub functions for diagram generation
@@ -147,6 +156,7 @@ private slots:
 
     // Diagram configuration functions
     void refreshDiagram();
+    void configDiagram();
 };
 
 #endif // MAINWINDOW_H

@@ -273,7 +273,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QSpinBox" name="spinBoxYMin">
+        <widget class="QDoubleSpinBox" name="spinBoxYMin">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -282,13 +282,13 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>52</width>
+           <width>57</width>
            <height>0</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>52</width>
+           <width>57</width>
            <height>16777215</height>
           </size>
          </property>
@@ -324,7 +324,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QSpinBox" name="spinBoxYMax">
+        <widget class="QDoubleSpinBox" name="spinBoxYMax">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -333,13 +333,13 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>52</width>
+           <width>57</width>
            <height>0</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>52</width>
+           <width>57</width>
            <height>16777215</height>
           </size>
          </property>
@@ -443,8 +443,8 @@
     </property>
     <addaction name="actionElegir_funci_n"/>
     <addaction name="actionGenerar_Diagrama"/>
-    <addaction name="actionConfigurar"/>
-    <addaction name="actionExportar"/>
+    <addaction name="menuConfigDiagram"/>
+    <addaction name="menuExport"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDiagrama"/>
@@ -470,12 +470,12 @@
     <string>Generar Diagrama</string>
    </property>
   </action>
-  <action name="actionConfigurar">
+  <action name="menuConfigDiagram">
    <property name="text">
     <string>Configuración</string>
    </property>
   </action>
-  <action name="actionExportar">
+  <action name="menuExport">
    <property name="text">
     <string>Exportar</string>
    </property>

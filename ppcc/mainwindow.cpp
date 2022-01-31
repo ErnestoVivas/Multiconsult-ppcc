@@ -17,8 +17,9 @@ MainWindow::MainWindow(QWidget *parent):
     ui->lineEditFileFreq->setReadOnly(true);
     ui->lineEditFileCat->setReadOnly(true);
     ui->lineEditFileSubCat->setReadOnly(true);
-    ui->spinBoxYMin->setRange(0, 99999);
-    ui->spinBoxYMax->setRange(0, 99999);
+    ui->spinBoxYMin->setRange(0, 999999);
+    ui->spinBoxYMax->setRange(0, 999999);
+    ui->buttonChangeCategories->setDisabled(true);
 
     // setup widgets containing the different functions to generate diagrams
     simpleDiagramFunction = new SimpleDiagramFunction(this);
@@ -60,6 +61,9 @@ MainWindow::MainWindow(QWidget *parent):
     // menu
     connect(ui->menuImportDocuments, SIGNAL(triggered()), this, SLOT(importDocument()));
     connect(ui->menuQuit, SIGNAL(triggered()), this, SLOT(exitProgram()));
+    connect(ui->menuExport, SIGNAL(triggered()), this, SLOT(exportDiagram()));
+    connect(ui->menuConfigDiagram, SIGNAL(triggered()), this, SLOT(configDiagram()));
+
 
     // file management
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
@@ -77,6 +81,8 @@ MainWindow::MainWindow(QWidget *parent):
 
     // Diagram
     connect(ui->buttonRefreshDiagram, SIGNAL(clicked()), this, SLOT(refreshDiagram()));
+    connect(ui->buttonAdvancedDiagramConfiguration, SIGNAL(clicked()), this, SLOT(configDiagram()));
+
 }
 
 MainWindow::~MainWindow() {
@@ -342,8 +348,8 @@ void MainWindow::configureChartAxes(QString &xAxisTitle, QString &yAxisTitle, do
         displayedSeries[i]->attachAxis(yAxis);
     }
     yAxis->applyNiceNumbers();
-    ui->spinBoxYMin->setValue(yMin);
-    ui->spinBoxYMax->setValue(yMax);
+    ui->spinBoxYMin->setValue(yAxis->min());
+    ui->spinBoxYMax->setValue(yAxis->max());
 }
 
 int MainWindow::generateSimpleDiagram() {
@@ -399,6 +405,7 @@ int MainWindow::generateSimpleDiagram() {
         ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
         ui->graphicsViewChart->setChart(measurementsChart.get());
         this->displayDiagramDataAsText();
+        this->currentDiagramType = 0;
         returnVal = 0;
 
     } else {
@@ -484,6 +491,7 @@ int MainWindow::generateSiteAnalysisDiagram() {
         ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
         ui->graphicsViewChart->setChart(measurementsChart.get());
         this->displayDiagramDataAsText();
+        this->currentDiagramType = 1;
         result = 0;
     } else {
         QMessageBox::information(this, tr("No se puede generar el diagrama."),
@@ -799,6 +807,11 @@ int MainWindow::generateSectorWeekdayDiagram() {
     ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
     ui->graphicsViewChart->setChart(measurementsChart.get());
     this->displayDiagramDataAsText();
+    this->currentDiagramType = 2;
+    this->currentSelectedCategory = sectorDayAnalysis->getSelectedSectorString();
+    this->currentSelectedSubCategory = sectorDayAnalysis->getSelectedSubCatString();
+    this->currentDayType = enumerations::getStringFromDay(selectedDay);
+    this->currentVisType = visType;
     result = 0;
 
     return result;
@@ -854,8 +867,10 @@ QList<QLineSeries*> MainWindow::transformAllTo15MinTicks(QList<QLineSeries*> &ol
                 newLineSeries[i]->append(xValFirst + 0.5, yValFirst + 0.5 * yDelta);
                 newLineSeries[i]->append(xValFirst + 0.75, yValFirst + 0.75 * yDelta);
                 if(j == (oldLineSeries[i]->count() - 1)) {
-                    double xValLast = oldLineSeries[i]->at(j-1).x();
-                    double yValLast = oldLineSeries[i]->at(j-1).y();
+                    //double xValLast = oldLineSeries[i]->at(j-1).x();
+                    //double yValLast = oldLineSeries[i]->at(j-1).y();
+                    double xValLast = oldLineSeries[i]->at(j).x();
+                    double yValLast = oldLineSeries[i]->at(j).y();
                     newLineSeries[i]->append(xValLast, yValLast);
                 }
             }
@@ -1097,6 +1112,7 @@ int MainWindow::generateSectorWeekDiagram() {
     ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
     ui->graphicsViewChart->setChart(measurementsChart.get());
     this->displayDiagramDataAsText();
+    this->currentDiagramType = 3;
     result = 0;
 
     return result;
@@ -1110,6 +1126,14 @@ int MainWindow::generateSectorSubCatsDiagram() {
     int sector = sectorSubCatsAnalysis->getSelectedSector();
     int dayType = sectorSubCatsAnalysis->getDay();
     int visType = sectorSubCatsAnalysis->getVisType();
+
+    if(dayType == 0) {
+        this->currentDayType = "lunes a viernes";
+    } else if(dayType == 1) {
+        this->currentDayType = "sábado";
+    } else if(dayType == 2) {
+        this->currentDayType = "domingo";
+    }
 
     // find all documents corresponding to the selected sector
     std::vector<int> correctFileIndices;
@@ -1335,6 +1359,8 @@ int MainWindow::generateSectorSubCatsDiagram() {
     ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
     ui->graphicsViewChart->setChart(measurementsChart.get());
     this->displaySectorSubCatsDiagramAsText();
+    this->currentDiagramType = 4;
+    this->currentSelectedCategory = sectorStr;
     result = 0;
 
     return result;
@@ -1557,7 +1583,6 @@ void MainWindow::displaySectorWeekDiagramAsText() {
             ui->textEditDisplayDiagram->append(currentLine);
         }
     }
-
 }
 
 void MainWindow::displaySectorSubCatsDiagramAsText() {
@@ -1605,6 +1630,32 @@ QString MainWindow::parseDocumentDataAsText(int selectedFile) {
     return documentDataAsText;
 }
 
+QString MainWindow::convertTimeToStr(double time) {
+
+    // function converts 1.5 to 01:30:00, 12.25 to 12:12:00 etc.
+    double hour;
+    double minute;
+    QString hourString;
+    QString minuteString;
+    QString timeString;
+    minute = std::modf(time, &hour);
+    if(minute == 0.0) {
+        minuteString = "00";
+    } else if(minute == 0.25) {
+        minuteString = "15";
+    } else if(minute == 0.5) {
+        minuteString = "30";
+    } else if(minute == 0.75) {
+        minuteString = "45";
+    }
+    hourString = QString::number(hour);
+    if(hourString.size() == 1) {
+        hourString.insert(0, "0");
+    }
+    timeString = hourString + ":" + minuteString  + ":00";
+    return timeString;
+}
+
 void MainWindow::saveDiagram() {
     QString saveFileName = QFileDialog::getSaveFileName(this, tr("Guardar imagen"),
                                                         "~/", tr("Imagenes (*.png)"));
@@ -1626,7 +1677,13 @@ void MainWindow::exportDiagram() {
     } else if(exportMethod == 1) {
         QString saveFileName = QFileDialog::getSaveFileName(this, tr("Guardar archivo Excel"),
                                                             "~/", tr("Excel (*.xlsx)"));
-        this->saveAsExcel(saveFileName);
+        if(this->currentDiagramType == 2) {
+            this->saveSectorDayDiagramAsExcel(saveFileName);
+        } else if(this->currentDiagramType == 4) {
+            this->saveSubCatsDiagramAsExcel(saveFileName);
+        } else {
+            this->saveAsExcel(saveFileName);
+        }
     } else if(exportMethod == 2) {
         QString saveFileName = QFileDialog::getSaveFileName(this, tr("Guardar archivo csv"),
                                                             "~/", tr("CSV (*.csv)"));
@@ -1647,6 +1704,58 @@ void MainWindow::saveAsExcel(QString &saveFileName) {
     }
     docToSave.saveAs(saveFileName);
 }
+
+void MainWindow::saveSectorDayDiagramAsExcel(QString &saveFileName) {
+    QXlsx::Document docToSave;
+    docToSave.write(1, 1, "Sector");
+    docToSave.write(1, 2, this->currentSelectedCategory);
+    docToSave.write(2, 1, "Subsector");
+    docToSave.write(2, 2, this->currentSelectedSubCategory);
+    docToSave.write(3, 1, "Día");
+    docToSave.write(3, 2, this->currentDayType);
+    docToSave.write(4, 1, "Tipo");
+    if(this->currentVisType == 0) {
+        docToSave.write(4, 2, "Visualización de todas las mediciones");
+    } else if(this->currentVisType == 1) {
+        docToSave.write(4, 2, "Promedio de todas las mediciones");
+    } else if(this->currentVisType == 2) {
+        docToSave.write(4, 2, "Suma de todas las mediciones");
+    }
+
+    for(int i = 0; i < displayedSeries.size(); ++i) {
+        docToSave.write(6, 3*i+1, displayedSeries[i]->name());
+        docToSave.write(7, 3*i+1, "Hora");
+        docToSave.write(7, 3*i+2, "kW");
+        QVector<QPointF> dataPoints = displayedSeries[i]->pointsVector();
+        for(int j = 0; j < dataPoints.size(); ++j) {
+            QString timeStr = convertTimeToStr(dataPoints[j].x());
+            docToSave.write(j+8, 3*i+1, timeStr);
+            docToSave.write(j+8, 3*i+2, dataPoints[j].y());
+        }
+    }
+
+    docToSave.saveAs(saveFileName);
+}
+
+void MainWindow::saveSubCatsDiagramAsExcel(QString &saveFileName) {
+    QXlsx::Document docToSave;
+    docToSave.write(1, 1, this->currentSelectedCategory);
+    docToSave.write(2, 1, "Promedio días " + this->currentDayType);
+    for(int i = 0; i < displayedSeries.size(); ++i) {
+        QString currentSubCat = displayedSeries[i]->name();
+        QVector<QPointF> dataPoints = displayedSeries[i]->pointsVector();
+        docToSave.write(4, 3*i+1, currentSubCat);
+        docToSave.write(5, 3*i+1, "Hora");
+        docToSave.write(5, 3*i+2, "kW");
+        for(int j = 0; j < dataPoints.size(); ++j) {
+            QString timeStr = convertTimeToStr(dataPoints[j].x());
+            docToSave.write(j+6, 3*i+1, timeStr);
+            docToSave.write(j+6, 3*i+2, dataPoints[j].y());
+        }
+    }
+    docToSave.saveAs(saveFileName);
+}
+
 
 void MainWindow::saveAsCSV(QString &saveFileName) {
     QFile docToSave(saveFileName);
@@ -1715,6 +1824,18 @@ void MainWindow::refreshDiagram() {
     this->yAxis->setRange(yMin, yMax);
     this->yAxis->setTickCount(9);
     //this->yAxis->applyNiceNumbers();
+}
+
+void MainWindow::configDiagram() {
+    ConfigDiagram* configDiagramDialog = new ConfigDiagram(this,
+                                                           this->measurementsChart.get(),
+                                                           xAxis, yAxis, &displayedSeries);
+    configDiagramDialog->setWindowTitle("Configurar Diagrama");
+    configDiagramDialog->exec();
+    ui->lineEditDiagramTitle->setText(measurementsChart->title());
+    ui->spinBoxYMin->setValue(yAxis->min());
+    ui->spinBoxYMax->setValue(yAxis->max());
+    delete configDiagramDialog;
 }
 
 int MainWindow::generateDiagram() {
