@@ -48,4 +48,4 @@ Date         Time       kW
     .            .         .  
     .            .         .  
 
-The date has to be in the format dd/mm/yyyy. If the provided files are not in the specified format, the program will not be able to analyze the data correctly and might result in crash. The program does not check thouroughly if the input files are in the correct format. Also the program does not check the units and assumes all values to be in kW.
+The date has to be in the format dd/mm/yyyy, the time has to be in 24 hour format. If the provided files are not in the specified format, the program will not be able to analyze the data correctly and might result in crash. The program does not check thouroughly if the input files are in the correct format. Also the program does not check the units and assumes all values to be in kW.

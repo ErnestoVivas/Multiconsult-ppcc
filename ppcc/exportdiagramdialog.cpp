@@ -20,7 +20,6 @@ ExportDiagramDialog::ExportDiagramDialog(QWidget* parent, short &expMethod) :
 
     connect(ui->buttonImage, SIGNAL(clicked()), this, SLOT(imageSelected()));
     connect(ui->buttonExcel, SIGNAL(clicked()), this, SLOT(excelSelected()));
-    connect(ui->buttonCSV, SIGNAL(clicked()), this, SLOT(csvSelected()));
 }
 
 ExportDiagramDialog::~ExportDiagramDialog() {
@@ -37,7 +36,3 @@ void ExportDiagramDialog::excelSelected() {
     this->close();
 }
 
-void ExportDiagramDialog::csvSelected() {
-    *exportMethod = 2;
-    this->close();
-}

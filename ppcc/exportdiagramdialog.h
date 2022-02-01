@@ -31,7 +31,6 @@ private:
 private slots:
     void imageSelected();
     void excelSelected();
-    void csvSelected();
 };
 
 #endif // EXPORTDIAGRAMDIALOG_H

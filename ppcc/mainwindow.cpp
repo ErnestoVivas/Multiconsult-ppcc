@@ -61,9 +61,10 @@ MainWindow::MainWindow(QWidget *parent):
     // menu
     connect(ui->menuImportDocuments, SIGNAL(triggered()), this, SLOT(importDocument()));
     connect(ui->menuQuit, SIGNAL(triggered()), this, SLOT(exitProgram()));
+    connect(ui->menuRemoveFile, SIGNAL(triggered()), this, SLOT(removeDocument()));
     connect(ui->menuExport, SIGNAL(triggered()), this, SLOT(exportDiagram()));
     connect(ui->menuConfigDiagram, SIGNAL(triggered()), this, SLOT(configDiagram()));
-
+    connect(ui->menuGenerateDiagram, SIGNAL(triggered()), this, SLOT(generateDiagram()));
 
     // file management
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
@@ -1703,10 +1704,6 @@ void MainWindow::exportDiagram() {
         } else if(this->currentDiagramType == 4) {
             this->saveSubCatsDiagramAsExcel(saveFileName);
         }
-    } else if(exportMethod == 2) {
-        QString saveFileName = QFileDialog::getSaveFileName(this, tr("Guardar archivo csv"),
-                                                            "~/", tr("CSV (*.csv)"));
-        this->saveAsCSV(saveFileName);
     }
 }
 

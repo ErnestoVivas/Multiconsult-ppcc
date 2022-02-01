@@ -6,9 +6,27 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>314</width>
+    <width>212</width>
     <height>114</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>212</width>
+    <height>114</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>212</width>
+    <height>114</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
@@ -46,32 +64,6 @@
     <size>
      <width>48</width>
      <height>48</height>
-    </size>
-   </property>
-   <property name="toolButtonStyle">
-    <enum>Qt::ToolButtonTextUnderIcon</enum>
-   </property>
-  </widget>
-  <widget class="QToolButton" name="buttonCSV">
-   <property name="geometry">
-    <rect>
-     <x>210</x>
-     <y>40</y>
-     <width>91</width>
-     <height>61</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>CSV (*.csv)</string>
-   </property>
-   <property name="icon">
-    <iconset>
-     <normaloff>csv-icon-32x32.png</normaloff>csv-icon-32x32.png</iconset>
-   </property>
-   <property name="iconSize">
-    <size>
-     <width>32</width>
-     <height>32</height>
     </size>
    </property>
    <property name="toolButtonStyle">
