@@ -9,7 +9,7 @@
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent):
-    QMainWindow(parent), ui(new Ui::MainWindow), fileManagerSelectedFile(-1) {
+    QMainWindow(parent), ui(new Ui::MainWindow),  currentDiagramType(-1), fileManagerSelectedFile(-1) {
 
     // setup ui elements
     ui->setupUi(this);
@@ -32,10 +32,10 @@ MainWindow::MainWindow(QWidget *parent):
     ui->stackedWidgetDiagramFunctions->addWidget(sectorDayAnalysis);
     ui->stackedWidgetDiagramFunctions->addWidget(sectorWeekAnalysis);
     ui->stackedWidgetDiagramFunctions->addWidget(sectorSubCatsAnalysis);
-    ui->comboBoxSelectFunction->addItem("Curvas de fechas específicas");
-    ui->comboBoxSelectFunction->addItem("Promedio días de semana, sitio");
-    ui->comboBoxSelectFunction->addItem("Promedio días de semana, sector");
-    ui->comboBoxSelectFunction->addItem("Promedio semana laboral, sector");
+    ui->comboBoxSelectFunction->addItem("Visualizar fechas específicas");
+    ui->comboBoxSelectFunction->addItem("Promedio días de semana por sitio");
+    ui->comboBoxSelectFunction->addItem("Promedio días de semana por sector");
+    ui->comboBoxSelectFunction->addItem("Promedio semana laboral por sector");
     ui->comboBoxSelectFunction->addItem("Promedio subcategorías de sector");
 
     // set pointers and smart pointers for correct resource management
@@ -398,14 +398,16 @@ int MainWindow::generateSimpleDiagram() {
         this->configureChartAxes(xAxisTitle, yAxisTitle, yMin, yMax);
 
         // setup and display chart
+        QString fileNameOnly = documents[selectedDocIndex].docName.section("/",-1,-1);
         measurementsChart->legend()->setVisible(true);
         measurementsChart->legend()->setAlignment(Qt::AlignBottom);
-        measurementsChart->setTitle("Consumo diario de energía");
+        measurementsChart->setTitle(fileNameOnly);
         ui->lineEditDiagramTitle->setText(measurementsChart->title());
         ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
         ui->graphicsViewChart->setChart(measurementsChart.get());
         this->displayDiagramDataAsText();
         this->currentDiagramType = 0;
+        this->currentDayType = fileNameOnly;
         returnVal = 0;
 
     } else {
@@ -492,6 +494,9 @@ int MainWindow::generateSiteAnalysisDiagram() {
         ui->graphicsViewChart->setChart(measurementsChart.get());
         this->displayDiagramDataAsText();
         this->currentDiagramType = 1;
+        this->currentSelectedCategory = documents[selectedDocIndex].docName.section("/",-1,-1);
+        this->currentDayType = enumerations::getStringFromDay(selectedDay);
+        this->currentVisType = visType;
         result = 0;
     } else {
         QMessageBox::information(this, tr("No se puede generar el diagrama."),
@@ -853,8 +858,8 @@ QList<QLineSeries*> MainWindow::transformAllTo15MinTicks(QList<QLineSeries*> &ol
             for(int j = 0; j < oldLineSeries[i]->count(); ++j) {
                 double xVal = oldLineSeries[i]->at(j).x();
                 double yVal = oldLineSeries[i]->at(j).y();
-                newLineSeries[i]->append(xVal, yVal);
-                newLineSeries[i]->setName(oldLineSeries[i]->name());
+                newLineSeries[i]->append(xVal, yVal);                   // better: use back(), because segfault
+                newLineSeries[i]->setName(oldLineSeries[i]->name());    // if sizes are not equal (-> count <= 1)
             }
         } else {
             newLineSeries.append(new QLineSeries());
@@ -1082,14 +1087,14 @@ int MainWindow::generateSectorWeekDiagram() {
     }
 
     QString diagramTitle = "Curvas de carga de los días laborales, "
-                           + enumerations::getStringFromSector(sector) + ", "
-                           + enumerations::getStringFromSubSector(sector, subCat);
+                           + sectorWeekAnalysis->getSelectedSectorString() + ", "
+                           + sectorWeekAnalysis->getSelectedSubCatString();
     if(visType == 1) {
         displayedSeries = getAverageFromSeries(displayedSeries, currentFreq, false);
         displayedSeries[0]->setName("Lunes a viernes");
         diagramTitle = "Curva de carga promedio de los días laborales, "
-                       + enumerations::getStringFromSector(sector) + ", "
-                       + enumerations::getStringFromSubSector(sector, subCat);
+                       + sectorWeekAnalysis->getSelectedSectorString() + ", "
+                       + sectorWeekAnalysis->getSelectedSubCatString();
     }
 
     for(int i = 0; i < displayedSeries.size(); ++i) {
@@ -1113,6 +1118,9 @@ int MainWindow::generateSectorWeekDiagram() {
     ui->graphicsViewChart->setChart(measurementsChart.get());
     this->displayDiagramDataAsText();
     this->currentDiagramType = 3;
+    this->currentSelectedCategory = sectorWeekAnalysis->getSelectedSectorString();
+    this->currentSelectedSubCategory = sectorWeekAnalysis->getSelectedSubCatString();
+    this->currentVisType = visType;
     result = 0;
 
     return result;
@@ -1360,6 +1368,7 @@ int MainWindow::generateSectorSubCatsDiagram() {
     ui->graphicsViewChart->setChart(measurementsChart.get());
     this->displaySectorSubCatsDiagramAsText();
     this->currentDiagramType = 4;
+    this->currentVisType = visType;
     this->currentSelectedCategory = sectorStr;
     result = 0;
 
@@ -1632,7 +1641,7 @@ QString MainWindow::parseDocumentDataAsText(int selectedFile) {
 
 QString MainWindow::convertTimeToStr(double time) {
 
-    // function converts 1.5 to 01:30:00, 12.25 to 12:12:00 etc.
+    // function converts 1.5 to 01:30:00, 12.25 to 12:15:00 etc.
     double hour;
     double minute;
     QString hourString;
@@ -1664,6 +1673,12 @@ void MainWindow::saveDiagram() {
 }
 
 void MainWindow::exportDiagram() {
+    if(this->currentDiagramType == -1) {
+        QMessageBox::warning(this, tr("No se puede exportar el diagrama."),
+                  tr("No se ha generado ningún diagrama para exportar."),
+                  QMessageBox::Ok);
+        return;
+    }
     short exportMethod = -1;
     ExportDiagramDialog* exportDiagramDialog = new ExportDiagramDialog(this, exportMethod);
     exportDiagramDialog->setWindowTitle("Exportar diagrama");
@@ -1677,12 +1692,16 @@ void MainWindow::exportDiagram() {
     } else if(exportMethod == 1) {
         QString saveFileName = QFileDialog::getSaveFileName(this, tr("Guardar archivo Excel"),
                                                             "~/", tr("Excel (*.xlsx)"));
-        if(this->currentDiagramType == 2) {
+        if(this->currentDiagramType == 0) {
+            this->saveSimpleDiagramAsExcel(saveFileName);
+        } else if(this->currentDiagramType == 1) {
+            this->saveSiteDayDiagramAsExcel(saveFileName);
+        } else if(this->currentDiagramType == 2) {
             this->saveSectorDayDiagramAsExcel(saveFileName);
+        } else if(this->currentDiagramType == 3) {
+            this->saveSectorWeekDiagramAsExcel(saveFileName);
         } else if(this->currentDiagramType == 4) {
             this->saveSubCatsDiagramAsExcel(saveFileName);
-        } else {
-            this->saveAsExcel(saveFileName);
         }
     } else if(exportMethod == 2) {
         QString saveFileName = QFileDialog::getSaveFileName(this, tr("Guardar archivo csv"),
@@ -1691,17 +1710,45 @@ void MainWindow::exportDiagram() {
     }
 }
 
-void MainWindow::saveAsExcel(QString &saveFileName) {
-    QXlsx::Document docToSave;
-    QString dataText = ui->textEditDisplayDiagram->toPlainText();
-    QStringList dataLines = dataText.split("\n");
-    for(int i = 0; i < dataLines.size(); ++i) {
-        QString currentDataLine = dataLines[i];
-        QStringList dataCells = currentDataLine.split(",");
-        for(int j = 0; j < dataCells.size(); ++j) {
-            docToSave.write(i+1, j+1, dataCells[j]);
+void MainWindow::writeLineSeriesToExcel(QXlsx::Document &docToSave, int firstRow) {
+    for(int i = 0; i < displayedSeries.size(); ++i) {
+        docToSave.write(firstRow, 3*i+1, displayedSeries[i]->name());
+        docToSave.write(firstRow+1, 3*i+1, "Hora");
+        docToSave.write(firstRow+1, 3*i+2, "kW");
+        QVector<QPointF> dataPoints = displayedSeries[i]->pointsVector();
+        for(int j = 0; j < dataPoints.size(); ++j) {
+            QString timeStr = convertTimeToStr(dataPoints[j].x());
+            docToSave.write(j+firstRow+2, 3*i+1, timeStr);
+            docToSave.write(j+firstRow+2, 3*i+2, dataPoints[j].y());
         }
     }
+}
+
+void MainWindow::saveSimpleDiagramAsExcel(QString &saveFileName) {
+    QXlsx::Document docToSave;
+    docToSave.write(1, 1, "Medición");
+    docToSave.write(1, 2, this->currentDayType);
+    docToSave.write(2, 1, "Tipo");
+    docToSave.write(2, 2, "Visualización de las mediciones de las fechas especificadas");
+    this->writeLineSeriesToExcel(docToSave, 4);
+    docToSave.saveAs(saveFileName);
+}
+
+void MainWindow::saveSiteDayDiagramAsExcel(QString &saveFileName) {
+    QXlsx::Document docToSave;
+    docToSave.write(1, 1, "Medición");
+    docToSave.write(1, 2, this->currentSelectedCategory);
+    docToSave.write(2, 1, "Tipo");
+    if(this->currentVisType == 0) {
+        docToSave.write(2, 2, "Visualización de todas las mediciones del día especificado");
+    } else if(this->currentVisType == 1) {
+        docToSave.write(2, 2, "Promedio de todas las mediciones del día especificado");
+    } else {
+        docToSave.write(2, 2, "Suma de todas las mediciones del día especificado");
+    }
+    docToSave.write(3, 1, "Día");
+    docToSave.write(3, 2, this->currentDayType);
+    this->writeLineSeriesToExcel(docToSave, 5);
     docToSave.saveAs(saveFileName);
 }
 
@@ -1721,36 +1768,49 @@ void MainWindow::saveSectorDayDiagramAsExcel(QString &saveFileName) {
     } else if(this->currentVisType == 2) {
         docToSave.write(4, 2, "Suma de todas las mediciones");
     }
+    this->writeLineSeriesToExcel(docToSave, 6);
+    docToSave.saveAs(saveFileName);
+}
 
-    for(int i = 0; i < displayedSeries.size(); ++i) {
-        docToSave.write(6, 3*i+1, displayedSeries[i]->name());
-        docToSave.write(7, 3*i+1, "Hora");
-        docToSave.write(7, 3*i+2, "kW");
-        QVector<QPointF> dataPoints = displayedSeries[i]->pointsVector();
-        for(int j = 0; j < dataPoints.size(); ++j) {
-            QString timeStr = convertTimeToStr(dataPoints[j].x());
-            docToSave.write(j+8, 3*i+1, timeStr);
-            docToSave.write(j+8, 3*i+2, dataPoints[j].y());
-        }
+void MainWindow::saveSectorWeekDiagramAsExcel(QString &saveFileName) {
+    QXlsx::Document docToSave;
+    docToSave.write(1, 1, "Sector");
+    docToSave.write(1, 2, this->currentSelectedCategory);
+    docToSave.write(2, 1, "Subsector");
+    docToSave.write(2, 2, this->currentSelectedSubCategory);
+    docToSave.write(3, 1, "Tipo");
+    if(this->currentVisType == 0) {
+        docToSave.write(3, 2, "Promedio desagregado por los días lunes a viernes");
+    } else {
+        docToSave.write(3, 2, "Promedio total de los días lunes a viernes");
     }
-
+    this->writeLineSeriesToExcel(docToSave, 5);
     docToSave.saveAs(saveFileName);
 }
 
 void MainWindow::saveSubCatsDiagramAsExcel(QString &saveFileName) {
     QXlsx::Document docToSave;
-    docToSave.write(1, 1, this->currentSelectedCategory);
-    docToSave.write(2, 1, "Promedio días " + this->currentDayType);
+    docToSave.write(1, 1, "Sector");
+    docToSave.write(1, 2, this->currentSelectedCategory);
+    docToSave.write(2, 1, "Día");
+    docToSave.write(2, 2, this->currentDayType);
+    docToSave.write(3, 1, "Tipo");
+    if(this->currentVisType == 0) {
+        docToSave.write(3, 2, "Promedio de las subcategorías");
+    } else {
+        docToSave.write(3, 2, "Promedio total de todas las subcategorías");
+    }
+
     for(int i = 0; i < displayedSeries.size(); ++i) {
         QString currentSubCat = displayedSeries[i]->name();
         QVector<QPointF> dataPoints = displayedSeries[i]->pointsVector();
-        docToSave.write(4, 3*i+1, currentSubCat);
-        docToSave.write(5, 3*i+1, "Hora");
-        docToSave.write(5, 3*i+2, "kW");
+        docToSave.write(5, 3*i+1, currentSubCat);
+        docToSave.write(6, 3*i+1, "Hora");
+        docToSave.write(6, 3*i+2, "kW");
         for(int j = 0; j < dataPoints.size(); ++j) {
             QString timeStr = convertTimeToStr(dataPoints[j].x());
-            docToSave.write(j+6, 3*i+1, timeStr);
-            docToSave.write(j+6, 3*i+2, dataPoints[j].y());
+            docToSave.write(j+7, 3*i+1, timeStr);
+            docToSave.write(j+7, 3*i+2, dataPoints[j].y());
         }
     }
     docToSave.saveAs(saveFileName);

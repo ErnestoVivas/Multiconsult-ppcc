@@ -96,8 +96,11 @@ private:
     // file management functions (not used as slots)
     void readDocument(QXlsx::Document*);
     QString convertTimeToStr(double);
-    void saveAsExcel(QString&);
+    void writeLineSeriesToExcel(QXlsx::Document&, int);
+    void saveSimpleDiagramAsExcel(QString&);
+    void saveSiteDayDiagramAsExcel(QString&);
     void saveSectorDayDiagramAsExcel(QString&);
+    void saveSectorWeekDiagramAsExcel(QString&);
     void saveSubCatsDiagramAsExcel(QString&);
     void saveAsCSV(QString&);
 
