@@ -6,6 +6,9 @@ This software processes load curve data that was obtained from power consumption
 
 The program is being developed in C++11 with QtCreator 6.0.1, using Qt 5.15.2 and the QXlsx library to read/write excel files. It was tested with Windows 10.
 
+GitHub repo:
+https://github.com/ErnestoVivas/Multiconsult-ppcc
+
 ## How to install and run
 There are two methods to install the program:
 
@@ -34,16 +37,16 @@ The libraries are either part of the Qt or the MinGW installation, they can be f
 ## Format of the measurement files
 The program imports excel files that contain the measurements. The provided excel files need to follow the following structure:
 
-Date         Time       kW  
-01/01/2001   00:00:00   100.0  
-01/01/2001   00:15:00   150.6  
-01/01/2001   00:30:00   120.0  
-01/01/2001   00:45:00   110.5  
-01/01/2001   01:00:00   100.5  
+Date        | Time      | kW  
+01/01/2001  | 00:00:00  | 100.0  
+01/01/2001  | 00:15:00  | 150.6  
+01/01/2001  | 00:30:00  | 120.0  
+01/01/2001  | 00:45:00  | 110.5  
+01/01/2001  | 01:00:00  | 100.5  
     .            .         .  
     .            .         .  
     .            .         .  
-02/01/2001     00:00:00   104.2  
+02/01/2001  | 00:00:00  | 104.2  
     .            .         .  
     .            .         .  
     .            .         .  
