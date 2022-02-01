@@ -27,6 +27,7 @@ Open the project in Qt Creator and click on run, this will build and run the pro
   - qminimal.dll
   - qoffscreen.dll
   - qwindows.dll
+
 The libraries are either part of the Qt or the MinGW installation, they can be found by searching in the windows file explorer.
 
 
