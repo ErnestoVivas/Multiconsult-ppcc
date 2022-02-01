@@ -34,18 +34,18 @@ The libraries are either part of the Qt or the MinGW installation, they can be f
 ## Format of the measurement files
 The program imports excel files that contain the measurements. The provided excel files need to follow the following structure:
 
-Date         Time       kW
-01/01/2001   00:00:00   100.0
-01/01/2001   00:15:00   150.6
-01/01/2001   00:30:00   120.0
-01/01/2001   00:45:00   110.5
-01/01/2001   01:00:00   100.5
-    .            .         .
-    .            .         .
-    .            .         .
-02/01/2001     00:00:00   104.2
-    .            .         .
-    .            .         .
-    .            .         .
+Date         Time       kW  
+01/01/2001   00:00:00   100.0  
+01/01/2001   00:15:00   150.6  
+01/01/2001   00:30:00   120.0  
+01/01/2001   00:45:00   110.5  
+01/01/2001   01:00:00   100.5  
+    .            .         .  
+    .            .         .  
+    .            .         .  
+02/01/2001     00:00:00   104.2  
+    .            .         .  
+    .            .         .  
+    .            .         .  
 
 The date has to be in the format dd/mm/yyyy. If the provided files are not in the specified format, the program will not be able to analyze the data correctly and might result in crash. The program does not check thouroughly if the input files are in the correct format. Also the program does not check the units and assumes all values to be in kW.
