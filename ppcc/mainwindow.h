@@ -137,8 +137,8 @@ private slots:
     // file management functions
     void importDocument();
     void cancelImport();
-    void exportDiagram();
-    void saveDiagram();
+    void saveDataBase();
+
     //void updateFileSubCatComboBox(int);
     void getFileCategories(int);
     void setFileCategory(int);
@@ -165,9 +165,11 @@ private slots:
     int generateSectorSubCatsDiagram();
     void showPointOnHover(const QPointF&, bool);
 
-    // Diagram configuration functions
+    // Diagram functions
     void refreshDiagram();
     void configDiagram();
+    void exportDiagram();
+    void saveDiagram();
 };
 
 #endif // MAINWINDOW_H

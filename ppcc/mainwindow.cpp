@@ -68,6 +68,7 @@ MainWindow::MainWindow(QWidget *parent):
     connect(ui->menuGenerateDiagram, SIGNAL(triggered()), this, SLOT(generateDiagram()));
     connect(ui->menuAboutSpanish, SIGNAL(triggered()), this, SLOT(openReadmeSpanish()));
     connect(ui->menuAboutEnglish, SIGNAL(triggered()), this, SLOT(openReadmeEnglish()));
+    connect(ui->menuSave, SIGNAL(clicked()), this, SLOT(saveDataBase()));
 
     // file management
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
@@ -76,6 +77,7 @@ MainWindow::MainWindow(QWidget *parent):
     //connect(ui->comboBoxFileCat, SIGNAL(currentIndexChanged(int)), this, SLOT(setFileCategory(int)));
     //connect(ui->comboBoxFileSubCat, SIGNAL(currentIndexChanged(int)), this, SLOT(setFileSubCategory(int)));
     connect(ui->buttonRemoveDocument, SIGNAL(clicked()), this, SLOT(removeDocument()));
+    connect(ui->buttonSave, SIGNAL(clicked()), this, SLOT(saveDataBase()));
 
     // functions
     connect(ui->comboBoxSelectFunction, SIGNAL(currentIndexChanged(int)), this, SLOT(selectFunction(int)));
@@ -326,6 +328,11 @@ void MainWindow::importDocument() {
         }
     }
 }
+
+void MainWindow::saveDataBase() {
+    // TODO
+}
+
 
 void MainWindow::selectFunction(int functionIndex) {
     if(functionIndex == 0) {

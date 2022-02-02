@@ -74,17 +74,7 @@
        <set>Qt::AlignCenter</set>
       </property>
       <layout class="QGridLayout" name="gridLayout_2">
-       <item row="6" column="1">
-        <widget class="QLineEdit" name="lineEditFileFreq">
-         <property name="focusPolicy">
-          <enum>Qt::NoFocus</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QListWidget" name="listWidgetDocuments"/>
-       </item>
-       <item row="8" column="0" colspan="2">
+       <item row="9" column="0" colspan="2">
         <widget class="QPushButton" name="buttonChangeCategories">
          <property name="text">
           <string>Cambiar categorías</string>
@@ -92,32 +82,28 @@
         </widget>
        </item>
        <item row="6" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Periodicidad:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>Categoría:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0">
         <widget class="QLabel" name="label_2">
          <property name="text">
           <string>Subcategoría:</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="QPushButton" name="buttonRemoveDocument">
+       <item row="2" column="0" colspan="2">
+        <widget class="QPushButton" name="buttonSave">
          <property name="text">
-          <string>Quitar</string>
+          <string>Guardar</string>
          </property>
         </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Periodicidad:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QLineEdit" name="lineEditFileCat"/>
        </item>
        <item row="0" column="0" colspan="2">
         <widget class="QPushButton" name="buttonImportDocuments">
@@ -126,11 +112,32 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="1">
+       <item row="3" column="0" colspan="2">
+        <widget class="QListWidget" name="listWidgetDocuments"/>
+       </item>
+       <item row="7" column="1">
+        <widget class="QLineEdit" name="lineEditFileFreq">
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Categoría:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
         <widget class="QLineEdit" name="lineEditFileSubCat"/>
        </item>
-       <item row="4" column="1">
-        <widget class="QLineEdit" name="lineEditFileCat"/>
+       <item row="10" column="0" colspan="2">
+        <widget class="QPushButton" name="buttonRemoveDocument">
+         <property name="text">
+          <string>Quitar</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -433,7 +440,9 @@
      <string>Archivo</string>
     </property>
     <addaction name="menuImportDocuments"/>
+    <addaction name="menuImportDataBase"/>
     <addaction name="menuRemoveFile"/>
+    <addaction name="menuSave"/>
     <addaction name="separator"/>
     <addaction name="menuQuit"/>
    </widget>
@@ -500,6 +509,16 @@
   <action name="menuAboutEnglish">
    <property name="text">
     <string>Acerca de (ING)</string>
+   </property>
+  </action>
+  <action name="menuSave">
+   <property name="text">
+    <string>Guardar</string>
+   </property>
+  </action>
+  <action name="menuImportDataBase">
+   <property name="text">
+    <string>Importar base de datos</string>
    </property>
   </action>
  </widget>
