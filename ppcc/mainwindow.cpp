@@ -9,7 +9,8 @@
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent):
-    QMainWindow(parent), ui(new Ui::MainWindow),  currentDiagramType(-1), fileManagerSelectedFile(-1) {
+    QMainWindow(parent), ui(new Ui::MainWindow),  currentDiagramType(-1),
+        fileManagerSelectedFile(-1), importCanceled(false) {
 
     // setup ui elements
     ui->setupUi(this);
@@ -65,6 +66,7 @@ MainWindow::MainWindow(QWidget *parent):
     connect(ui->menuExport, SIGNAL(triggered()), this, SLOT(exportDiagram()));
     connect(ui->menuConfigDiagram, SIGNAL(triggered()), this, SLOT(configDiagram()));
     connect(ui->menuGenerateDiagram, SIGNAL(triggered()), this, SLOT(generateDiagram()));
+    connect(ui->menuAbout, SIGNAL(triggered()), this, SLOT(openReadme()));
 
     // file management
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
@@ -83,6 +85,7 @@ MainWindow::MainWindow(QWidget *parent):
     // Diagram
     connect(ui->buttonRefreshDiagram, SIGNAL(clicked()), this, SLOT(refreshDiagram()));
     connect(ui->buttonAdvancedDiagramConfiguration, SIGNAL(clicked()), this, SLOT(configDiagram()));
+    //connect();
 
 }
 
@@ -194,6 +197,16 @@ void MainWindow::setFileSubCategory(int newSubCat) {
     }
 }
 
+void MainWindow::openReadme() {
+    QDir currentWorkingDirectory;
+    QString readmeFilePath = currentWorkingDirectory.absolutePath() + "/README.md";
+    qDebug() << readmeFilePath;
+    QDesktopServices::openUrl(QUrl("file:///" + readmeFilePath));
+}
+
+void MainWindow::cancelImport() {
+    this->importCanceled = true;
+}
 
 void MainWindow::importDocument() {
     QStringList docFileNames = QFileDialog::getOpenFileNames(this,
@@ -206,9 +219,14 @@ void MainWindow::importDocument() {
         if(!docFileNames[i].isEmpty()) {
             SetCategoriesDialog* selectCategories =
                     new SetCategoriesDialog(this, docCategories, fileNameOnly);
+            connect(selectCategories, SIGNAL(importProcessCanceled()), this, SLOT(cancelImport()));
             selectCategories->setWindowTitle("Importar archivo");
             selectCategories->exec();
             delete selectCategories;
+            if(this->importCanceled) {
+                this->importCanceled = false;
+                return;
+            }
             documents.emplace_back(MeasurementsDocument(docFileNames[i]));
             documents.back().docSector = docCategories.sector;
             documents.back().docResRange = docCategories.resRange;
@@ -353,6 +371,25 @@ void MainWindow::configureChartAxes(QString &xAxisTitle, QString &yAxisTitle, do
     ui->spinBoxYMax->setValue(yAxis->max());
 }
 
+void MainWindow::showPointOnHover(const QPointF& point, bool state) {
+    if(state) {
+       //pointLabel.setText(QString::asprintf("%1.0f%", point.y()));
+       //QPoint curPos = mapFromGlobal(QCursor::pos());
+       //pointLabel.move(curPos.x()-pointLabel.width()/2, curPos.y()-pointLabel.height()*1.5);
+       //pointLabel.show();
+
+       qDebug() << point.x() << ", " << point.y();
+    } else {
+        //pointLabel.hide();
+    }
+}
+
+void MainWindow::configSeriesForHover() {
+    for(int i = 0; i < displayedSeries.size(); ++i) {
+        connect(displayedSeries[i], SIGNAL(hovered(const QPointF&, bool)), this, SLOT(showPointOnHover(const QPointF&, bool)));
+    }
+}
+
 int MainWindow::generateSimpleDiagram() {
 
     int returnVal = -1;
@@ -399,6 +436,7 @@ int MainWindow::generateSimpleDiagram() {
         this->configureChartAxes(xAxisTitle, yAxisTitle, yMin, yMax);
 
         // setup and display chart
+        this->configSeriesForHover();
         QString fileNameOnly = documents[selectedDocIndex].docName.section("/",-1,-1);
         measurementsChart->legend()->setVisible(true);
         measurementsChart->legend()->setAlignment(Qt::AlignBottom);

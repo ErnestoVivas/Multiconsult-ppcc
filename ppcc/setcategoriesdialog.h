@@ -9,6 +9,7 @@
 #define SETCATEGORIESDIALOG_H
 
 #include <QDialog>
+#include <QDebug>
 #include <QButtonGroup>
 
 #include "enumerations.h"
@@ -49,7 +50,11 @@ private:
     QString* currentCustomIndustrialStr;
     QString* currentCustomSubSectorStr;
 
+signals:
+    void importProcessCanceled();
+
 private slots:
+    void exitOnCancel();
     void exitCategoriesDialog();
     void setNotResidential(bool);
     void setNotCommercial(bool);

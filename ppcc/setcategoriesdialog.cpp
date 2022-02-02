@@ -104,6 +104,7 @@ SetCategoriesDialog::SetCategoriesDialog(QWidget *parent, Categories &docCategor
     ui->lineEditCustomSubCat->setPlaceholderText("Personalizar");
 
     connect(ui->buttonOk, SIGNAL(clicked()), this, SLOT(exitCategoriesDialog()));
+    connect(ui->pushButtonCancel, SIGNAL(clicked()), this, SLOT(exitOnCancel()));
     connect(ui->radioButtonRes, SIGNAL(toggled(bool)), this, SLOT(setNotResidential(bool)));
     connect(ui->radioButtonCommercial, SIGNAL(toggled(bool)), this, SLOT(setNotCommercial(bool)));
     connect(ui->radioButtonIndustrial, SIGNAL(toggled(bool)), this, SLOT(setNotIndustrial(bool)));
@@ -116,6 +117,11 @@ SetCategoriesDialog::SetCategoriesDialog(QWidget *parent, Categories &docCategor
 
 SetCategoriesDialog::~SetCategoriesDialog() {
     delete ui;
+}
+
+void SetCategoriesDialog::exitOnCancel() {
+    emit importProcessCanceled();
+    this->close();
 }
 
 void SetCategoriesDialog::exitCategoriesDialog() {

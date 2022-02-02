@@ -23,6 +23,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QTextStream>
+#include <QDesktopServices>
 
 // C++ STL
 #include <vector>
@@ -88,10 +89,12 @@ private:
     std::shared_ptr<QChart> measurementsChart;      // holds the official chart with the correct data
     std::shared_ptr<QChart> auxiliaryUpdateChart;   // pseudo chart to which chartView is set while official chart is being updated
     QList<QLineSeries*> displayedSeries;            // holds only the series currently displayed in the chart
+    QLabel pointLabel;
 
     // File management parameters
     std::vector<MeasurementsDocument> documents;
     int fileManagerSelectedFile;
+    bool importCanceled;
 
     // file management functions (not used as slots)
     void readDocument(QXlsx::Document*);
@@ -116,6 +119,7 @@ private:
     QList<QLineSeries*> transformAllTo15MinTicks(QList<QLineSeries*>&);
 
     // Diagram display functions
+    void configSeriesForHover();
     void displayDiagramDataAsText();
     void displaySimpleDiagramAsText();
     void displaySiteAnalysisDiagramAsText();
@@ -126,10 +130,12 @@ private:
 private slots:
 
     // general gui / program functions
+    void openReadme();
     void exitProgram();
 
     // file management functions
     void importDocument();
+    void cancelImport();
     void exportDiagram();
     void saveDiagram();
     //void updateFileSubCatComboBox(int);
@@ -156,6 +162,7 @@ private slots:
     int generateSectorWeekdayDiagram();
     int generateSectorWeekDiagram();
     int generateSectorSubCatsDiagram();
+    void showPointOnHover(const QPointF&, bool);
 
     // Diagram configuration functions
     void refreshDiagram();
