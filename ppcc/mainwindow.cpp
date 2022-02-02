@@ -66,7 +66,8 @@ MainWindow::MainWindow(QWidget *parent):
     connect(ui->menuExport, SIGNAL(triggered()), this, SLOT(exportDiagram()));
     connect(ui->menuConfigDiagram, SIGNAL(triggered()), this, SLOT(configDiagram()));
     connect(ui->menuGenerateDiagram, SIGNAL(triggered()), this, SLOT(generateDiagram()));
-    connect(ui->menuAbout, SIGNAL(triggered()), this, SLOT(openReadme()));
+    connect(ui->menuAboutSpanish, SIGNAL(triggered()), this, SLOT(openReadmeSpanish()));
+    connect(ui->menuAboutEnglish, SIGNAL(triggered()), this, SLOT(openReadmeEnglish()));
 
     // file management
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
@@ -197,7 +198,14 @@ void MainWindow::setFileSubCategory(int newSubCat) {
     }
 }
 
-void MainWindow::openReadme() {
+void MainWindow::openReadmeSpanish() {
+    QDir currentWorkingDirectory;
+    QString readmeFilePath = currentWorkingDirectory.absolutePath() + "/LEEME.md";
+    qDebug() << readmeFilePath;
+    QDesktopServices::openUrl(QUrl("file:///" + readmeFilePath));
+}
+
+void MainWindow::openReadmeEnglish() {
     QDir currentWorkingDirectory;
     QString readmeFilePath = currentWorkingDirectory.absolutePath() + "/README.md";
     qDebug() << readmeFilePath;

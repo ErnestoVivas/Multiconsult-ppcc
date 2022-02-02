@@ -130,7 +130,8 @@ private:
 private slots:
 
     // general gui / program functions
-    void openReadme();
+    void openReadmeSpanish();
+    void openReadmeEnglish();
     void exitProgram();
 
     // file management functions

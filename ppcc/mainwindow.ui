@@ -449,7 +449,8 @@
     <property name="title">
      <string>Ayuda</string>
     </property>
-    <addaction name="menuAbout"/>
+    <addaction name="menuAboutSpanish"/>
+    <addaction name="menuAboutEnglish"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDiagrama"/>
@@ -491,9 +492,14 @@
     <string>Quitar</string>
    </property>
   </action>
-  <action name="menuAbout">
+  <action name="menuAboutSpanish">
    <property name="text">
-    <string>Acerca de</string>
+    <string>Acerca de (ESP)</string>
+   </property>
+  </action>
+  <action name="menuAboutEnglish">
+   <property name="text">
+    <string>Acerca de (ING)</string>
    </property>
   </action>
  </widget>
