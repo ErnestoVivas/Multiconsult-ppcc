@@ -68,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent):
     connect(ui->menuGenerateDiagram, SIGNAL(triggered()), this, SLOT(generateDiagram()));
     connect(ui->menuAboutSpanish, SIGNAL(triggered()), this, SLOT(openReadmeSpanish()));
     connect(ui->menuAboutEnglish, SIGNAL(triggered()), this, SLOT(openReadmeEnglish()));
-    connect(ui->menuSave, SIGNAL(clicked()), this, SLOT(saveDataBase()));
+    connect(ui->menuSave, SIGNAL(triggered()), this, SLOT(saveDataBase()));
 
     // file management
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
@@ -330,7 +330,61 @@ void MainWindow::importDocument() {
 }
 
 void MainWindow::saveDataBase() {
-    // TODO
+
+    QStringList saveMethods;
+    saveMethods << tr("Guardar referencias") << tr("Guardar archivos");
+    bool positiveAnswer;
+    QString saveMethod = QInputDialog::getItem(this, tr("Guardar base de datos"), tr("Seleccione Método"),
+                                         saveMethods, 0, false, &positiveAnswer);
+
+    if(positiveAnswer /*&& (saveMethod == "Guardar referencias")*/) {
+        QString saveFileName = QFileDialog::getSaveFileName(this, tr("Guardar base de datos"),
+                                                            "~/", tr("Archivo de configuración (*.txt)"));
+        QFile dataBaseReferences(saveFileName);
+        if(dataBaseReferences.open(QIODevice::WriteOnly)) {
+            QTextStream dataStream(&dataBaseReferences);
+            for(unsigned int i = 0; i < this->documents.size(); ++i) {
+                if(saveMethod == "Guardar referencias") {
+                    dataStream << this->documents[i].docName << ",";
+                } else {
+                    QString currentDocFileNameOnly = this->documents[i].docName.section("/",-1,-1);
+                    int lastDirIndex = saveFileName.lastIndexOf("/");
+                    QString destinationDirectory = saveFileName.left(lastDirIndex + 1);
+                    QString destinationFile = destinationDirectory + currentDocFileNameOnly;
+                    QFile::copy(this->documents[i].docName, destinationFile);
+                    dataStream << currentDocFileNameOnly << ",";
+                }
+                if(this->documents[i].docSector == -2) {
+                    dataStream << this->documents[i].customSectorStr << ",";
+                } else {
+                    dataStream << this->documents[i].docSector << ",";
+                }
+                if(this->documents[i].docResRange == -2) {
+                    dataStream << this->documents[i].customSubSectorStr << ",";
+                } else {
+                    dataStream << this->documents[i].docResRange << ",";
+                }
+                if(this->documents[i].docSubCommercial == -2) {
+                    dataStream << this->documents[i].customSubSectorStr << ",";
+                } else {
+                    dataStream << this->documents[i].docSubCommercial << ",";
+                }
+                if(this->documents[i].docSubIndustrial == -2) {
+                    dataStream << this->documents[i].customSubSectorStr << ",";
+                } else {
+                    dataStream << this->documents[i].docSubIndustrial << ",";
+                }
+                if(this->documents[i].docCustomSubSector == -2) {
+                    dataStream << this->documents[i].customSubSectorStr << "\r\n";  // Win style, change if compiled in unix system
+                } else {
+                    dataStream << this->documents[i].docCustomSubSector << "\r\n";
+                }
+            }
+            dataBaseReferences.close();
+        } else {
+            QMessageBox::critical(this, tr("Error"), tr("Ha ocurrido un error.\nNo se ha podido guardar la base de datos."));
+        }
+    }
 }
 
 

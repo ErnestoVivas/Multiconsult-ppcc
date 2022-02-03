@@ -441,8 +441,9 @@
     </property>
     <addaction name="menuImportDocuments"/>
     <addaction name="menuImportDataBase"/>
-    <addaction name="menuRemoveFile"/>
     <addaction name="menuSave"/>
+    <addaction name="separator"/>
+    <addaction name="menuRemoveFile"/>
     <addaction name="separator"/>
     <addaction name="menuQuit"/>
    </widget>
