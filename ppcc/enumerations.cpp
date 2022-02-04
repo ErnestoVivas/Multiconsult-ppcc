@@ -7,6 +7,110 @@
 
 #include "enumerations.h"
 
+Sector enumerations::getSectorFromInt(int numericSector) {
+    Sector sector = Sector::otherSector;
+    if(numericSector == 0) {
+        sector = Sector::residential;
+    } else if(numericSector == 1) {
+        sector = Sector::commercial;
+    } else if(numericSector == 2) {
+        sector = Sector::industrial;
+    } else if(numericSector == 3) {
+        sector = Sector::pumping;
+    } else if(numericSector == 4) {
+        sector = Sector::publicLighting;
+    } else if(numericSector == 5) {
+        sector = Sector::otherSector;
+    } else if(numericSector == -2) {
+        sector = Sector::customSector;
+    }
+    return sector;
+}
+
+ResidentialRange enumerations::getResRangeFromInt(int numericResRange) {
+    ResidentialRange resRange = ResidentialRange::otherResRange;
+    if(numericResRange == 0) {
+        resRange = ResidentialRange::A;
+    } else if(numericResRange == 1) {
+        resRange = ResidentialRange::B;
+    } else if(numericResRange == 2) {
+        resRange = ResidentialRange::C;
+    } else if(numericResRange == 3) {
+        resRange = ResidentialRange::D;
+    } else if(numericResRange == 4) {
+        resRange = ResidentialRange::E;
+    } else if(numericResRange == 5) {
+        resRange = ResidentialRange::F;
+    } else if(numericResRange == 6) {
+        resRange = ResidentialRange::otherResRange;
+    } else if(numericResRange == -2) {
+        resRange = ResidentialRange::customResRange;
+    } else if(numericResRange == -1) {
+        resRange = ResidentialRange::X;
+    }
+    return resRange;
+}
+
+Commercial enumerations::getCommercialFromInt(int numericCommercial) {
+    Commercial commercial = Commercial::otherCommercial;
+    if(numericCommercial == 0) {
+        commercial = Commercial::finances;
+    } else if(numericCommercial == 1) {
+        commercial = Commercial::wholesale;
+    } else if(numericCommercial == 2) {
+        commercial = Commercial::retail;
+    } else if(numericCommercial == 3) {
+        commercial = Commercial::government;
+    } else if(numericCommercial == 4) {
+        commercial = Commercial::health;
+    } else if(numericCommercial == 5) {
+        commercial = Commercial::hotels;
+    } else if(numericCommercial == 6) {
+        commercial = Commercial::education;
+    } else if(numericCommercial == 7) {
+        commercial = Commercial::otherCommercial;
+    } else if(numericCommercial == -2) {
+        commercial = Commercial::customCommercial;
+    } else if(numericCommercial == -1) {
+        commercial = Commercial::notCommercial;
+    }
+    return commercial;
+}
+
+Industrial enumerations::getIndustrialFromInt(int numericIndustrial) {
+    Industrial industrial = Industrial::otherIndustrial;
+    if(numericIndustrial == 0) {
+        industrial = Industrial::food;
+    } else if(numericIndustrial == 1) {
+        industrial = Industrial::paper;
+    } else if(numericIndustrial == 2) {
+        industrial = Industrial::plastics;
+    } else if(numericIndustrial == 3) {
+        industrial = Industrial::chemistry;
+    } else if(numericIndustrial == 4) {
+        industrial = Industrial::textiles;
+    } else if(numericIndustrial == 5) {
+        industrial = Industrial::otherIndustrial;
+    } else if(numericIndustrial == -2) {
+        industrial = Industrial::customIndustrial;
+    } else if(numericIndustrial == -1) {
+        industrial = Industrial::notIndustrial;
+    }
+    return industrial;
+}
+
+CustomSubSector enumerations::getCustomSubSecFromInt(int numericCustomSubSec) {
+    CustomSubSector customSubSec = CustomSubSector::otherCustomSubSector;
+    if(numericCustomSubSec == 0) {
+        customSubSec = CustomSubSector::otherCustomSubSector;
+    } else if(numericCustomSubSec == -2) {
+        customSubSec = CustomSubSector::customSubSector;
+    } else if(numericCustomSubSec == -1) {
+        customSubSec = CustomSubSector::notCustomSubSector;
+    }
+    return customSubSec;
+}
+
 QString enumerations::getStringFromSector(int sector) {
     QString sectorString = "";
     if(sector == 0) {

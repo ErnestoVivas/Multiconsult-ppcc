@@ -61,8 +61,10 @@ MainWindow::MainWindow(QWidget *parent):
 
     // menu
     connect(ui->menuImportDocuments, SIGNAL(triggered()), this, SLOT(importDocument()));
+    connect(ui->menuImportDataBase, SIGNAL(triggered()), this, SLOT(importDataBase()));
     connect(ui->menuQuit, SIGNAL(triggered()), this, SLOT(exitProgram()));
     connect(ui->menuRemoveFile, SIGNAL(triggered()), this, SLOT(removeDocument()));
+    connect(ui->menuRemoveAllFiles, SIGNAL(triggered()), this, SLOT(removeAllDocuments()));
     connect(ui->menuExport, SIGNAL(triggered()), this, SLOT(exportDiagram()));
     connect(ui->menuConfigDiagram, SIGNAL(triggered()), this, SLOT(configDiagram()));
     connect(ui->menuGenerateDiagram, SIGNAL(triggered()), this, SLOT(generateDiagram()));
@@ -245,78 +247,7 @@ void MainWindow::importDocument() {
             documents.back().docCustomSubSector = docCategories.customSubSec;
             documents.back().customSectorStr = docCategories.customSectorStr;
             documents.back().documentDataAsText = parseDocumentDataAsText(documents.size() - 1);
-
-            if(documents.back().docResRange == -2) {
-                documents.back().customSubSectorStr = docCategories.customResRangeStr;
-                bool resRangeDoesNotExist = true;
-                for(int i = 0; i < sectorDayAnalysis->customResRanges.size(); ++i) {
-                    if(documents.back().customSubSectorStr == sectorDayAnalysis->customResRanges[i]) {
-                        resRangeDoesNotExist = false;
-                        break;
-                    }
-                }
-                if(resRangeDoesNotExist) {
-                    sectorDayAnalysis->customResRanges.append(documents.back().customSubSectorStr);
-                    sectorWeekAnalysis->customResRanges.append(documents.back().customSubSectorStr);
-                }
-            } else if(documents.back().docSubCommercial == -2) {
-                documents.back().customSubSectorStr = docCategories.customCommercialStr;
-                bool commercialDoesNotExist = true;
-                for(int i = 0; i < sectorDayAnalysis->customCommercials.size(); ++i) {
-                    if(documents.back().customSubSectorStr == sectorDayAnalysis->customCommercials[i]) {
-                        commercialDoesNotExist = false;
-                        break;
-                    }
-                }
-                if(commercialDoesNotExist) {
-                    sectorDayAnalysis->customCommercials.append(documents.back().customSubSectorStr);
-                    sectorWeekAnalysis->customCommercials.append(documents.back().customSubSectorStr);
-                }
-            } else if(documents.back().docSubIndustrial == -2) {
-                documents.back().customSubSectorStr = docCategories.customIndustrialStr;
-                bool industrialDoesNotExist = true;
-                for(int i = 0; i < sectorDayAnalysis->customIndustrials.size(); ++i) {
-                    if(documents.back().customSubSectorStr == sectorDayAnalysis->customIndustrials[i]) {
-                        industrialDoesNotExist = false;
-                        break;
-                    }
-                }
-                if(industrialDoesNotExist) {
-                    sectorDayAnalysis->customIndustrials.append(documents.back().customSubSectorStr);
-                    sectorWeekAnalysis->customIndustrials.append(documents.back().customSubSectorStr);
-                }
-            } else if(documents.back().docCustomSubSector == -2) {
-                documents.back().customSubSectorStr = docCategories.customSubSectorStr;
-                bool subSecDoesNotExist = true;
-                for(int i = 0; i < sectorDayAnalysis->customSubSectors.size(); ++i) {
-                    if(documents.back().customSubSectorStr == sectorDayAnalysis->customSubSectors[i]) {
-                        subSecDoesNotExist = false;
-                        break;
-                    }
-                }
-                if(subSecDoesNotExist) {
-                    sectorDayAnalysis->customSubSectors.append(documents.back().customSubSectorStr);
-                    sectorWeekAnalysis->customSubSectors.append(documents.back().customSubSectorStr);
-                }
-            }
-
-            if(documents.back().docSector == -2) {
-                bool sectorDoesNotExist = true;
-                for(int i = 0; i < sectorDayAnalysis->customSectors.size(); ++i) {
-                    if(documents.back().customSectorStr == sectorDayAnalysis->customSectors[i]) {
-                        sectorDoesNotExist = false;
-                        break;
-                    }
-                }
-                if(sectorDoesNotExist) {
-                    sectorDayAnalysis->customSectors.append(documents.back().customSectorStr);
-                    sectorWeekAnalysis->customSectors.append(documents.back().customSectorStr);
-                    sectorSubCatsAnalysis->customSectors.append(documents.back().customSectorStr);
-                }
-            }
-            sectorDayAnalysis->setupComboBoxSector();
-            sectorWeekAnalysis->setupComboBoxSector();
-            sectorSubCatsAnalysis->setupComboBoxSector();
+            this->configDocumentCategories(documents.back(), docCategories);
 
             // add corresponding entries to the function widgets
             simpleDiagramFunction->addEntryComboBoxSelectDoc(fileNameOnly);
@@ -329,13 +260,84 @@ void MainWindow::importDocument() {
     }
 }
 
+void MainWindow::importDataBase() {
+    QString dataBaseFileName = QFileDialog::getOpenFileName(this, tr("Importar base de datos"),
+                                                            "/home", tr("Archivos de configuración (*.txt)"));
+    if(!dataBaseFileName.isEmpty()) {
+        QFile dataBaseConfigFile(dataBaseFileName);
+        if(dataBaseConfigFile.open(QIODevice::ReadOnly)) {
+            QTextStream dataBaseIn(&dataBaseConfigFile);
+            QString firstLine = dataBaseIn.readLine();
+            QString currentDocFileName;
+            if((firstLine == "REFS") || (firstLine == "FILES")) {
+                QString currentLine;
+                while(!dataBaseIn.atEnd()) {
+                    currentLine = dataBaseIn.readLine();
+                    QStringList newDocParameters = currentLine.split(",");
+                    if(newDocParameters.size() != 8) {
+                        continue;
+                    }
+                    Categories newDocCategories;
+                    if(firstLine == "REFS") {
+                        documents.emplace_back(MeasurementsDocument(newDocParameters[0]));
+                        currentDocFileName = newDocParameters[0].section("/",-1,-1);
+                    } else {
+                        int lastDirIndex = dataBaseFileName.lastIndexOf("/");
+                        QString dataBaseFileDir = dataBaseFileName.left(lastDirIndex + 1);
+                        QString newDocFileName = dataBaseFileDir + newDocParameters[0];
+                        documents.emplace_back(MeasurementsDocument(newDocFileName));
+                        currentDocFileName = newDocParameters[0];
+                    }
+                    documents.back().docSector = enumerations::getSectorFromInt(newDocParameters[1].toInt());
+                    newDocCategories.sector = enumerations::getSectorFromInt(newDocParameters[1].toInt());
+                    documents.back().docResRange = enumerations::getResRangeFromInt(newDocParameters[2].toInt());
+                    newDocCategories.resRange = enumerations::getResRangeFromInt(newDocParameters[2].toInt());
+                    documents.back().docSubCommercial = enumerations::getCommercialFromInt(newDocParameters[3].toInt());
+                    newDocCategories.commercial = enumerations::getCommercialFromInt(newDocParameters[3].toInt());
+                    documents.back().docSubIndustrial = enumerations::getIndustrialFromInt(newDocParameters[4].toInt());
+                    newDocCategories.industrial = enumerations::getIndustrialFromInt(newDocParameters[4].toInt());
+                    documents.back().docCustomSubSector = enumerations::getCustomSubSecFromInt(newDocParameters[5].toInt());
+                    newDocCategories.customSubSec = enumerations::getCustomSubSecFromInt(newDocParameters[5].toInt());
+                    documents.back().customSectorStr = newDocParameters[6];
+                    newDocCategories.customSectorStr = newDocParameters[6];
+                    newDocCategories.customResRangeStr = newDocParameters[7];
+                    newDocCategories.customCommercialStr = newDocParameters[7];
+                    newDocCategories.customIndustrialStr = newDocParameters[7];
+                    newDocCategories.customSubSectorStr = newDocParameters[7];
+                    documents.back().documentDataAsText = parseDocumentDataAsText(documents.size() - 1);
+                    this->configDocumentCategories(documents.back(), newDocCategories);
+                    simpleDiagramFunction->addEntryComboBoxSelectDoc(currentDocFileName);
+                    siteAnalysis->addEntryComboBoxSelectDoc(currentDocFileName);
+                    ui->listWidgetDocuments->addItem(currentDocFileName);
+                    if(ui->listWidgetDocuments->count() == 1) {
+                        ui->listWidgetDocuments->setCurrentRow(0);
+                    }
+                }
+            } else {
+                QMessageBox::critical(this, tr("Importar base de datos"),
+                                      tr("No se ha podido importar la base de datos.\n"
+                                         "El archivo de configuración no cumple con el formato requerido."));
+            }
+        } else {
+            QMessageBox::warning(this, tr("Importar base de datos"),
+                                 tr("No se ha podido importar la base de datos.\nVerifique el nombre del archivo"));
+        }
+    }
+}
+
 void MainWindow::saveDataBase() {
+
+    if(this->documents.size() == 0) {
+        QMessageBox::warning(this, tr("Guardar base de datos"),
+                             tr("No se han importado archivos para guardar la base de datos."));
+        return;
+    }
 
     QStringList saveMethods;
     saveMethods << tr("Guardar referencias") << tr("Guardar archivos");
     bool positiveAnswer;
     QString saveMethod = QInputDialog::getItem(this, tr("Guardar base de datos"), tr("Seleccione Método"),
-                                         saveMethods, 0, false, &positiveAnswer);
+                                               saveMethods, 0, false, &positiveAnswer);
 
     if(positiveAnswer /*&& (saveMethod == "Guardar referencias")*/) {
         QString saveFileName = QFileDialog::getSaveFileName(this, tr("Guardar base de datos"),
@@ -343,6 +345,11 @@ void MainWindow::saveDataBase() {
         QFile dataBaseReferences(saveFileName);
         if(dataBaseReferences.open(QIODevice::WriteOnly)) {
             QTextStream dataStream(&dataBaseReferences);
+            if(saveMethod == "Guardar referencias") {
+                dataStream << "REFS\r\n";               // Win style, change on UNIX systems!
+            } else {
+                dataStream << "FILES\r\n";              // Win style, change on UNIX systems!
+            }
             for(unsigned int i = 0; i < this->documents.size(); ++i) {
                 if(saveMethod == "Guardar referencias") {
                     dataStream << this->documents[i].docName << ",";
@@ -354,37 +361,93 @@ void MainWindow::saveDataBase() {
                     QFile::copy(this->documents[i].docName, destinationFile);
                     dataStream << currentDocFileNameOnly << ",";
                 }
-                if(this->documents[i].docSector == -2) {
-                    dataStream << this->documents[i].customSectorStr << ",";
-                } else {
-                    dataStream << this->documents[i].docSector << ",";
-                }
-                if(this->documents[i].docResRange == -2) {
-                    dataStream << this->documents[i].customSubSectorStr << ",";
-                } else {
-                    dataStream << this->documents[i].docResRange << ",";
-                }
-                if(this->documents[i].docSubCommercial == -2) {
-                    dataStream << this->documents[i].customSubSectorStr << ",";
-                } else {
-                    dataStream << this->documents[i].docSubCommercial << ",";
-                }
-                if(this->documents[i].docSubIndustrial == -2) {
-                    dataStream << this->documents[i].customSubSectorStr << ",";
-                } else {
-                    dataStream << this->documents[i].docSubIndustrial << ",";
-                }
-                if(this->documents[i].docCustomSubSector == -2) {
-                    dataStream << this->documents[i].customSubSectorStr << "\r\n";  // Win style, change if compiled in unix system
-                } else {
-                    dataStream << this->documents[i].docCustomSubSector << "\r\n";
-                }
+                dataStream << this->documents[i].docSector << ",";
+                dataStream << this->documents[i].docResRange << ",";
+                dataStream << this->documents[i].docSubCommercial << ",";
+                dataStream << this->documents[i].docSubIndustrial << ",";
+                dataStream << this->documents[i].docCustomSubSector << ",";
+                dataStream << this->documents[i].customSectorStr << ",";
+                dataStream << this->documents[i].customSubSectorStr << "\r\n";   // Win style, change on UNIX systems!
             }
             dataBaseReferences.close();
         } else {
             QMessageBox::critical(this, tr("Error"), tr("Ha ocurrido un error.\nNo se ha podido guardar la base de datos."));
         }
     }
+}
+
+void MainWindow::configDocumentCategories(MeasurementsDocument &newDoc, Categories &docCategories) {
+    if(newDoc.docResRange == -2) {
+        newDoc.customSubSectorStr = docCategories.customResRangeStr;
+        bool resRangeDoesNotExist = true;
+        for(int i = 0; i < sectorDayAnalysis->customResRanges.size(); ++i) {
+            if(newDoc.customSubSectorStr == sectorDayAnalysis->customResRanges[i]) {
+                resRangeDoesNotExist = false;
+                break;
+            }
+        }
+        if(resRangeDoesNotExist) {
+            sectorDayAnalysis->customResRanges.append(newDoc.customSubSectorStr);
+            sectorWeekAnalysis->customResRanges.append(newDoc.customSubSectorStr);
+        }
+    } else if(newDoc.docSubCommercial == -2) {
+        newDoc.customSubSectorStr = docCategories.customCommercialStr;
+        bool commercialDoesNotExist = true;
+        for(int i = 0; i < sectorDayAnalysis->customCommercials.size(); ++i) {
+            if(newDoc.customSubSectorStr == sectorDayAnalysis->customCommercials[i]) {
+                commercialDoesNotExist = false;
+                break;
+            }
+        }
+        if(commercialDoesNotExist) {
+            sectorDayAnalysis->customCommercials.append(newDoc.customSubSectorStr);
+            sectorWeekAnalysis->customCommercials.append(newDoc.customSubSectorStr);
+        }
+    } else if(newDoc.docSubIndustrial == -2) {
+        newDoc.customSubSectorStr = docCategories.customIndustrialStr;
+        bool industrialDoesNotExist = true;
+        for(int i = 0; i < sectorDayAnalysis->customIndustrials.size(); ++i) {
+            if(newDoc.customSubSectorStr == sectorDayAnalysis->customIndustrials[i]) {
+                industrialDoesNotExist = false;
+                break;
+            }
+        }
+        if(industrialDoesNotExist) {
+            sectorDayAnalysis->customIndustrials.append(newDoc.customSubSectorStr);
+            sectorWeekAnalysis->customIndustrials.append(newDoc.customSubSectorStr);
+        }
+    } else if(newDoc.docCustomSubSector == -2) {
+        newDoc.customSubSectorStr = docCategories.customSubSectorStr;
+        bool subSecDoesNotExist = true;
+        for(int i = 0; i < sectorDayAnalysis->customSubSectors.size(); ++i) {
+            if(newDoc.customSubSectorStr == sectorDayAnalysis->customSubSectors[i]) {
+                subSecDoesNotExist = false;
+                break;
+            }
+        }
+        if(subSecDoesNotExist) {
+            sectorDayAnalysis->customSubSectors.append(newDoc.customSubSectorStr);
+            sectorWeekAnalysis->customSubSectors.append(newDoc.customSubSectorStr);
+        }
+    }
+
+    if(newDoc.docSector == -2) {
+        bool sectorDoesNotExist = true;
+        for(int i = 0; i < sectorDayAnalysis->customSectors.size(); ++i) {
+            if(newDoc.customSectorStr == sectorDayAnalysis->customSectors[i]) {
+                sectorDoesNotExist = false;
+                break;
+            }
+        }
+        if(sectorDoesNotExist) {
+            sectorDayAnalysis->customSectors.append(newDoc.customSectorStr);
+            sectorWeekAnalysis->customSectors.append(newDoc.customSectorStr);
+            sectorSubCatsAnalysis->customSectors.append(newDoc.customSectorStr);
+        }
+    }
+    sectorDayAnalysis->setupComboBoxSector();
+    sectorWeekAnalysis->setupComboBoxSector();
+    sectorSubCatsAnalysis->setupComboBoxSector();
 }
 
 
@@ -1974,6 +2037,12 @@ void MainWindow::removeDocument() {
         siteAnalysis->removeDocument(docToRemove);
         ui->textEditDisplayDocument->clear();
         delete itemToRemove;
+    }
+}
+
+void MainWindow::removeAllDocuments() {
+    while(ui->listWidgetDocuments->count() > 0) {
+        this->removeDocument();
     }
 }
 

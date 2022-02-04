@@ -99,6 +99,11 @@ struct Categories {
 };
 
 namespace enumerations {
+    Sector getSectorFromInt(int);
+    ResidentialRange getResRangeFromInt(int);
+    Commercial getCommercialFromInt(int);
+    Industrial getIndustrialFromInt(int);
+    CustomSubSector getCustomSubSecFromInt(int);
     QString getStringFromSector(int);
     QString getStringFromSubSector(int, int);
     QString getStringFromFreq(int);

@@ -29,6 +29,9 @@ SetCategoriesDialog::SetCategoriesDialog(QWidget *parent, Categories &docCategor
     currentCustomIndustrialStr = &docCategories.customIndustrialStr;
     currentCustomSubSectorStr = &docCategories.customSubSectorStr;
 
+    *currentCustomSectorStr = "";
+    *currentCustomSubSectorStr = "";
+
     // Assign radio button ids corresponding to enums
     sectorGroup.addButton(ui->radioButtonRes, 0);
     sectorGroup.addButton(ui->radioButtonCommercial, 1);

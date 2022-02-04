@@ -10,8 +10,8 @@
 #include <QApplication>
 #include <QIcon>
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
+
     //QApplication::setStyle("windowsvista");
     QApplication::setStyle("fusion");
     QApplication a(argc, argv);

@@ -444,6 +444,7 @@
     <addaction name="menuSave"/>
     <addaction name="separator"/>
     <addaction name="menuRemoveFile"/>
+    <addaction name="menuRemoveAllFiles"/>
     <addaction name="separator"/>
     <addaction name="menuQuit"/>
    </widget>
@@ -520,6 +521,11 @@
   <action name="menuImportDataBase">
    <property name="text">
     <string>Importar base de datos</string>
+   </property>
+  </action>
+  <action name="menuRemoveAllFiles">
+   <property name="text">
+    <string>Quitar todos</string>
    </property>
   </action>
  </widget>

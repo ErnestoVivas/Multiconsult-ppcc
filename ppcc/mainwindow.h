@@ -97,6 +97,7 @@ private:
     bool importCanceled;
 
     // file management functions (not used as slots)
+    void configDocumentCategories(MeasurementsDocument&, Categories&);
     void readDocument(QXlsx::Document*);
     QString convertTimeToStr(double);
     void writeLineSeriesToExcel(QXlsx::Document&, int);
@@ -136,6 +137,7 @@ private slots:
 
     // file management functions
     void importDocument();
+    void importDataBase();
     void cancelImport();
     void saveDataBase();
 
@@ -145,6 +147,7 @@ private slots:
     void setFileSubCategory(int);
     QString parseDocumentDataAsText(int);
     void removeDocument();
+    void removeAllDocuments();
     //void setFileFreq(int);          // currently not used
 
     //int generateClassifiedDiagram();
