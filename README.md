@@ -3,7 +3,7 @@ Software for processing load curve data.
 
 
 ## What is this?
-This software processes load curve data that was obtained from power consumption measurements. The program allows to import different measurement files and categorize the data in different sectors and subcategories, that can also be customized (e.g. industrial-chemistry, commercial-education, etc.). After importing measurements there are various functions to analyze the data, for example to calculate the average of the measurements of specific days or categories, to visualize the calculated values in a diagram and to export the diagram either as a picture or an excel file.
+This software processes load curve data that was obtained from power consumption measurements. The program allows to import different measurement files and categorize the data in different sectors and subcategories, that can also be customized (e.g. industrial-chemistry, commercial-education, etc.). After importing measurements there are various functions to analyze the data, for example to calculate the average of the measurements of specific days or categories, to visualize the calculated values in a diagram and to export the diagram either as a picture or as an excel file.
 
 The program is being developed in C++11 with QtCreator 6.0.1, using Qt 5.15.2 (GPL v3 license) and the QXlsx library (MIT license) to read/write excel files. It was tested with Windows 10.
 
@@ -53,4 +53,4 @@ Date        | Time      | kW
     .            .         .  
     .            .         .  
 
-The date has to be in the format dd/mm/yyyy, the time has to be in 24 hour format. The frequency of the measurements must be 15 min or 1h If the provided files are not in the specified format, the program will not be able to analyze the data correctly and might result in crash. The program does not check thouroughly if the input files are in the correct format. Also the program does not check the units and assumes all values to be in kW. The names of the columns (Date, Time, kW) do not matter: The names of the 2nd and 3rd column will be used to label the x- and y-axis of the diagram, but the labeling can be customized in the program.
+The date has to be in the format dd/mm/yyyy, the time has to be in 24 hour format. The frequency of the measurements must be 15 min or 1h. If the provided files are not in the specified format, the program will not be able to analyze the data correctly and might result in crash. The program does not check thouroughly if the input files are in the correct format. Also the program does not check the units and assumes all values to be in kW. The names of the columns (Date, Time, kW) do not matter: The names of the 2nd and 3rd column will be used to label the x- and y-axis of the diagram, but the labeling can be customized in the program.
