@@ -49,6 +49,8 @@ void SectorDayAnalysis::setupComboBoxSector() {
 }
 
 void SectorDayAnalysis::updateSelectSubCatComboBox(int sectorIndex) {
+    emit requestSubCatsUpdate(sectorIndex, ui->comboBoxSelectSubCategory);
+    /*
     ui->comboBoxSelectSubCategory->clear();
     if(sectorIndex == 0) {
         ui->comboBoxSelectSubCategory->addItem("50 kWh/mes");
@@ -89,6 +91,7 @@ void SectorDayAnalysis::updateSelectSubCatComboBox(int sectorIndex) {
             ui->comboBoxSelectSubCategory->addItem(customSubSectors[i]);
         }
     }
+    */
 }
 
 int SectorDayAnalysis::getSelectedSector() {
@@ -127,4 +130,13 @@ int SectorDayAnalysis::getDay() {
 
 int SectorDayAnalysis::getVisType() {
     return visualizationGroup.checkedId();
+}
+
+
+QComboBox* SectorDayAnalysis::getSectorComboBox() {
+    return ui->comboBoxSelectSector;
+}
+
+QComboBox* SectorDayAnalysis::getSubCatComboBox() {
+    return ui->comboBoxSelectSubCategory;
 }

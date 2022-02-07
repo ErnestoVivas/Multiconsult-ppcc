@@ -39,13 +39,21 @@ MainWindow::MainWindow(QWidget *parent):
     ui->comboBoxSelectFunction->addItem("Promedio semana laboral por sector");
     ui->comboBoxSelectFunction->addItem("Promedio subcategorías de sector");
 
+    // setup categories tracking
+    categoriesTracking.initCategories();
+    categoriesTracking.initComboBox(sectorDayAnalysis->getSectorComboBox());
+    categoriesTracking.initComboBox(sectorDayAnalysis->getSubCatComboBox());
+    categoriesTracking.initComboBox(sectorWeekAnalysis->getSectorComboBox());
+    categoriesTracking.initComboBox(sectorWeekAnalysis->getSubCatComboBox());
+    categoriesTracking.initComboBox(sectorSubCatsAnalysis->getSectorComboBox());
+
     // set pointers and smart pointers for correct resource management
     this->measurementsChart = std::make_shared<QChart>();
     this->auxiliaryUpdateChart = std::make_shared<QChart>();
     xAxis = new QValueAxis();
     yAxis = new QValueAxis();
 
-    // setup axes: a axis always stays the same, only label changes on each chart
+    // setup axes: x axis always stays the same, only label changes on each chart
     xAxis->setMin(0.0);
     xAxis->setMax(24.0);
     xAxis->setLabelFormat("%i");
@@ -86,6 +94,8 @@ MainWindow::MainWindow(QWidget *parent):
     connect(simpleDiagramFunction, SIGNAL(selectedDocChanged(int)), this, SLOT(updateDaysSimpleDiagramFunction(int)));
     connect(ui->buttonGenerateDiagram, SIGNAL(clicked()), this, SLOT(generateDiagram()));
     connect(ui->buttonExportDiagram, SIGNAL(clicked()), this, SLOT(exportDiagram()));
+    connect(sectorDayAnalysis, SIGNAL(requestSubCatsUpdate(int, QComboBox*)), this, SLOT(updateSubCatComboBox(int, QComboBox*)));
+    connect(sectorWeekAnalysis, SIGNAL(requestSubCatsUpdate(int, QComboBox*)), this, SLOT(updateSubCatComboBox(int, QComboBox*)));
 
     // Diagram
     connect(ui->buttonRefreshDiagram, SIGNAL(clicked()), this, SLOT(refreshDiagram()));
@@ -97,9 +107,13 @@ MainWindow::MainWindow(QWidget *parent):
 MainWindow::~MainWindow() {
 
     // remove diagram function widgets from stacked widget container and delete them
+    ui->stackedWidgetDiagramFunctions->removeWidget(sectorSubCatsAnalysis);
+    ui->stackedWidgetDiagramFunctions->removeWidget(sectorWeekAnalysis);
     ui->stackedWidgetDiagramFunctions->removeWidget(sectorDayAnalysis);
     ui->stackedWidgetDiagramFunctions->removeWidget(siteAnalysis);
     ui->stackedWidgetDiagramFunctions->removeWidget(simpleDiagramFunction);
+    delete sectorSubCatsAnalysis;
+    delete sectorWeekAnalysis;
     delete sectorDayAnalysis;
     delete siteAnalysis;
     delete simpleDiagramFunction;
@@ -160,6 +174,10 @@ void MainWindow::updateFileSubCatComboBox(int sectorIndex) {
     }
 }
 */
+
+void MainWindow::updateSubCatComboBox(int sectorIndex, QComboBox* subCatComboBox) {
+    this->categoriesTracking.updateSubCatComboBox(sectorIndex, subCatComboBox);
+}
 
 void MainWindow::getFileCategories(int selectedFile) {
     if(selectedFile >= 0) {
@@ -377,77 +395,136 @@ void MainWindow::saveDataBase() {
 }
 
 void MainWindow::configDocumentCategories(MeasurementsDocument &newDoc, Categories &docCategories) {
+    categoriesTracking.updateStandardCategories(docCategories);
     if(newDoc.docResRange == -2) {
         newDoc.customSubSectorStr = docCategories.customResRangeStr;
         bool resRangeDoesNotExist = true;
-        for(int i = 0; i < sectorDayAnalysis->customResRanges.size(); ++i) {
-            if(newDoc.customSubSectorStr == sectorDayAnalysis->customResRanges[i]) {
+
+
+        //for(int i = 0; i < sectorDayAnalysis->customResRanges.size(); ++i) {
+        //    if(newDoc.customSubSectorStr == sectorDayAnalysis->customResRanges[i]) {
+        //        resRangeDoesNotExist = false;
+        //        break;
+        //    }
+        //}
+
+        for(unsigned int i = 0; i < categoriesTracking.customResRangesAndCount.size(); ++i) {
+            if(newDoc.customSubSectorStr == categoriesTracking.customResRangesAndCount[i].first) {
+                ++categoriesTracking.customResRangesAndCount[i].second;
                 resRangeDoesNotExist = false;
-                break;
             }
         }
+
         if(resRangeDoesNotExist) {
-            sectorDayAnalysis->customResRanges.append(newDoc.customSubSectorStr);
-            sectorWeekAnalysis->customResRanges.append(newDoc.customSubSectorStr);
+            categoriesTracking.customResRangesAndCount.emplace_back(std::make_pair(newDoc.customSubSectorStr, 1));
+            //sectorDayAnalysis->customResRanges.append(newDoc.customSubSectorStr);
+            //sectorWeekAnalysis->customResRanges.append(newDoc.customSubSectorStr);
         }
+
+
     } else if(newDoc.docSubCommercial == -2) {
         newDoc.customSubSectorStr = docCategories.customCommercialStr;
         bool commercialDoesNotExist = true;
-        for(int i = 0; i < sectorDayAnalysis->customCommercials.size(); ++i) {
-            if(newDoc.customSubSectorStr == sectorDayAnalysis->customCommercials[i]) {
+
+
+        //for(int i = 0; i < sectorDayAnalysis->customCommercials.size(); ++i) {
+        //    if(newDoc.customSubSectorStr == sectorDayAnalysis->customCommercials[i]) {
+        //        commercialDoesNotExist = false;
+        //        break;
+        //    }
+        //}
+
+        for(unsigned int i = 0; i < categoriesTracking.customCommercialsAndCount.size(); ++i) {
+            if(newDoc.customSubSectorStr == categoriesTracking.customCommercialsAndCount[i].first) {
+                ++categoriesTracking.customCommercialsAndCount[i].second;
                 commercialDoesNotExist = false;
-                break;
             }
         }
+
         if(commercialDoesNotExist) {
-            sectorDayAnalysis->customCommercials.append(newDoc.customSubSectorStr);
-            sectorWeekAnalysis->customCommercials.append(newDoc.customSubSectorStr);
+            categoriesTracking.customCommercialsAndCount.emplace_back(std::make_pair(newDoc.customSubSectorStr, 1));
+            //sectorDayAnalysis->customCommercials.append(newDoc.customSubSectorStr);
+            //sectorWeekAnalysis->customCommercials.append(newDoc.customSubSectorStr);
         }
     } else if(newDoc.docSubIndustrial == -2) {
         newDoc.customSubSectorStr = docCategories.customIndustrialStr;
         bool industrialDoesNotExist = true;
-        for(int i = 0; i < sectorDayAnalysis->customIndustrials.size(); ++i) {
-            if(newDoc.customSubSectorStr == sectorDayAnalysis->customIndustrials[i]) {
+
+        //for(int i = 0; i < sectorDayAnalysis->customIndustrials.size(); ++i) {
+        //    if(newDoc.customSubSectorStr == sectorDayAnalysis->customIndustrials[i]) {
+        //        industrialDoesNotExist = false;
+        //        break;
+        //    }
+        //}
+
+        for(unsigned int i = 0; i < categoriesTracking.customIndustrialsAndCount.size(); ++i) {
+            if(newDoc.customSubSectorStr == categoriesTracking.customIndustrialsAndCount[i].first) {
+                ++categoriesTracking.customIndustrialsAndCount[i].second;
                 industrialDoesNotExist = false;
-                break;
             }
         }
+
         if(industrialDoesNotExist) {
-            sectorDayAnalysis->customIndustrials.append(newDoc.customSubSectorStr);
-            sectorWeekAnalysis->customIndustrials.append(newDoc.customSubSectorStr);
+            categoriesTracking.customIndustrialsAndCount.emplace_back(std::make_pair(newDoc.customSubSectorStr, 1));
+            //sectorDayAnalysis->customIndustrials.append(newDoc.customSubSectorStr);
+            //sectorWeekAnalysis->customIndustrials.append(newDoc.customSubSectorStr);
         }
     } else if(newDoc.docCustomSubSector == -2) {
         newDoc.customSubSectorStr = docCategories.customSubSectorStr;
         bool subSecDoesNotExist = true;
-        for(int i = 0; i < sectorDayAnalysis->customSubSectors.size(); ++i) {
-            if(newDoc.customSubSectorStr == sectorDayAnalysis->customSubSectors[i]) {
+
+        for(unsigned int i = 0; i < categoriesTracking.customSubCatsAndCount.size(); ++i) {
+            if(newDoc.customSubSectorStr == categoriesTracking.customSubCatsAndCount[i].first) {
+                ++categoriesTracking.customSubCatsAndCount[i].second;
                 subSecDoesNotExist = false;
-                break;
             }
         }
+
+        //for(int i = 0; i < sectorDayAnalysis->customSubSectors.size(); ++i) {
+        //    if(newDoc.customSubSectorStr == sectorDayAnalysis->customSubSectors[i]) {
+        //        subSecDoesNotExist = false;
+        //        break;
+        //    }
+        //}
+
         if(subSecDoesNotExist) {
-            sectorDayAnalysis->customSubSectors.append(newDoc.customSubSectorStr);
-            sectorWeekAnalysis->customSubSectors.append(newDoc.customSubSectorStr);
+            categoriesTracking.customSubCatsAndCount.emplace_back(std::make_pair(newDoc.customSubSectorStr, 1));
+            //sectorDayAnalysis->customSubSectors.append(newDoc.customSubSectorStr);
+            //sectorWeekAnalysis->customSubSectors.append(newDoc.customSubSectorStr);
         }
     }
 
     if(newDoc.docSector == -2) {
         bool sectorDoesNotExist = true;
-        for(int i = 0; i < sectorDayAnalysis->customSectors.size(); ++i) {
-            if(newDoc.customSectorStr == sectorDayAnalysis->customSectors[i]) {
+
+        //for(int i = 0; i < sectorDayAnalysis->customSectors.size(); ++i) {
+        //    if(newDoc.customSectorStr == sectorDayAnalysis->customSectors[i]) {
+        //        sectorDoesNotExist = false;
+        //        break;
+        //    }
+        //}
+
+        for(unsigned int i = 0; i < categoriesTracking.customSectorsAndCount.size(); ++i) {
+            if(newDoc.customSectorStr == categoriesTracking.customSectorsAndCount[i].first) {
+                ++categoriesTracking.customSectorsAndCount[i].second;
                 sectorDoesNotExist = false;
-                break;
             }
         }
+
         if(sectorDoesNotExist) {
-            sectorDayAnalysis->customSectors.append(newDoc.customSectorStr);
-            sectorWeekAnalysis->customSectors.append(newDoc.customSectorStr);
-            sectorSubCatsAnalysis->customSectors.append(newDoc.customSectorStr);
+            categoriesTracking.customSectorsAndCount.emplace_back(std::make_pair(newDoc.customSectorStr, 1));
+            //sectorDayAnalysis->customSectors.append(newDoc.customSectorStr);
+            //sectorWeekAnalysis->customSectors.append(newDoc.customSectorStr);
+            //sectorSubCatsAnalysis->customSectors.append(newDoc.customSectorStr);
         }
     }
-    sectorDayAnalysis->setupComboBoxSector();
-    sectorWeekAnalysis->setupComboBoxSector();
-    sectorSubCatsAnalysis->setupComboBoxSector();
+    //sectorDayAnalysis->setupComboBoxSector();
+    //sectorWeekAnalysis->setupComboBoxSector();
+    //sectorSubCatsAnalysis->setupComboBoxSector();
+    categoriesTracking.updateSectorComboBox(sectorDayAnalysis->getSectorComboBox());
+    categoriesTracking.updateSectorComboBox(sectorWeekAnalysis->getSectorComboBox());
+    categoriesTracking.updateSectorComboBox(sectorSubCatsAnalysis->getSectorComboBox());
+    categoriesTracking.printCategories();
 }
 
 
@@ -464,6 +541,20 @@ void MainWindow::selectFunction(int functionIndex) {
         ui->stackedWidgetDiagramFunctions->setCurrentWidget(sectorSubCatsAnalysis);
     }
 }
+
+
+/*
+void MainWindow::initCategories() {
+    QComboBox* sectorDayAnalysisSectors = sectorDayAnalysis->getSectorComboBox();
+    QComboBox* sectorDayAnalysisSubCats = sectorDayAnalysis->getSubCatComboBox();
+    for(int i = 0; i < sectorDayAnalysisSectors->count(); ++i) {
+        categoriesTracking.setComboBoxItemEnabled(sectorDayAnalysisSectors, i, false);
+    }
+    for(int i = 0; i < sectorDayAnalysisSubCats->count(); ++i) {
+        categoriesTracking.setComboBoxItemEnabled(sectorDayAnalysisSubCats, i, false);
+    }
+}
+*/
 
 void MainWindow::resetMeasurementsChart() {
 

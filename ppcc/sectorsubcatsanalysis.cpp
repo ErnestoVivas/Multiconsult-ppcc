@@ -61,3 +61,7 @@ int SectorSubCatsAnalysis::getDay() {
 int SectorSubCatsAnalysis::getVisType() {
     return visualizationGroup.checkedId();
 }
+
+QComboBox* SectorSubCatsAnalysis::getSectorComboBox() {
+    return ui->comboBoxSelectSector;
+}

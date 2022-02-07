@@ -32,6 +32,7 @@
 
 // custom classes, widgets
 #include "measurements.h"
+#include "categoriestracking.h"
 #include "setcategoriesdialog.h"
 #include "simplediagramfunction.h"
 #include "siteanalysis.h"
@@ -91,10 +92,15 @@ private:
     QList<QLineSeries*> displayedSeries;            // holds only the series currently displayed in the chart
     QLabel pointLabel;
 
+
     // File management parameters
     std::vector<MeasurementsDocument> documents;
     int fileManagerSelectedFile;
     bool importCanceled;
+
+    // Tracking of contained categories
+    CategoriesTracking categoriesTracking;
+    //void initCategories();
 
     // file management functions (not used as slots)
     void configDocumentCategories(MeasurementsDocument&, Categories&);
@@ -156,6 +162,7 @@ private slots:
     void selectFunction(int);
     //void updateSheetListSimpleDiagramFunction(int);
     void updateDaysSimpleDiagramFunction(int);
+    void updateSubCatComboBox(int, QComboBox*);
     //void updateDaysSimpleDiagramFunction(int, int);
     //void updateSheetListSiteAnalysis(int);
 

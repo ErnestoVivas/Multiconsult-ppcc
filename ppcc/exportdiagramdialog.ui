@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>212</width>
+    <width>232</width>
     <height>114</height>
    </rect>
   </property>
@@ -18,13 +18,13 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>212</width>
+    <width>232</width>
     <height>114</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>212</width>
+    <width>232</width>
     <height>114</height>
    </size>
   </property>
@@ -47,9 +47,9 @@
   <widget class="QToolButton" name="buttonExcel">
    <property name="geometry">
     <rect>
-     <x>110</x>
+     <x>120</x>
      <y>40</y>
-     <width>91</width>
+     <width>101</width>
      <height>61</height>
     </rect>
    </property>
@@ -75,7 +75,7 @@
     <rect>
      <x>10</x>
      <y>40</y>
-     <width>91</width>
+     <width>101</width>
      <height>61</height>
     </rect>
    </property>

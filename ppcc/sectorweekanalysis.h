@@ -9,6 +9,7 @@
 #define SECTORWEEKANALYSIS_H
 
 #include <QWidget>
+#include <QComboBox>
 #include <QButtonGroup>
 
 #include "enumerations.h"
@@ -38,6 +39,12 @@ public:
     QList<QString> customCommercials;
     QList<QString> customIndustrials;
     QList<QString> customSubSectors;
+
+    QComboBox* getSectorComboBox();
+    QComboBox* getSubCatComboBox();
+
+signals:
+    void requestSubCatsUpdate(int, QComboBox*);
 
 private:
     Ui::SectorWeekAnalysis *ui;

@@ -9,6 +9,7 @@
 #define SECTORSUBCATSANALYSIS_H
 
 #include <QWidget>
+#include <QComboBox>
 #include <QButtonGroup>
 
 namespace Ui {
@@ -28,6 +29,7 @@ public:
     QString getSelectedSectorString();
     int getDay();
     int getVisType();
+    QComboBox* getSectorComboBox();
 
     QList<QString> customSectors;
 

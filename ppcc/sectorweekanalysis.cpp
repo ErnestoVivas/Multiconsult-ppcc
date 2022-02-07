@@ -40,6 +40,9 @@ void SectorWeekAnalysis::setupComboBoxSector() {
 }
 
 void SectorWeekAnalysis::updateSelectSubCatComboBox(int sectorIndex) {
+
+    emit requestSubCatsUpdate(sectorIndex, ui->comboBoxSelectSubCategory);
+    /*
     ui->comboBoxSelectSubCategory->clear();
     if(sectorIndex == 0) {
         ui->comboBoxSelectSubCategory->addItem("50 kWh/mes");
@@ -80,6 +83,7 @@ void SectorWeekAnalysis::updateSelectSubCatComboBox(int sectorIndex) {
             ui->comboBoxSelectSubCategory->addItem(customSubSectors[i]);
         }
     }
+    */
 }
 
 QString SectorWeekAnalysis::getSelectedSectorString() {
@@ -114,4 +118,12 @@ int SectorWeekAnalysis::getSelectedSubCat() {
 
 int SectorWeekAnalysis::getVisType() {
     return visualizationGroup.checkedId();
+}
+
+QComboBox* SectorWeekAnalysis::getSectorComboBox() {
+    return ui->comboBoxSelectSector;
+}
+
+QComboBox* SectorWeekAnalysis::getSubCatComboBox() {
+    return ui->comboBoxSelectSubCategory;
 }
