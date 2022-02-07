@@ -12,7 +12,7 @@ https://github.com/ErnestoVivas/Multiconsult-ppcc
 
 
 ## Formato de las Mediciones
-Los archivos Excel que contienen las mediciones y que se importan en PPCC deben obedecer al siguiente formato:
+Los archivos Excel que contienen las mediciones y que se importan en PPCC deben cumplir con el siguiente formato:
 
 Fecha       | Hora      | kW  
 01/01/2001  | 00:00:00  | 100.0  
