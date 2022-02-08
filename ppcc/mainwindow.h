@@ -98,6 +98,7 @@ private:
     // file management functions (not used as slots)
     void configDocumentCategories(MeasurementsDocument&, Categories&);
     void readDocument(QXlsx::Document*);
+    Categories getDocCategories(int&);
 
     // sub functions to export diagram data as excel
     QString convertTimeToStr(double);

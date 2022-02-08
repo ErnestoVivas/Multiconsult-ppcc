@@ -207,6 +207,57 @@ void CategoriesTracking::updateCustomSubCatsComboBox(QComboBox* customSubCatComb
     customSubCatComboBox->setCurrentIndex(firstValidIndex);
 }
 
+void CategoriesTracking::removeEntries(Categories &oldDocCategories) {
+    if(oldDocCategories.sector != -2) {
+        --sectorsAndCount[oldDocCategories.sector];
+    }
+    if((oldDocCategories.resRange != -1) && (oldDocCategories.resRange != -2)) {
+        --resRangesAndCount[oldDocCategories.resRange];
+    }
+    if((oldDocCategories.commercial != -1) && (oldDocCategories.commercial != -2)) {
+        --commercialsAndCount[oldDocCategories.commercial];
+    }
+    if((oldDocCategories.industrial != -1) && (oldDocCategories.industrial != -2)) {
+        --industrialsAndCount[oldDocCategories.industrial];
+    }
+    if(oldDocCategories.sector == -2) {
+        for(unsigned int i = 0; i < customSectorsAndCount.size(); ++i) {
+            if(customSectorsAndCount[i].first == oldDocCategories.customSectorStr) {
+                --customSectorsAndCount[i].second;  // item does not need to be deleted when count == 0
+            }
+        }
+    }
+    if(oldDocCategories.resRange == -2) {
+        for(unsigned int i = 0; i < customResRangesAndCount.size(); ++i) {
+            if(customResRangesAndCount[i].first == oldDocCategories.customSubSectorStr) {
+                --customResRangesAndCount[i].second;
+            }
+        }
+    }
+    if(oldDocCategories.commercial == -2) {
+        for(unsigned int i = 0; i < customCommercialsAndCount.size(); ++i) {
+            if(customCommercialsAndCount[i].first == oldDocCategories.customSubSectorStr) {
+                --customCommercialsAndCount[i].second;
+            }
+        }
+    }
+    if(oldDocCategories.industrial == -2) {
+        for(unsigned int i = 0; i < customIndustrialsAndCount.size(); ++i) {
+            if(customIndustrialsAndCount[i].first == oldDocCategories.customSubSectorStr) {
+                --customIndustrialsAndCount[i].second;
+            }
+        }
+    }
+    if(oldDocCategories.customSubSec == -2) {
+        for(unsigned int i = 0; i < customSubCatsAndCount.size(); ++i) {
+            if(customSubCatsAndCount[i].first == oldDocCategories.customSubSectorStr) {
+                --customSubCatsAndCount[i].second;
+            }
+        }
+    }
+}
+
+
 
 void CategoriesTracking::updateStandardCategories(Categories &newDocCategories) {
     if(newDocCategories.sector != -2) {

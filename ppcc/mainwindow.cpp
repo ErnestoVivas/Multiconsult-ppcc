@@ -1976,9 +1976,26 @@ void MainWindow::updateDaysSimpleDiagramFunction(int newDocIndex) {
     }
 }
 
+Categories MainWindow::getDocCategories(int &docIndex) {
+    Categories docCategories;
+    docCategories.sector = this->documents[docIndex].docSector;
+    docCategories.resRange = this->documents[docIndex].docResRange;
+    docCategories.commercial = this->documents[docIndex].docSubCommercial;
+    docCategories.industrial = this->documents[docIndex].docSubIndustrial;
+    docCategories.customSubSec = this->documents[docIndex].docCustomSubSector;
+    docCategories.customSectorStr = this->documents[docIndex].customSectorStr;
+    docCategories.customSubSectorStr = this->documents[docIndex].customSubSectorStr; // will be used to analyze all custom sub sectors
+    return docCategories;
+}
+
 void MainWindow::removeDocument() {
     int docToRemove = ui->listWidgetDocuments->currentRow();
     if(docToRemove >= 0) {
+        Categories oldDocCategories = this->getDocCategories(docToRemove);
+        categoriesTracking.removeEntries(oldDocCategories);
+        categoriesTracking.updateSectorComboBox(sectorDayAnalysis->getSectorComboBox());
+        categoriesTracking.updateSectorComboBox(sectorWeekAnalysis->getSectorComboBox());
+        categoriesTracking.updateSectorComboBox(sectorSubCatsAnalysis->getSectorComboBox());
         unsigned int oldDocumentsCount = documents.size();
         for(unsigned int i = docToRemove; i < (oldDocumentsCount - 1); ++i) {
             documents[i] = documents[i+1];

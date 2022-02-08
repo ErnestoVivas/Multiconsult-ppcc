@@ -38,6 +38,7 @@ struct CategoriesTracking {
     void updateCommercialComboBox(QComboBox*);
     void updateIndustrialComboBox(QComboBox*);
     void updateCustomSubCatsComboBox(QComboBox*);
+    void removeEntries(Categories&);
 
     void updateStandardCategories(Categories&);
     void printCategories();
