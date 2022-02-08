@@ -65,6 +65,7 @@ MainWindow::MainWindow(QWidget *parent):
     this->auxiliaryUpdateChart->createDefaultAxes();
 
 
+
     // connect interactive elements with respective functions
 
     // menu
@@ -83,13 +84,10 @@ MainWindow::MainWindow(QWidget *parent):
     // file management
     connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
     connect(ui->listWidgetDocuments, SIGNAL(currentRowChanged(int)), this, SLOT(getFileCategories(int)));
-    //connect(ui->comboBoxFileCat, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFileSubCatComboBox(int)));
-    //connect(ui->comboBoxFileCat, SIGNAL(currentIndexChanged(int)), this, SLOT(setFileCategory(int)));
-    //connect(ui->comboBoxFileSubCat, SIGNAL(currentIndexChanged(int)), this, SLOT(setFileSubCategory(int)));
     connect(ui->buttonRemoveDocument, SIGNAL(clicked()), this, SLOT(removeDocument()));
     connect(ui->buttonSave, SIGNAL(clicked()), this, SLOT(saveDataBase()));
 
-    // functions
+    // functions for diagram generation
     connect(ui->comboBoxSelectFunction, SIGNAL(currentIndexChanged(int)), this, SLOT(selectFunction(int)));
     connect(simpleDiagramFunction, SIGNAL(selectedDocChanged(int)), this, SLOT(updateDaysSimpleDiagramFunction(int)));
     connect(ui->buttonGenerateDiagram, SIGNAL(clicked()), this, SLOT(generateDiagram()));
@@ -97,11 +95,9 @@ MainWindow::MainWindow(QWidget *parent):
     connect(sectorDayAnalysis, SIGNAL(requestSubCatsUpdate(int, QComboBox*)), this, SLOT(updateSubCatComboBox(int, QComboBox*)));
     connect(sectorWeekAnalysis, SIGNAL(requestSubCatsUpdate(int, QComboBox*)), this, SLOT(updateSubCatComboBox(int, QComboBox*)));
 
-    // Diagram
+    // diagram configuration
     connect(ui->buttonRefreshDiagram, SIGNAL(clicked()), this, SLOT(refreshDiagram()));
     connect(ui->buttonAdvancedDiagramConfiguration, SIGNAL(clicked()), this, SLOT(configDiagram()));
-    //connect();
-
 }
 
 MainWindow::~MainWindow() {
@@ -135,45 +131,6 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
-// function can be used later
-//void MainWindow::setupComboBoxesFileCategories() {
-//    ui->comboBoxFileCat->addItem("Residencial");
-//    ui->comboBoxFileCat->addItem("Comercial");
-//    ui->comboBoxFileCat->addItem("Industrial");
-//    ui->comboBoxFileCat->addItem("Bombeo");
-//    ui->comboBoxFileCat->addItem("Alumbrado público");
-//}
-
-// function can be used later
-/*
-void MainWindow::updateFileSubCatComboBox(int sectorIndex) {
-    ui->comboBoxFileSubCat->clear();
-    if(sectorIndex == 0) {
-        ui->comboBoxFileSubCat->addItem("50 kWh/mes");
-        ui->comboBoxFileSubCat->addItem("51 - 100 kWh/mes");
-        ui->comboBoxFileSubCat->addItem("101 - 150 kWh/mes");
-        ui->comboBoxFileSubCat->addItem("151 - 250 kWh/mes");
-        ui->comboBoxFileSubCat->addItem("251 - 500 kWh/mes");
-        ui->comboBoxFileSubCat->addItem(">500 kWh/mes");
-    } else if(sectorIndex == 1) {
-        ui->comboBoxFileSubCat->addItem("Financieras");
-        ui->comboBoxFileSubCat->addItem("Comercio al por mayor");
-        ui->comboBoxFileSubCat->addItem("Comercio al por menor");
-        ui->comboBoxFileSubCat->addItem("Gobierno");
-        ui->comboBoxFileSubCat->addItem("Salud");
-        ui->comboBoxFileSubCat->addItem("Hoteles");
-        ui->comboBoxFileSubCat->addItem("Educación");
-        ui->comboBoxFileSubCat->addItem("Otros");
-    } else if(sectorIndex == 2) {
-        ui->comboBoxFileSubCat->addItem("Alimentos y bebidas");
-        ui->comboBoxFileSubCat->addItem("Papel, cartón");
-        ui->comboBoxFileSubCat->addItem("Caucho, plástico");
-        ui->comboBoxFileSubCat->addItem("Quimica");
-        ui->comboBoxFileSubCat->addItem("Textil");
-        ui->comboBoxFileSubCat->addItem("Otros");
-    }
-}
-*/
 
 void MainWindow::updateSubCatComboBox(int sectorIndex, QComboBox* subCatComboBox) {
     this->categoriesTracking.updateSubCatComboBox(sectorIndex, subCatComboBox);
@@ -204,7 +161,6 @@ void MainWindow::getFileCategories(int selectedFile) {
         ui->lineEditFileCat->setText("");
         ui->lineEditFileSubCat->setText("");
         ui->lineEditFileFreq->setText("");
-        //ui->comboBoxFileCat->setCurrentIndex(0);
     }
 }
 
@@ -223,14 +179,12 @@ void MainWindow::setFileSubCategory(int newSubCat) {
 void MainWindow::openReadmeSpanish() {
     QDir currentWorkingDirectory;
     QString readmeFilePath = currentWorkingDirectory.absolutePath() + "/LEEME.md";
-    qDebug() << readmeFilePath;
     QDesktopServices::openUrl(QUrl("file:///" + readmeFilePath));
 }
 
 void MainWindow::openReadmeEnglish() {
     QDir currentWorkingDirectory;
     QString readmeFilePath = currentWorkingDirectory.absolutePath() + "/README.md";
-    qDebug() << readmeFilePath;
     QDesktopServices::openUrl(QUrl("file:///" + readmeFilePath));
 }
 
@@ -394,136 +348,94 @@ void MainWindow::saveDataBase() {
     }
 }
 
+
 void MainWindow::configDocumentCategories(MeasurementsDocument &newDoc, Categories &docCategories) {
+
+    // function configures categories of a new doc, adds them to categoriesTracking and updates the corresponding comboboxes
+
+    // standard categories
     categoriesTracking.updateStandardCategories(docCategories);
+
+    // custom residential subcategories
     if(newDoc.docResRange == -2) {
         newDoc.customSubSectorStr = docCategories.customResRangeStr;
         bool resRangeDoesNotExist = true;
-
-
-        //for(int i = 0; i < sectorDayAnalysis->customResRanges.size(); ++i) {
-        //    if(newDoc.customSubSectorStr == sectorDayAnalysis->customResRanges[i]) {
-        //        resRangeDoesNotExist = false;
-        //        break;
-        //    }
-        //}
-
         for(unsigned int i = 0; i < categoriesTracking.customResRangesAndCount.size(); ++i) {
             if(newDoc.customSubSectorStr == categoriesTracking.customResRangesAndCount[i].first) {
                 ++categoriesTracking.customResRangesAndCount[i].second;
                 resRangeDoesNotExist = false;
             }
         }
-
         if(resRangeDoesNotExist) {
             categoriesTracking.customResRangesAndCount.emplace_back(std::make_pair(newDoc.customSubSectorStr, 1));
-            //sectorDayAnalysis->customResRanges.append(newDoc.customSubSectorStr);
-            //sectorWeekAnalysis->customResRanges.append(newDoc.customSubSectorStr);
         }
+    }
 
-
-    } else if(newDoc.docSubCommercial == -2) {
+    // custom commercial subcategories
+    else if(newDoc.docSubCommercial == -2) {
         newDoc.customSubSectorStr = docCategories.customCommercialStr;
         bool commercialDoesNotExist = true;
-
-
-        //for(int i = 0; i < sectorDayAnalysis->customCommercials.size(); ++i) {
-        //    if(newDoc.customSubSectorStr == sectorDayAnalysis->customCommercials[i]) {
-        //        commercialDoesNotExist = false;
-        //        break;
-        //    }
-        //}
-
         for(unsigned int i = 0; i < categoriesTracking.customCommercialsAndCount.size(); ++i) {
             if(newDoc.customSubSectorStr == categoriesTracking.customCommercialsAndCount[i].first) {
                 ++categoriesTracking.customCommercialsAndCount[i].second;
                 commercialDoesNotExist = false;
             }
         }
-
         if(commercialDoesNotExist) {
             categoriesTracking.customCommercialsAndCount.emplace_back(std::make_pair(newDoc.customSubSectorStr, 1));
-            //sectorDayAnalysis->customCommercials.append(newDoc.customSubSectorStr);
-            //sectorWeekAnalysis->customCommercials.append(newDoc.customSubSectorStr);
         }
-    } else if(newDoc.docSubIndustrial == -2) {
+    }
+
+    // custom industrial subcategories
+    else if(newDoc.docSubIndustrial == -2) {
         newDoc.customSubSectorStr = docCategories.customIndustrialStr;
         bool industrialDoesNotExist = true;
-
-        //for(int i = 0; i < sectorDayAnalysis->customIndustrials.size(); ++i) {
-        //    if(newDoc.customSubSectorStr == sectorDayAnalysis->customIndustrials[i]) {
-        //        industrialDoesNotExist = false;
-        //        break;
-        //    }
-        //}
-
         for(unsigned int i = 0; i < categoriesTracking.customIndustrialsAndCount.size(); ++i) {
             if(newDoc.customSubSectorStr == categoriesTracking.customIndustrialsAndCount[i].first) {
                 ++categoriesTracking.customIndustrialsAndCount[i].second;
                 industrialDoesNotExist = false;
             }
         }
-
         if(industrialDoesNotExist) {
             categoriesTracking.customIndustrialsAndCount.emplace_back(std::make_pair(newDoc.customSubSectorStr, 1));
-            //sectorDayAnalysis->customIndustrials.append(newDoc.customSubSectorStr);
-            //sectorWeekAnalysis->customIndustrials.append(newDoc.customSubSectorStr);
         }
-    } else if(newDoc.docCustomSubSector == -2) {
+    }
+
+    // custom subcategories of a custom sector
+    else if(newDoc.docCustomSubSector == -2) {
         newDoc.customSubSectorStr = docCategories.customSubSectorStr;
         bool subSecDoesNotExist = true;
-
         for(unsigned int i = 0; i < categoriesTracking.customSubCatsAndCount.size(); ++i) {
             if(newDoc.customSubSectorStr == categoriesTracking.customSubCatsAndCount[i].first) {
                 ++categoriesTracking.customSubCatsAndCount[i].second;
                 subSecDoesNotExist = false;
             }
         }
-
-        //for(int i = 0; i < sectorDayAnalysis->customSubSectors.size(); ++i) {
-        //    if(newDoc.customSubSectorStr == sectorDayAnalysis->customSubSectors[i]) {
-        //        subSecDoesNotExist = false;
-        //        break;
-        //    }
-        //}
-
         if(subSecDoesNotExist) {
             categoriesTracking.customSubCatsAndCount.emplace_back(std::make_pair(newDoc.customSubSectorStr, 1));
-            //sectorDayAnalysis->customSubSectors.append(newDoc.customSubSectorStr);
-            //sectorWeekAnalysis->customSubSectors.append(newDoc.customSubSectorStr);
         }
     }
 
+    // custom sector
     if(newDoc.docSector == -2) {
         bool sectorDoesNotExist = true;
-
-        //for(int i = 0; i < sectorDayAnalysis->customSectors.size(); ++i) {
-        //    if(newDoc.customSectorStr == sectorDayAnalysis->customSectors[i]) {
-        //        sectorDoesNotExist = false;
-        //        break;
-        //    }
-        //}
-
         for(unsigned int i = 0; i < categoriesTracking.customSectorsAndCount.size(); ++i) {
             if(newDoc.customSectorStr == categoriesTracking.customSectorsAndCount[i].first) {
                 ++categoriesTracking.customSectorsAndCount[i].second;
                 sectorDoesNotExist = false;
             }
         }
-
         if(sectorDoesNotExist) {
             categoriesTracking.customSectorsAndCount.emplace_back(std::make_pair(newDoc.customSectorStr, 1));
-            //sectorDayAnalysis->customSectors.append(newDoc.customSectorStr);
-            //sectorWeekAnalysis->customSectors.append(newDoc.customSectorStr);
-            //sectorSubCatsAnalysis->customSectors.append(newDoc.customSectorStr);
         }
     }
-    //sectorDayAnalysis->setupComboBoxSector();
-    //sectorWeekAnalysis->setupComboBoxSector();
-    //sectorSubCatsAnalysis->setupComboBoxSector();
+
+    // update sector combo boxes, subCat comboboxes are updated automatically as signals are sent by sector combo boxes
     categoriesTracking.updateSectorComboBox(sectorDayAnalysis->getSectorComboBox());
     categoriesTracking.updateSectorComboBox(sectorWeekAnalysis->getSectorComboBox());
     categoriesTracking.updateSectorComboBox(sectorSubCatsAnalysis->getSectorComboBox());
+
+    // debug
     categoriesTracking.printCategories();
 }
 
@@ -541,20 +453,6 @@ void MainWindow::selectFunction(int functionIndex) {
         ui->stackedWidgetDiagramFunctions->setCurrentWidget(sectorSubCatsAnalysis);
     }
 }
-
-
-/*
-void MainWindow::initCategories() {
-    QComboBox* sectorDayAnalysisSectors = sectorDayAnalysis->getSectorComboBox();
-    QComboBox* sectorDayAnalysisSubCats = sectorDayAnalysis->getSubCatComboBox();
-    for(int i = 0; i < sectorDayAnalysisSectors->count(); ++i) {
-        categoriesTracking.setComboBoxItemEnabled(sectorDayAnalysisSectors, i, false);
-    }
-    for(int i = 0; i < sectorDayAnalysisSubCats->count(); ++i) {
-        categoriesTracking.setComboBoxItemEnabled(sectorDayAnalysisSubCats, i, false);
-    }
-}
-*/
 
 void MainWindow::resetMeasurementsChart() {
 
@@ -620,8 +518,7 @@ int MainWindow::generateSimpleDiagram() {
     // get inputs from the user
     std::vector<int> selectedDaysIndices = simpleDiagramFunction->getSelectedDays();
     int selectedDocIndex = simpleDiagramFunction->selectedDocIndex;
-    int selectedSheetIndex = 0;
-    //int selectedSheetIndex = simpleDiagramFunction->selectedSheetIndex; // not used anymore
+    int selectedSheetIndex = 0;                                             // only one sheet is used (update jan 22)
 
     // update diagram only if there are valid entries
     if(selectedDaysIndices.size() > 0) {
@@ -935,32 +832,38 @@ int MainWindow::generateSectorWeekdayDiagram() {
     int subCat = sectorDayAnalysis->getSelectedSubCat();
     int selectedDay = sectorDayAnalysis->getDay() + 1;
     int visType = sectorDayAnalysis->getVisType();
+    QString sectorStr;
+    QString subCatStr;
 
     // First: find measurementDocs corresponding to the selected Category and store indices
     std::vector<int> correctFileIndices;
     if((sector == -2) && (subCat == -2)) {
-        QString sectorStr = sectorDayAnalysis->getSelectedSectorString();
-        QString subCatStr = sectorDayAnalysis->getSelectedSubCatString();
+        sectorStr = sectorDayAnalysis->getSelectedSectorString();
+        subCatStr = sectorDayAnalysis->getSelectedSubCatString();
         for(unsigned int i = 0; i < this->documents.size(); ++i) {
             if((documents[i].customSectorStr == sectorStr) && (documents[i].customSubSectorStr == subCatStr)) {
                 correctFileIndices.emplace_back(i);
             }
         }
     } else if(sector == -2) {
-        QString sectorStr = sectorDayAnalysis->getSelectedSectorString();
+        sectorStr = sectorDayAnalysis->getSelectedSectorString();
+        subCatStr = enumerations::getStringFromSubSector(sector, subCat);
         for(unsigned int i = 0; i < this->documents.size(); ++i) {
             if((documents[i].customSectorStr == sectorStr) && (documents[i].getSubCategory() == subCat)) {
                 correctFileIndices.emplace_back(i);
             }
         }
     } else if(subCat == -2) {
-        QString subCatStr = sectorDayAnalysis->getSelectedSubCatString();
+        sectorStr = enumerations::getStringFromSector(sector);
+        subCatStr = sectorDayAnalysis->getSelectedSubCatString();
         for(unsigned int i = 0; i < this->documents.size(); ++i) {
             if((documents[i].docSector == sector) && (documents[i].customSubSectorStr == subCatStr)) {
                 correctFileIndices.emplace_back(i);
             }
         }
     } else {
+        sectorStr = enumerations::getStringFromSector(sector);
+        subCatStr = enumerations::getStringFromSubSector(sector, subCat);
         for(unsigned int i = 0; i < this->documents.size(); ++i) {
             if((documents[i].docSector == sector) && (documents[i].getSubCategory() == subCat)) {
                 correctFileIndices.emplace_back(i);
@@ -1038,19 +941,16 @@ int MainWindow::generateSectorWeekdayDiagram() {
     }
 
     QString diagramTitle = "Curvas de carga del día " + enumerations::getStringFromDay(selectedDay)
-                           + ", " + enumerations::getStringFromSector(sector) + ", "
-                           + enumerations::getStringFromSubSector(sector, subCat);
+                           + ", " + sectorStr + ", " + subCatStr;
     if(visType == 1) {
         displayedSeries = getAverageFromSeries(displayedSeries, currentFreq, false);
         diagramTitle = "Curva de carga promedio, días " + enumerations::getStringFromDay(selectedDay)
-                       + ", " + enumerations::getStringFromSector(sector) + ", "
-                       + enumerations::getStringFromSubSector(sector, subCat);
+                       + ", " + sectorStr + ", " + subCatStr;
         displayedSeries[0]->setName(enumerations::getStringFromDay(selectedDay));
     } else if(visType == 2) {
         displayedSeries = getAverageFromSeries(displayedSeries, currentFreq, true);
         diagramTitle = "Suma de las curvas de carga, días " + enumerations::getStringFromDay(selectedDay)
-                       + ", " + enumerations::getStringFromSector(sector) + ", "
-                       + enumerations::getStringFromSubSector(sector, subCat);
+                       + ", " + sectorStr + ", " + subCatStr;
         displayedSeries[0]->setName(enumerations::getStringFromDay(selectedDay));
     }
 
@@ -1522,19 +1422,19 @@ int MainWindow::generateSectorSubCatsDiagram() {
     }
 
     // Debug (keep for testing)
-    for(int i = 0; i < targetLineSeries.size(); ++i) {
-        qDebug() << "< (" << targetLineSeries[i].first.first << ", "
-                 << targetLineSeries[i].first.second << "), "
-                 << targetLineSeries[i].second.size() << ">";
-        for(int j = 0; j < targetLineSeries[i].second.size(); ++j) {
-            qDebug() << targetLineSeries[i].second[j]->name()
-                     << "num of data points: " << targetLineSeries[i].second[j]->count();
-            if((targetLineSeries[i].second[j]->name()).isEmpty()) {
-                //qDebug() << "Empty Line Series";
-            }
-        }
-    }
-    qDebug() << "\n";
+    //for(int i = 0; i < targetLineSeries.size(); ++i) {
+    //    qDebug() << "< (" << targetLineSeries[i].first.first << ", "
+    //             << targetLineSeries[i].first.second << "), "
+    //             << targetLineSeries[i].second.size() << ">";
+    //    for(int j = 0; j < targetLineSeries[i].second.size(); ++j) {
+    //        qDebug() << targetLineSeries[i].second[j]->name()
+    //                 << "num of data points: " << targetLineSeries[i].second[j]->count();
+    //        if((targetLineSeries[i].second[j]->name()).isEmpty()) {
+    //            //qDebug() << "Empty Line Series";
+    //        }
+    //    }
+    //}
+    //qDebug() << "\n";
 
     // fix bug: remove empty line series (reason unkown)
     QVector<QPair<int, int> > emptyLineSeries;
@@ -1557,7 +1457,7 @@ int MainWindow::generateSectorSubCatsDiagram() {
         qDebug() << targetLineSeries[emptyLineSeries[i].first].second[emptyLineSeries[i].second - removedCount]->count();
         targetLineSeries[emptyLineSeries[i].first].second.removeAt((emptyLineSeries[i].second) - removedCount);
         //++removedCount;
-        qDebug() << "Empty line series was removed";
+        //qDebug() << "Empty line series was removed";
     }
 
 
@@ -1580,9 +1480,9 @@ int MainWindow::generateSectorSubCatsDiagram() {
     }
 
     // Debug
-    for(int i = 0; i < targetAverageLineSeries.size(); ++i) {
-        qDebug() << targetAverageLineSeries[i]->name();
-    }
+    //for(int i = 0; i < targetAverageLineSeries.size(); ++i) {
+    //    qDebug() << targetAverageLineSeries[i]->name();
+    //}
 
     // calculate average of all subcategories if visType == 1
     if(visType == 1) {
@@ -1639,7 +1539,7 @@ int MainWindow::generateSectorSubCatsDiagram() {
 
 void MainWindow::copyLineSeries(QLineSeries* &oldLineSeries, QLineSeries* &newLineSeries) {
 
-    // this function copies oldLineSeries to the empty newLineSeries
+    // this function copies oldLineSeries to the empty (!) newLineSeries
     newLineSeries->setName(oldLineSeries->name());
     QVector<QPointF> dataPoints = oldLineSeries->pointsVector();
     for(unsigned short i = 0; i < dataPoints.size(); ++i) {
@@ -1860,7 +1760,6 @@ void MainWindow::displaySectorSubCatsDiagramAsText() {
     ui->textEditDisplayDiagram->clear();
      ui->textEditDisplayDiagram->append(measurementsChart->title() + "\n");
      int numberOfSeries = displayedSeries.size();
-     //int currentSeriesColumn = 0;
      QString seriesName = "";
      for(int i = 0; i < numberOfSeries; ++i) {
          seriesName = displayedSeries[i]->name();
@@ -1925,13 +1824,6 @@ QString MainWindow::convertTimeToStr(double time) {
     }
     timeString = hourString + ":" + minuteString  + ":00";
     return timeString;
-}
-
-void MainWindow::saveDiagram() {
-    QString saveFileName = QFileDialog::getSaveFileName(this, tr("Guardar imagen"),
-                                                        "~/", tr("Imagenes (*.png)"));
-    QPixmap measurementsImage = ui->graphicsViewChart->grab();
-    measurementsImage.save(saveFileName, "PNG");
 }
 
 void MainWindow::exportDiagram() {
@@ -2074,29 +1966,6 @@ void MainWindow::saveSubCatsDiagramAsExcel(QString &saveFileName) {
     docToSave.saveAs(saveFileName);
 }
 
-
-void MainWindow::saveAsCSV(QString &saveFileName) {
-    QFile docToSave(saveFileName);
-    if(docToSave.open(QIODevice::WriteOnly)) {
-        QTextStream dataStream(&docToSave);
-        QString dataText = ui->textEditDisplayDiagram->toPlainText();
-        QStringList dataLines = dataText.split("\n");
-        for(int i = 0; i < dataLines.size(); ++i) {
-            dataStream << dataLines[i] << Qt::endl;
-        }
-        docToSave.close();
-    }
-}
-
-
-//void MainWindow::updateSheetListSimpleDiagramFunction(int newDocIndex) {
-//    if(newDocIndex >= 0) {
-//        for(unsigned short i = 0; i < documents[newDocIndex].sheets.size(); ++i) {
-//            simpleDiagramFunction->updateSheetList(documents[newDocIndex].sheets[i]->sheetName);
-//        }
-//    }
-//}
-
 void MainWindow::updateDaysSimpleDiagramFunction(int newDocIndex) {
     if(newDocIndex >= 0) {
         short numOfDays = documents[newDocIndex].sheets[0]->daysAndCounting.size();
@@ -2106,14 +1975,6 @@ void MainWindow::updateDaysSimpleDiagramFunction(int newDocIndex) {
         }
     }
 }
-
-//void MainWindow::updateSheetListSiteAnalysis(int newDocIndex) {
-//    if(newDocIndex >= 0) {
-//        for(unsigned short i = 0; i < documents[newDocIndex].sheets.size(); ++i) {
-//            siteAnalysis->updateSheetList(documents[newDocIndex].sheets[i]->sheetName);
-//        }
-//    }
-//}
 
 void MainWindow::removeDocument() {
     int docToRemove = ui->listWidgetDocuments->currentRow();
@@ -2139,15 +2000,11 @@ void MainWindow::removeAllDocuments() {
 
 void MainWindow::refreshDiagram() {
     QString newTitleText = ui->lineEditDiagramTitle->text();
-    //ui->graphicsViewChart->setChart(auxiliaryUpdateChart.get());
     this->measurementsChart->setTitle(newTitleText);
-    //ui->graphicsViewChart->setChart(measurementsChart);
-
     double yMin = ui->spinBoxYMin->value();
     double yMax = ui->spinBoxYMax->value();
     this->yAxis->setRange(yMin, yMax);
     this->yAxis->setTickCount(9);
-    //this->yAxis->applyNiceNumbers();
 }
 
 void MainWindow::configDiagram() {
@@ -2179,5 +2036,10 @@ int MainWindow::generateDiagram() {
 }
 
 void MainWindow::exitProgram() {
-    QCoreApplication::quit();
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Salir", "¿Seguro que desea terminar el programa?",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if(reply == QMessageBox::Yes) {
+        QCoreApplication::quit();
+    }
 }

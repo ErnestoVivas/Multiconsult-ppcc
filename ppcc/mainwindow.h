@@ -25,6 +25,9 @@
 #include <QTextStream>
 #include <QDesktopServices>
 
+// QXlsx
+#include "xlsxdocument.h"
+
 // C++ STL
 #include <vector>
 #include <tuple>
@@ -41,14 +44,6 @@
 #include "sectorsubcatsanalysis.h"
 #include "configdiagram.h"
 #include "exportdiagramdialog.h"
-#include "xlsxdocument.h"
-
-//#include "QXlsx/header/xlsxdocument.h"
-//#include "QXlsx/header/xlsxchartsheet.h"
-//#include "QXlsx/header/xlsxcellrange.h"
-//#include "xlsxchart.h"
-//#include "xlsxrichstring.h"
-//#include "xlsxworkbook.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -79,7 +74,7 @@ private:
     SectorWeekAnalysis* sectorWeekAnalysis;
     SectorSubCatsAnalysis* sectorSubCatsAnalysis;
 
-    // chart parameters
+    // chart parameters (should be a class of it's own...)
     short currentDiagramType;
     QString currentSelectedCategory;
     QString currentSelectedSubCategory;
@@ -92,7 +87,6 @@ private:
     QList<QLineSeries*> displayedSeries;            // holds only the series currently displayed in the chart
     QLabel pointLabel;
 
-
     // File management parameters
     std::vector<MeasurementsDocument> documents;
     int fileManagerSelectedFile;
@@ -100,11 +94,12 @@ private:
 
     // Tracking of contained categories
     CategoriesTracking categoriesTracking;
-    //void initCategories();
 
     // file management functions (not used as slots)
     void configDocumentCategories(MeasurementsDocument&, Categories&);
     void readDocument(QXlsx::Document*);
+
+    // sub functions to export diagram data as excel
     QString convertTimeToStr(double);
     void writeLineSeriesToExcel(QXlsx::Document&, int);
     void saveSimpleDiagramAsExcel(QString&);
@@ -112,7 +107,6 @@ private:
     void saveSectorDayDiagramAsExcel(QString&);
     void saveSectorWeekDiagramAsExcel(QString&);
     void saveSubCatsDiagramAsExcel(QString&);
-    void saveAsCSV(QString&);
 
     // sub functions for diagram generation
     void resetMeasurementsChart();
@@ -146,25 +140,19 @@ private slots:
     void importDataBase();
     void cancelImport();
     void saveDataBase();
-
-    //void updateFileSubCatComboBox(int);
     void getFileCategories(int);
     void setFileCategory(int);
     void setFileSubCategory(int);
-    QString parseDocumentDataAsText(int);
     void removeDocument();
     void removeAllDocuments();
-    //void setFileFreq(int);          // currently not used
+    QString parseDocumentDataAsText(int);
 
     //int generateClassifiedDiagram();
 
     // Functions to communicate with diagram function widgets
     void selectFunction(int);
-    //void updateSheetListSimpleDiagramFunction(int);
     void updateDaysSimpleDiagramFunction(int);
     void updateSubCatComboBox(int, QComboBox*);
-    //void updateDaysSimpleDiagramFunction(int, int);
-    //void updateSheetListSiteAnalysis(int);
 
     // Diagram generation functions
     int generateDiagram();
@@ -175,11 +163,11 @@ private slots:
     int generateSectorSubCatsDiagram();
     void showPointOnHover(const QPointF&, bool);
 
-    // Diagram functions
+    // Diagram functions after generation
     void refreshDiagram();
     void configDiagram();
     void exportDiagram();
-    void saveDiagram();
+    //void saveDiagramAsPNG();
 };
 
 #endif // MAINWINDOW_H

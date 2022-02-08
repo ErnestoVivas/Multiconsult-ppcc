@@ -34,11 +34,11 @@ public:
 
     void setupComboBoxSector();
 
-    QList<QString> customSectors;
-    QList<QString> customResRanges;
-    QList<QString> customCommercials;
-    QList<QString> customIndustrials;
-    QList<QString> customSubSectors;
+    //QList<QString> customSectors;
+    //QList<QString> customResRanges;
+    //QList<QString> customCommercials;
+    //QList<QString> customIndustrials;
+    //QList<QString> customSubSectors;
 
     QComboBox* getSectorComboBox();
     QComboBox* getSubCatComboBox();

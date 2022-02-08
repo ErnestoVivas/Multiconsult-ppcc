@@ -31,7 +31,7 @@ public:
     int getVisType();
     QComboBox* getSectorComboBox();
 
-    QList<QString> customSectors;
+    //QList<QString> customSectors;
 
 private:
     Ui::SectorSubCatsAnalysis *ui;

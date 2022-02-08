@@ -28,6 +28,7 @@ SectorSubCatsAnalysis::~SectorSubCatsAnalysis() {
     delete ui;
 }
 
+// function to construct the widget, not used for updating combobox
 void SectorSubCatsAnalysis::setupComboBoxSector() {
     ui->comboBoxSelectSector->clear();
     ui->comboBoxSelectSector->addItem("Residencial");
@@ -36,9 +37,6 @@ void SectorSubCatsAnalysis::setupComboBoxSector() {
     ui->comboBoxSelectSector->addItem("Bombeo");
     ui->comboBoxSelectSector->addItem("Alumbrado público");
     ui->comboBoxSelectSector->addItem("Otros");
-    for(int i = 0; i < customSectors.size(); ++i) {
-        ui->comboBoxSelectSector->addItem(customSectors[i]);
-    }
 }
 
 int SectorSubCatsAnalysis::getSelectedSector() {

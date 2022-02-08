@@ -26,6 +26,7 @@ SectorWeekAnalysis::~SectorWeekAnalysis() {
     delete ui;
 }
 
+// function to construct the widget, not used for updating combobox
 void SectorWeekAnalysis::setupComboBoxSector() {
     ui->comboBoxSelectSector->clear();
     ui->comboBoxSelectSector->addItem("Residencial");
@@ -34,56 +35,10 @@ void SectorWeekAnalysis::setupComboBoxSector() {
     ui->comboBoxSelectSector->addItem("Bombeo");
     ui->comboBoxSelectSector->addItem("Alumbrado público");
     ui->comboBoxSelectSector->addItem("Otros");
-    for(int i = 0; i < customSectors.size(); ++i) {
-        ui->comboBoxSelectSector->addItem(customSectors[i]);
-    }
 }
 
 void SectorWeekAnalysis::updateSelectSubCatComboBox(int sectorIndex) {
-
     emit requestSubCatsUpdate(sectorIndex, ui->comboBoxSelectSubCategory);
-    /*
-    ui->comboBoxSelectSubCategory->clear();
-    if(sectorIndex == 0) {
-        ui->comboBoxSelectSubCategory->addItem("50 kWh/mes");
-        ui->comboBoxSelectSubCategory->addItem("51 - 100 kWh/mes");
-        ui->comboBoxSelectSubCategory->addItem("101 - 150 kWh/mes");
-        ui->comboBoxSelectSubCategory->addItem("151 - 250 kWh/mes");
-        ui->comboBoxSelectSubCategory->addItem("251 - 500 kWh/mes");
-        ui->comboBoxSelectSubCategory->addItem(">500 kWh/mes");
-        ui->comboBoxSelectSubCategory->addItem("Otros");
-        for(int i = 0; i < customResRanges.size(); ++i) {
-            ui->comboBoxSelectSubCategory->addItem(customResRanges[i]);
-        }
-    } else if(sectorIndex == 1) {
-        ui->comboBoxSelectSubCategory->addItem("Financieras");
-        ui->comboBoxSelectSubCategory->addItem("Comercio al por mayor");
-        ui->comboBoxSelectSubCategory->addItem("Comercio al por menor");
-        ui->comboBoxSelectSubCategory->addItem("Gobierno");
-        ui->comboBoxSelectSubCategory->addItem("Salud");
-        ui->comboBoxSelectSubCategory->addItem("Hoteles");
-        ui->comboBoxSelectSubCategory->addItem("Educación");
-        ui->comboBoxSelectSubCategory->addItem("Otros");
-        for(int i = 0; i < customCommercials.size(); ++i) {
-            ui->comboBoxSelectSubCategory->addItem(customCommercials[i]);
-        }
-    } else if(sectorIndex == 2) {
-        ui->comboBoxSelectSubCategory->addItem("Alimentos y bebidas");
-        ui->comboBoxSelectSubCategory->addItem("Papel, cartón");
-        ui->comboBoxSelectSubCategory->addItem("Caucho, plastico");
-        ui->comboBoxSelectSubCategory->addItem("Quimica");
-        ui->comboBoxSelectSubCategory->addItem("Textil");
-        ui->comboBoxSelectSubCategory->addItem("Otros");
-        for(int i = 0; i < customIndustrials.size(); ++i) {
-            ui->comboBoxSelectSubCategory->addItem(customIndustrials[i]);
-        }
-    } else if(sectorIndex > 5) {
-        ui->comboBoxSelectSubCategory->addItem("Otros");
-        for(int i = 0; i < customSubSectors.size(); ++i) {
-            ui->comboBoxSelectSubCategory->addItem(customSubSectors[i]);
-        }
-    }
-    */
 }
 
 QString SectorWeekAnalysis::getSelectedSectorString() {
