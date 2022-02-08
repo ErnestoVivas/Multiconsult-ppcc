@@ -25,6 +25,7 @@ ConfigDiagram::ConfigDiagram(QWidget* parent, QChart* currentChart, QValueAxis* 
     ui->checkBoxShowLegend->setCheckable(true);
     ui->comboBoxYFormat->addItem("int");
     ui->comboBoxYFormat->addItem("float");
+    ui->buttonOk->setFocus();
 
     if(yAxis->labelFormat() == "%i") {
         ui->comboBoxYFormat->setCurrentIndex(0);

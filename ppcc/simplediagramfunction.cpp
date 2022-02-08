@@ -14,8 +14,6 @@ SimpleDiagramFunction::SimpleDiagramFunction(QWidget *parent) :
     ui->listWidgetDays->setSelectionMode(QAbstractItemView::MultiSelection);
 
     connect(ui->comboBoxSelectDoc, SIGNAL(currentIndexChanged(int)), this, SLOT(clearDaysEntries(int)));
-    //connect(ui->comboBoxSelectDoc, SIGNAL(currentIndexChanged(int)), this, SLOT(clearSheetList(int)));
-    //connect(ui->comboBoxSelectSheet, SIGNAL(currentIndexChanged(int)), this, SLOT(clearDaysEntries(int)));
 }
 
 SimpleDiagramFunction::~SimpleDiagramFunction() {
@@ -27,10 +25,6 @@ void SimpleDiagramFunction::addEntryComboBoxSelectDoc(const QString &newDocument
     int lastItemIndex = (ui->comboBoxSelectDoc->count()) - 1;
     ui->comboBoxSelectDoc->setCurrentIndex(lastItemIndex);
 }
-
-//void SimpleDiagramFunction::updateSheetList(const QString& newSheetEntry) {
-//    ui->comboBoxSelectSheet->addItem(newSheetEntry);
-//}
 
 void SimpleDiagramFunction::updateDays(const QString &day) {
     ui->listWidgetDays->addItem(day);
@@ -50,22 +44,8 @@ void SimpleDiagramFunction::removeDocument(int docToRemove) {
     ui->comboBoxSelectDoc->removeItem(docToRemove);
 }
 
-//void SimpleDiagramFunction::clearSheetList(int newDocIndex) {
-//    ui->comboBoxSelectSheet->clear();
-//    this->selectedDocIndex = newDocIndex;
-//    emit selectedDocChanged(newDocIndex);
-//}
-
 void SimpleDiagramFunction::clearDaysEntries(int newDocIndex) {
     ui->listWidgetDays->clear();
     this->selectedDocIndex = newDocIndex;
     emit selectedDocChanged(newDocIndex);
 }
-
-//void SimpleDiagramFunction::clearDaysEntries(int newSheetIndex) {
-//    ui->listWidgetDays->clear();
-//    this->selectedSheetIndex = newSheetIndex;
-//    emit selectedSheetChanged(newSheetIndex, this->selectedDocIndex);
-//}
-
-

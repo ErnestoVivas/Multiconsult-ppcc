@@ -1,8 +1,6 @@
 #include "categoriestracking.h"
 
-CategoriesTracking::CategoriesTracking() {
-
-}
+CategoriesTracking::CategoriesTracking() {}
 
 void CategoriesTracking::initCategories() {
     for(int i = 0; i < 6; ++i) {

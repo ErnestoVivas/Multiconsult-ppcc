@@ -30,21 +30,18 @@ public:
     int selectedDocIndex;
     int selectedSheetIndex;
     void addEntryComboBoxSelectDoc(const QString&);
-    //void updateSheetList(const QString&);               // not used anymore
     void updateDays(const QString&);
     void removeDocument(int);
     std::vector<int> getSelectedDays();
 
 
-    // signals and slots to communicate with the
-    // main window and handle user inputs
 public slots:
-    //void clearSheetList(int);
+
+    // signals and slots to communicate with the main window and handle user inputs
     void clearDaysEntries(int);
 
 signals:
     void selectedDocChanged(int);
-    //void selectedSheetChanged(int, int);
 
 private:
     Ui::SimpleDiagramFunction *ui;

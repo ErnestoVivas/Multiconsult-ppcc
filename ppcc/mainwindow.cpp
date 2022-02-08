@@ -436,7 +436,7 @@ void MainWindow::configDocumentCategories(MeasurementsDocument &newDoc, Categori
     categoriesTracking.updateSectorComboBox(sectorSubCatsAnalysis->getSectorComboBox());
 
     // debug
-    categoriesTracking.printCategories();
+    //categoriesTracking.printCategories();
 }
 
 

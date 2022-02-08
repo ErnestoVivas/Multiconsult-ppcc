@@ -27,8 +27,6 @@ public:
     void addEntryComboBoxSelectDoc(const QString&);
 
     int selectedDocIndex;
-    //int selectedSheetIndex;                             // not used anymore
-    //void updateSheetList(const QString&);               // not used anymore
     void removeDocument(int);
     int getDay();
     int getVisType();

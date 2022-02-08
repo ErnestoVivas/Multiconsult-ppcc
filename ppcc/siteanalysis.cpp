@@ -27,7 +27,6 @@ SiteAnalysis::SiteAnalysis(QWidget *parent) :
     ui->comboBoxSelectDay->addItem("Domingo");
 
     connect(ui->comboBoxSelectDoc, SIGNAL(currentIndexChanged(int)), this, SLOT(setCurrentDoc(int)));
-    //connect(ui->comboBoxSelectSheet, SIGNAL(currentIndexChanged(int)), this, SLOT(setCurrentSheet(int)));
 }
 
 SiteAnalysis::~SiteAnalysis() {
@@ -39,10 +38,6 @@ void SiteAnalysis::addEntryComboBoxSelectDoc(const QString &newDocument) {
     int lastItemIndex = (ui->comboBoxSelectDoc->count()) - 1;
     ui->comboBoxSelectDoc->setCurrentIndex(lastItemIndex);
 }
-
-//void SiteAnalysis::updateSheetList(const QString& newSheetEntry) {
-//    ui->comboBoxSelectSheet->addItem(newSheetEntry);
-//}
 
 void SiteAnalysis::removeDocument(int docToRemove) {
     ui->comboBoxSelectDoc->removeItem(docToRemove);
@@ -56,12 +51,6 @@ int SiteAnalysis::getDay() {
 int SiteAnalysis::getVisType() {
     return visualizationGroup.checkedId();
 }
-
-//void SiteAnalysis::clearSheetList(int newDocIndex) {
-//    ui->comboBoxSelectSheet->clear();
-//    this->selectedDocIndex = newDocIndex;
-//    emit selectedDocChanged(newDocIndex);
-//}
 
 void SiteAnalysis::setCurrentDoc(int newDocIndex) {
     this->selectedDocIndex = newDocIndex;
