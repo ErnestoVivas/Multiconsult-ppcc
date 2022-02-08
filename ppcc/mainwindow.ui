@@ -452,6 +452,8 @@
     <property name="title">
      <string>Diagrama</string>
     </property>
+    <addaction name="menuSelectFunction"/>
+    <addaction name="separator"/>
     <addaction name="menuGenerateDiagram"/>
     <addaction name="menuConfigDiagram"/>
     <addaction name="menuExport"/>
@@ -526,6 +528,11 @@
   <action name="menuRemoveAllFiles">
    <property name="text">
     <string>Quitar todos</string>
+   </property>
+  </action>
+  <action name="menuSelectFunction">
+   <property name="text">
+    <string>Elegir función</string>
    </property>
   </action>
  </widget>

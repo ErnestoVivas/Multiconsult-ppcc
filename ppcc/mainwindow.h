@@ -42,6 +42,7 @@
 #include "sectordayanalysis.h"
 #include "sectorweekanalysis.h"
 #include "sectorsubcatsanalysis.h"
+#include "selectfunction.h"
 #include "configdiagram.h"
 #include "exportdiagramdialog.h"
 
@@ -151,6 +152,7 @@ private slots:
     //int generateClassifiedDiagram();
 
     // Functions to communicate with diagram function widgets
+    void selectFunction();
     void selectFunction(int);
     void updateDaysSimpleDiagramFunction(int);
     void updateSubCatComboBox(int, QComboBox*);

@@ -74,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent):
     connect(ui->menuQuit, SIGNAL(triggered()), this, SLOT(exitProgram()));
     connect(ui->menuRemoveFile, SIGNAL(triggered()), this, SLOT(removeDocument()));
     connect(ui->menuRemoveAllFiles, SIGNAL(triggered()), this, SLOT(removeAllDocuments()));
+    connect(ui->menuSelectFunction, SIGNAL(triggered()), this, SLOT(selectFunction()));
     connect(ui->menuExport, SIGNAL(triggered()), this, SLOT(exportDiagram()));
     connect(ui->menuConfigDiagram, SIGNAL(triggered()), this, SLOT(configDiagram()));
     connect(ui->menuGenerateDiagram, SIGNAL(triggered()), this, SLOT(generateDiagram()));
@@ -439,6 +440,12 @@ void MainWindow::configDocumentCategories(MeasurementsDocument &newDoc, Categori
     //categoriesTracking.printCategories();
 }
 
+void MainWindow::selectFunction() {
+    SelectFunction* selectFunctionDialog = new SelectFunction();
+    selectFunctionDialog->setWindowTitle("Elegir función");
+    selectFunctionDialog->exec();
+    delete selectFunctionDialog;
+}
 
 void MainWindow::selectFunction(int functionIndex) {
     if(functionIndex == 0) {

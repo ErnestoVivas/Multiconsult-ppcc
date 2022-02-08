@@ -25,6 +25,7 @@ SOURCES += \
     sectordayanalysis.cpp \
     sectorsubcatsanalysis.cpp \
     sectorweekanalysis.cpp \
+    selectfunction.cpp \
     setcategoriesdialog.cpp \
     simplediagramfunction.cpp \
     siteanalysis.cpp
@@ -39,6 +40,7 @@ HEADERS += \
     sectordayanalysis.h \
     sectorsubcatsanalysis.h \
     sectorweekanalysis.h \
+    selectfunction.h \
     setcategoriesdialog.h \
     simplediagramfunction.h \
     siteanalysis.h
@@ -50,6 +52,7 @@ FORMS += \
     sectordayanalysis.ui \
     sectorsubcatsanalysis.ui \
     sectorweekanalysis.ui \
+    selectfunction.ui \
     setcategoriesdialog.ui \
     simplediagramfunction.ui \
     siteanalysis.ui
