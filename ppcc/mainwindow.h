@@ -42,6 +42,7 @@
 #include "sectordayanalysis.h"
 #include "sectorweekanalysis.h"
 #include "sectorsubcatsanalysis.h"
+#include "selectimportmethod.h"
 #include "selectfunction.h"
 #include "configdiagram.h"
 #include "exportdiagramdialog.h"
@@ -90,6 +91,7 @@ private:
 
     // File management parameters
     std::vector<MeasurementsDocument> documents;
+    MeasurementsDocument docTotalNationalLoad;
     int fileManagerSelectedFile;
     bool importCanceled;
 
@@ -138,8 +140,10 @@ private slots:
     void exitProgram();
 
     // file management functions
+    void selectImportMethod();
     void importDocument();
     void importDataBase();
+    void importTotalNatDoc();
     void cancelImport();
     void saveDataBase();
     void getFileCategories(int);
@@ -170,7 +174,6 @@ private slots:
     void refreshDiagram();
     void configDiagram();
     void exportDiagram();
-    //void saveDiagramAsPNG();
 };
 
 #endif // MAINWINDOW_H

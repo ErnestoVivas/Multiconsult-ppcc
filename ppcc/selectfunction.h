@@ -23,6 +23,7 @@ public:
 private:
     Ui::SelectFunction *ui;
 
+    int currentFunction;
     QList<QRadioButton*> functionButtons;
     QButtonGroup selectFunctionsGroup;
 

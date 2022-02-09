@@ -33,11 +33,11 @@ MainWindow::MainWindow(QWidget *parent):
     ui->stackedWidgetDiagramFunctions->addWidget(sectorDayAnalysis);
     ui->stackedWidgetDiagramFunctions->addWidget(sectorWeekAnalysis);
     ui->stackedWidgetDiagramFunctions->addWidget(sectorSubCatsAnalysis);
-    ui->comboBoxSelectFunction->addItem("Visualizar fechas específicas");
-    ui->comboBoxSelectFunction->addItem("Promedio días de semana por sitio");
-    ui->comboBoxSelectFunction->addItem("Promedio días de semana por sector");
-    ui->comboBoxSelectFunction->addItem("Promedio semana laboral por sector");
-    ui->comboBoxSelectFunction->addItem("Promedio subcategorías de sector");
+    ui->comboBoxSelectFunction->addItem("CC de fechas específicas de un sitio");
+    ui->comboBoxSelectFunction->addItem("CC de días de semana por sitio");
+    ui->comboBoxSelectFunction->addItem("CC de días de semana por categoría");
+    ui->comboBoxSelectFunction->addItem("CC de semana laboral por categoría");
+    ui->comboBoxSelectFunction->addItem("CC de subcategorías de sector");
 
     // setup categories tracking
     categoriesTracking.initCategories();
@@ -71,6 +71,7 @@ MainWindow::MainWindow(QWidget *parent):
     // menu
     connect(ui->menuImportDocuments, SIGNAL(triggered()), this, SLOT(importDocument()));
     connect(ui->menuImportDataBase, SIGNAL(triggered()), this, SLOT(importDataBase()));
+    connect(ui->menuImportTotalNatDoc, SIGNAL(triggered()), this, SLOT(importTotalNatDoc()));
     connect(ui->menuQuit, SIGNAL(triggered()), this, SLOT(exitProgram()));
     connect(ui->menuRemoveFile, SIGNAL(triggered()), this, SLOT(removeDocument()));
     connect(ui->menuRemoveAllFiles, SIGNAL(triggered()), this, SLOT(removeAllDocuments()));
@@ -83,7 +84,7 @@ MainWindow::MainWindow(QWidget *parent):
     connect(ui->menuSave, SIGNAL(triggered()), this, SLOT(saveDataBase()));
 
     // file management
-    connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(importDocument()));
+    connect(ui->buttonImportDocuments, SIGNAL(clicked()), this, SLOT(selectImportMethod()));
     connect(ui->listWidgetDocuments, SIGNAL(currentRowChanged(int)), this, SLOT(getFileCategories(int)));
     connect(ui->buttonRemoveDocument, SIGNAL(clicked()), this, SLOT(removeDocument()));
     connect(ui->buttonSave, SIGNAL(clicked()), this, SLOT(saveDataBase()));
@@ -193,6 +194,21 @@ void MainWindow::cancelImport() {
     this->importCanceled = true;
 }
 
+void MainWindow::selectImportMethod() {
+    int importMethod = -1;
+    SelectImportMethod* selectImportMethod = new SelectImportMethod(this, importMethod);
+    selectImportMethod->setWindowTitle("Importar Mediciones");
+    selectImportMethod->exec();
+    delete selectImportMethod;
+    if(importMethod == 0) {
+        this->importDocument();
+    } else if(importMethod == 1) {
+        this->importDataBase();
+    } else if(importMethod == 2) {
+        this->importTotalNatDoc();
+    }
+}
+
 void MainWindow::importDocument() {
     QStringList docFileNames = QFileDialog::getOpenFileNames(this,
             tr("Abrir archivo(s) Excel"), "/home", tr("Formato Excel (*.xlsx)"));
@@ -295,6 +311,18 @@ void MainWindow::importDataBase() {
             QMessageBox::warning(this, tr("Importar base de datos"),
                                  tr("No se ha podido importar la base de datos.\nVerifique el nombre del archivo"));
         }
+    }
+}
+
+void MainWindow::importTotalNatDoc() {
+    QString totalNatDocFileName = QFileDialog::getOpenFileName(this,
+            tr("Abrir archivo Excel"), "/home", tr("Formato Excel (*.xlsx)"));
+    if(!totalNatDocFileName.isEmpty()) {
+        docTotalNationalLoad = MeasurementsDocument(totalNatDocFileName);
+        QString fileNameOnly = totalNatDocFileName.section("/",-1,-1);
+        const QString message = "El archivo " + fileNameOnly + " ha sido importado con éxito.";
+        QMessageBox::information(this, tr("Importar curva de carga nacional"), message,
+                                 QMessageBox::Ok);
     }
 }
 
@@ -1450,7 +1478,7 @@ int MainWindow::generateSectorSubCatsDiagram() {
             QString currSeriesName = targetLineSeries[i].second[j]->name();
             if(currSeriesName.isEmpty()) {
                 emptyLineSeries.push_back(qMakePair(i, j));
-                qDebug() << "Remove indices: " << i << ", " << j;
+                //qDebug() << "Remove indices: " << i << ", " << j;
             }
         }
     }
@@ -1461,7 +1489,7 @@ int MainWindow::generateSectorSubCatsDiagram() {
         } else if(emptyLineSeries[i].second > 0) {
             ++removedCount;
         }
-        qDebug() << targetLineSeries[emptyLineSeries[i].first].second[emptyLineSeries[i].second - removedCount]->count();
+        //qDebug() << targetLineSeries[emptyLineSeries[i].first].second[emptyLineSeries[i].second - removedCount]->count();
         targetLineSeries[emptyLineSeries[i].first].second.removeAt((emptyLineSeries[i].second) - removedCount);
         //++removedCount;
         //qDebug() << "Empty line series was removed";
