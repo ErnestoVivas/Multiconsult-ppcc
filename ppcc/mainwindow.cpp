@@ -10,7 +10,7 @@
 
 MainWindow::MainWindow(QWidget *parent):
     QMainWindow(parent), ui(new Ui::MainWindow),  currentDiagramType(-1),
-        fileManagerSelectedFile(-1), importCanceled(false) {
+        docTotalNationalLoadExists(false), fileManagerSelectedFile(-1), importCanceled(false) {
 
     // setup ui elements
     ui->setupUi(this);
@@ -28,16 +28,19 @@ MainWindow::MainWindow(QWidget *parent):
     sectorDayAnalysis = new SectorDayAnalysis(this);
     sectorWeekAnalysis = new SectorWeekAnalysis(this);
     sectorSubCatsAnalysis = new SectorSubCatsAnalysis(this);
+    sectorAndTotalNatDiagram = new SectorAndTotalNatDiagram(this);
     ui->stackedWidgetDiagramFunctions->addWidget(simpleDiagramFunction);
     ui->stackedWidgetDiagramFunctions->addWidget(siteAnalysis);
     ui->stackedWidgetDiagramFunctions->addWidget(sectorDayAnalysis);
     ui->stackedWidgetDiagramFunctions->addWidget(sectorWeekAnalysis);
     ui->stackedWidgetDiagramFunctions->addWidget(sectorSubCatsAnalysis);
+    ui->stackedWidgetDiagramFunctions->addWidget(sectorAndTotalNatDiagram);
     ui->comboBoxSelectFunction->addItem("CC de fechas específicas de un sitio");
     ui->comboBoxSelectFunction->addItem("CC de días de semana por sitio");
     ui->comboBoxSelectFunction->addItem("CC de días de semana por categoría");
     ui->comboBoxSelectFunction->addItem("CC de semana laboral por categoría");
     ui->comboBoxSelectFunction->addItem("CC de subcategorías de sector");
+    ui->comboBoxSelectFunction->addItem("Comparar sector con CC nacional");
 
     // setup categories tracking
     categoriesTracking.initCategories();
@@ -323,6 +326,8 @@ void MainWindow::importTotalNatDoc() {
         const QString message = "El archivo " + fileNameOnly + " ha sido importado con éxito.";
         QMessageBox::information(this, tr("Importar curva de carga nacional"), message,
                                  QMessageBox::Ok);
+        docTotalNationalLoadExists = true;
+        sectorAndTotalNatDiagram->setTotalNatDoc(fileNameOnly);
     }
 }
 
@@ -463,6 +468,7 @@ void MainWindow::configDocumentCategories(MeasurementsDocument &newDoc, Categori
     categoriesTracking.updateSectorComboBox(sectorDayAnalysis->getSectorComboBox());
     categoriesTracking.updateSectorComboBox(sectorWeekAnalysis->getSectorComboBox());
     categoriesTracking.updateSectorComboBox(sectorSubCatsAnalysis->getSectorComboBox());
+    categoriesTracking.updateSectorComboBox(sectorAndTotalNatDiagram->getSectorComboBox());
 
     // debug
     //categoriesTracking.printCategories();
@@ -486,6 +492,8 @@ void MainWindow::selectFunction(int functionIndex) {
         ui->stackedWidgetDiagramFunctions->setCurrentWidget(sectorWeekAnalysis);
     } else if(functionIndex == 4) {
         ui->stackedWidgetDiagramFunctions->setCurrentWidget(sectorSubCatsAnalysis);
+    } else if(functionIndex == 5) {
+        ui->stackedWidgetDiagramFunctions->setCurrentWidget(sectorAndTotalNatDiagram);
     }
 }
 
@@ -1037,6 +1045,22 @@ void MainWindow::findMinMaxDisplayedSeries(double &yMin, double &yMax) {
     }
 }
 
+void MainWindow::findMaxLineSeries(QLineSeries* currentLineSeries, double &xMax, double &yMax) {
+    QVector<QPointF> dataPoints = currentLineSeries->pointsVector();
+    for(int i = 0; i < dataPoints.size(); ++i) {
+        if(i == 0) {
+            xMax = dataPoints[i].x();
+            yMax = dataPoints[i].y();
+        } else {
+            if(yMax < dataPoints[i].y()) {
+                xMax = dataPoints[i].x();
+                yMax = dataPoints[i].y();
+            }
+        }
+    }
+}
+
+
 QList<QLineSeries*> MainWindow::transformAllTo15MinTicks(QList<QLineSeries*> &oldLineSeries) {
     QList<QLineSeries*> newLineSeries;
 
@@ -1572,6 +1596,234 @@ int MainWindow::generateSectorSubCatsDiagram() {
     return result;
 }
 
+
+int MainWindow::generateSectorAndTotalNatDiagram() {
+    if(!docTotalNationalLoadExists) {
+        QMessageBox::warning(this, tr("No se puede generar el diagrama."),
+                             tr("No se ha importado un archivo con la curva de carga nacional."),
+                             QMessageBox::Ok);
+        return -1;
+    }
+
+    int result = -1;
+
+    // get selected parameters
+    int sector = sectorAndTotalNatDiagram->getSelectedSector();
+    int dayType = sectorAndTotalNatDiagram->getDay();
+    bool showSubCats = sectorAndTotalNatDiagram->getShowSubCats();
+
+    if(dayType == 0) {
+        this->currentDayType = "lunes a viernes";
+    } else if(dayType == 1) {
+        this->currentDayType = "sábado";
+    } else if(dayType == 2) {
+        this->currentDayType = "domingo";
+    }
+
+    // find all documents corresponding to the selected sector
+    std::vector<int> correctFileIndices;
+    if(sector == -2) {
+        QString sectorStr = sectorAndTotalNatDiagram->getSelectedSectorString();
+        for(unsigned int i = 0; i < this->documents.size(); ++i) {
+            if((documents[i].docSector == sector) && (documents[i].customSectorStr == sectorStr)) {
+                correctFileIndices.emplace_back(i);
+            }
+        }
+    } else if(sector >= 0) {
+        for(unsigned int i = 0; i < this->documents.size(); ++i) {
+            if(documents[i].docSector == sector) {
+                correctFileIndices.emplace_back(i);
+            }
+        }
+    }
+
+    // find number of subcategories, name of subcategories and number of lineseries for each subcat
+    QVector<QPair<QPair<int, QString>, int> > subCatIndices;
+    QVector<QPair<QPair<int, QString>, QList<QLineSeries*> > > targetLineSeries;
+    QList<QLineSeries*> currentLineSeries;
+
+    //QVector<QString> subCatStrings;
+    if(sector == -2) {
+        for(unsigned int i = 0; i < correctFileIndices.size(); ++i) {
+            if(i == 0) {
+                //subCatStrings.push_back(documents[i].customSubSectorStr);
+                subCatIndices.push_back(qMakePair(qMakePair(-2, documents[correctFileIndices[i]].customSubSectorStr), 0));
+                targetLineSeries.push_back(
+                            qMakePair(qMakePair(-2, documents[correctFileIndices[i]].customSubSectorStr), QList<QLineSeries*>()));
+            }
+            bool subCatExistsAlready = false;
+            for(int j = 0; j < subCatIndices.size(); ++j) {
+                if(documents[correctFileIndices[i]].customSubSectorStr == subCatIndices[j].first.second) {
+                    ++subCatIndices[j].second;
+                    subCatExistsAlready = true;
+
+                    currentLineSeries = getMeasurementDayLineSeries(correctFileIndices[i], dayType);
+                    for(int k = 0; k < currentLineSeries.size(); ++k) {
+                        targetLineSeries[j].second.push_back(new QLineSeries());
+                        copyLineSeries(currentLineSeries[k], targetLineSeries[j].second.back());
+                    }
+                    currentLineSeries.clear();
+                }
+            }
+            if(!subCatExistsAlready) {
+                subCatIndices.push_back(qMakePair(qMakePair(-2, documents[correctFileIndices[i]].customSubSectorStr), 1));
+                targetLineSeries.push_back(
+                            qMakePair(qMakePair(-2, documents[correctFileIndices[i]].customSubSectorStr), QList<QLineSeries*>()));
+                targetLineSeries.back().second.push_back(new QLineSeries());
+
+                // copy to new QLine series
+                currentLineSeries = getMeasurementDayLineSeries(correctFileIndices[i], dayType);
+                for(int k = 0; k < currentLineSeries.size(); ++k) {
+                    targetLineSeries.back().second.push_back(new QLineSeries());
+                    copyLineSeries(currentLineSeries[k], targetLineSeries.back().second.back());
+                }
+                currentLineSeries.clear();
+            }
+        }
+    } else if(sector >= 0) {
+        for(unsigned int i = 0; i < correctFileIndices.size(); ++i) {
+            int subCatEnum = documents[correctFileIndices[i]].getSubCategory();
+            QString subCatString = enumerations::getStringFromSubSector(sector, subCatEnum);
+            if(subCatEnum == -2) {
+                subCatString = documents[correctFileIndices[i]].customSubSectorStr;
+            }
+            if(i == 0) {
+                subCatIndices.push_back(qMakePair(qMakePair(subCatEnum, subCatString), 0));
+                targetLineSeries.push_back(
+                            qMakePair(qMakePair(subCatEnum, subCatString), QList<QLineSeries*>()));
+            }
+            bool subCatExistsAlready = false;
+
+            for(int j = 0; j < subCatIndices.size(); ++j) {
+                if(subCatString == subCatIndices[j].first.second) {
+                    ++subCatIndices[j].second;
+                    subCatExistsAlready = true;
+                    targetLineSeries[j].second.push_back(new QLineSeries());
+
+                    // copy to new QLine series
+                    currentLineSeries = getMeasurementDayLineSeries(correctFileIndices[i], dayType);
+                    for(int k = 0; k < currentLineSeries.size(); ++k) {
+                        targetLineSeries[j].second.push_back(new QLineSeries());
+                        copyLineSeries(currentLineSeries[k], targetLineSeries[j].second.back());
+                    }
+                    currentLineSeries.clear();
+                }
+            }
+            if(!subCatExistsAlready) {
+                subCatIndices.push_back(qMakePair(qMakePair(subCatEnum, subCatString), 1));
+                targetLineSeries.push_back(
+                            qMakePair(qMakePair(subCatEnum, subCatString), QList<QLineSeries*>()));
+                targetLineSeries.back().second.push_back(new QLineSeries());
+
+                // copy to new QLine series
+                currentLineSeries = getMeasurementDayLineSeries(correctFileIndices[i], dayType);
+                for(int k = 0; k < currentLineSeries.size(); ++k) {
+                    targetLineSeries.back().second.push_back(new QLineSeries());
+                    copyLineSeries(currentLineSeries[k], targetLineSeries.back().second.back());
+                }
+                currentLineSeries.clear();
+            }
+        }
+    }
+
+    // fix bug: remove empty line series (reason unkown)
+    QVector<QPair<int, int> > emptyLineSeries;
+    for(int i = 0; i < targetLineSeries.size(); ++i) {
+        for(int j = 0; j < targetLineSeries[i].second.size(); ++j) {
+            QString currSeriesName = targetLineSeries[i].second[j]->name();
+            if(currSeriesName.isEmpty()) {
+                emptyLineSeries.push_back(qMakePair(i, j));
+                //qDebug() << "Remove indices: " << i << ", " << j;
+            }
+        }
+    }
+    int removedCount = 0;
+    for(int i = 0; i < emptyLineSeries.size(); ++i) {
+        if(emptyLineSeries[i].second == 0) {
+            removedCount = 0;
+        } else if(emptyLineSeries[i].second > 0) {
+            ++removedCount;
+        }
+        //qDebug() << targetLineSeries[emptyLineSeries[i].first].second[emptyLineSeries[i].second - removedCount]->count();
+        targetLineSeries[emptyLineSeries[i].first].second.removeAt((emptyLineSeries[i].second) - removedCount);
+        //++removedCount;
+        //qDebug() << "Empty line series was removed";
+    }
+
+
+    if(targetLineSeries.size() == 0) {
+        QMessageBox::warning(this, tr("No se puede generar el diagrama."),
+                  tr("No se han encontrado datos para el sector indicado."),
+                  QMessageBox::Ok);
+        return result;
+    }
+
+    // calculate averages and transform (currently not checked whether it is necessary)
+    QList<QLineSeries*> targetAverageLineSeries;
+    for(int i = 0; i < targetLineSeries.size(); ++i) {
+        if(targetLineSeries[i].second.size() > 0) {
+            QList<QLineSeries*> currentLineSeries = transformAllTo15MinTicks(targetLineSeries[i].second);
+            currentLineSeries = getAverageFromSeries(currentLineSeries, Frequency::quarterHour, false);
+            currentLineSeries[0]->setName(targetLineSeries[i].first.second);
+            targetAverageLineSeries.push_back(currentLineSeries[0]);
+        }
+    }
+
+    if(!showSubCats) {
+        targetAverageLineSeries = getAverageFromSeries(targetAverageLineSeries, Frequency::quarterHour, false);
+        targetAverageLineSeries[0]->setName("Promedio del sector ");
+    }
+
+    // Setup and display Diagram
+    this->resetMeasurementsChart();
+
+    // copy by value series from sheets to current displayed series, find yMin and yMax
+    double yMin = 0.0;
+    double yMax = 0.0;
+
+    // add total national curve to displayed series
+    displayedSeries.append(new QLineSeries());
+    displayedSeries[0]->setName("CC nacional");
+    QVector<QPointF> dataPoints =
+        docTotalNationalLoad.sheets[0]->measurementSeries[0]->pointsVector();
+    for(int j = 0; j < dataPoints.size(); ++j) {
+        displayedSeries[0]->append(dataPoints[j]);
+    }
+    measurementsChart->addSeries(displayedSeries[0]);
+
+    for(unsigned short i = 0; i < targetAverageLineSeries.size(); ++i) {
+
+        displayedSeries.append(new QLineSeries());
+        displayedSeries[i+1]->setName(targetAverageLineSeries[i]->name());
+        QVector<QPointF> dataPoints = targetAverageLineSeries[i]->pointsVector();
+        for(int j = 0; j < dataPoints.size(); ++j) {
+            displayedSeries[i+1]->append(dataPoints[j]);
+        }
+        measurementsChart->addSeries(displayedSeries[i+1]);
+    }
+    QString xAxisTitle = "Hora";
+    QString yAxisTitle = "kW";
+    this->findMinMaxDisplayedSeries(yMin, yMax);
+    this->configureChartAxes(xAxisTitle, yAxisTitle, yMin, yMax);
+
+
+    QString sectorStr = sectorAndTotalNatDiagram->getSelectedSectorString();
+    QString diagramTitle = "Comparación CC nacional con el sector " + sectorStr;
+    measurementsChart->legend()->setVisible(true);
+    measurementsChart->legend()->setAlignment(Qt::AlignBottom);
+    measurementsChart->setTitle(diagramTitle);
+    ui->lineEditDiagramTitle->setText(diagramTitle);
+    ui->graphicsViewChart->setRenderHint(QPainter::Antialiasing);
+    ui->graphicsViewChart->setChart(measurementsChart.get());
+    this->displaySectorTotalNatDiagramAsText();
+    this->currentDiagramType = 5;
+    this->currentVisType = 0;
+    this->currentSelectedCategory = sectorStr;
+    result = 0;
+
+    return result;
+}
+
 void MainWindow::copyLineSeries(QLineSeries* &oldLineSeries, QLineSeries* &newLineSeries) {
 
     // this function copies oldLineSeries to the empty (!) newLineSeries
@@ -1792,7 +2044,7 @@ void MainWindow::displaySectorWeekDiagramAsText() {
 }
 
 void MainWindow::displaySectorSubCatsDiagramAsText() {
-    ui->textEditDisplayDiagram->clear();
+     ui->textEditDisplayDiagram->clear();
      ui->textEditDisplayDiagram->append(measurementsChart->title() + "\n");
      int numberOfSeries = displayedSeries.size();
      QString seriesName = "";
@@ -1810,6 +2062,11 @@ void MainWindow::displaySectorSubCatsDiagramAsText() {
          }
          ui->textEditDisplayDiagram->append("");
     }
+}
+
+void MainWindow::displaySectorTotalNatDiagramAsText() {
+    ui->textEditDisplayDiagram->clear();
+    ui->textEditDisplayDiagram->append(measurementsChart->title() + "\n");
 }
 
 QString MainWindow::parseDocumentDataAsText(int selectedFile) {
@@ -1891,6 +2148,8 @@ void MainWindow::exportDiagram() {
             this->saveSectorWeekDiagramAsExcel(saveFileName);
         } else if(this->currentDiagramType == 4) {
             this->saveSubCatsDiagramAsExcel(saveFileName);
+        } else if(this->currentDiagramType == 5) {
+            this->saveSectorTotalNatDiagramAsExcel(saveFileName);
         }
     }
 }
@@ -2001,6 +2260,48 @@ void MainWindow::saveSubCatsDiagramAsExcel(QString &saveFileName) {
     docToSave.saveAs(saveFileName);
 }
 
+void MainWindow::saveSectorTotalNatDiagramAsExcel(QString &saveFileName) {
+    QXlsx::Document docToSave;
+    docToSave.write(1, 1, "Sector");
+    docToSave.write(1, 2, this->currentSelectedCategory);
+    docToSave.write(2, 1, "Día");
+    docToSave.write(2, 2, this->currentDayType);
+    docToSave.write(3, 1, "Tipo");
+    docToSave.write(3, 2, "Comparación con la curva de carga nacional");
+
+    double xMaxCCNat = 0.0;
+    double yMaxCCNat = 1.0;
+    double yMaxCurrentLineSeries;
+
+    for(int i = 0; i < displayedSeries.size(); ++i) {
+        QString currentSubCat = displayedSeries[i]->name();
+        QVector<QPointF> dataPoints = displayedSeries[i]->pointsVector();
+        docToSave.write(5, 3*i+1, currentSubCat);
+        if(i == 0) {
+            findMaxLineSeries(displayedSeries[i], xMaxCCNat, yMaxCCNat);
+            yMaxCurrentLineSeries = yMaxCCNat;
+            docToSave.write(6, 3*i+1, "MAX");
+            docToSave.write(6, 3*i+2, yMaxCCNat);
+        } else {
+            for(int j = 0; j < dataPoints.size(); ++j) {
+                if(xMaxCCNat == dataPoints[j].x()) {
+                    yMaxCurrentLineSeries = dataPoints[j].y();
+                }
+            }
+            docToSave.write(6, 3*i+1, "% de MAX CC");
+            docToSave.write(6, 3*i+2, (yMaxCurrentLineSeries/yMaxCCNat)*100.0);
+        }
+        docToSave.write(7, 3*i+1, "Hora");
+        docToSave.write(7, 3*i+2, "kW");
+        for(int j = 0; j < dataPoints.size(); ++j) {
+            QString timeStr = convertTimeToStr(dataPoints[j].x());
+            docToSave.write(j+8, 3*i+1, timeStr);
+            docToSave.write(j+8, 3*i+2, dataPoints[j].y());
+        }
+    }
+    docToSave.saveAs(saveFileName);
+}
+
 void MainWindow::updateDaysSimpleDiagramFunction(int newDocIndex) {
     if(newDocIndex >= 0) {
         short numOfDays = documents[newDocIndex].sheets[0]->daysAndCounting.size();
@@ -2031,6 +2332,7 @@ void MainWindow::removeDocument() {
         categoriesTracking.updateSectorComboBox(sectorDayAnalysis->getSectorComboBox());
         categoriesTracking.updateSectorComboBox(sectorWeekAnalysis->getSectorComboBox());
         categoriesTracking.updateSectorComboBox(sectorSubCatsAnalysis->getSectorComboBox());
+        categoriesTracking.updateSectorComboBox(sectorAndTotalNatDiagram->getSectorComboBox());
         unsigned int oldDocumentsCount = documents.size();
         for(unsigned int i = docToRemove; i < (oldDocumentsCount - 1); ++i) {
             documents[i] = documents[i+1];
@@ -2083,6 +2385,8 @@ int MainWindow::generateDiagram() {
         this->generateSectorWeekDiagram();
     } else if(selectedFunction == 4) {
         this->generateSectorSubCatsDiagram();
+    } else if(selectedFunction == 5) {
+        this->generateSectorAndTotalNatDiagram();
     }
     return 0;
 }

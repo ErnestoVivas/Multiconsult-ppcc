@@ -22,6 +22,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     measurements.cpp \
+    sectorandtotalnatdiagram.cpp \
     sectordayanalysis.cpp \
     sectorsubcatsanalysis.cpp \
     sectorweekanalysis.cpp \
@@ -38,6 +39,7 @@ HEADERS += \
     exportdiagramdialog.h \
     mainwindow.h \
     measurements.h \
+    sectorandtotalnatdiagram.h \
     sectordayanalysis.h \
     sectorsubcatsanalysis.h \
     sectorweekanalysis.h \
@@ -51,6 +53,7 @@ FORMS += \
     configdiagram.ui \
     exportdiagramdialog.ui \
     mainwindow.ui \
+    sectorandtotalnatdiagram.ui \
     sectordayanalysis.ui \
     sectorsubcatsanalysis.ui \
     sectorweekanalysis.ui \

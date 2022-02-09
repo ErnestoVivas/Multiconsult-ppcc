@@ -42,6 +42,7 @@
 #include "sectordayanalysis.h"
 #include "sectorweekanalysis.h"
 #include "sectorsubcatsanalysis.h"
+#include "sectorandtotalnatdiagram.h"
 #include "selectimportmethod.h"
 #include "selectfunction.h"
 #include "configdiagram.h"
@@ -75,6 +76,7 @@ private:
     SectorDayAnalysis* sectorDayAnalysis;
     SectorWeekAnalysis* sectorWeekAnalysis;
     SectorSubCatsAnalysis* sectorSubCatsAnalysis;
+    SectorAndTotalNatDiagram* sectorAndTotalNatDiagram;
 
     // chart parameters (should be a class of it's own...)
     short currentDiagramType;
@@ -92,6 +94,7 @@ private:
     // File management parameters
     std::vector<MeasurementsDocument> documents;
     MeasurementsDocument docTotalNationalLoad;
+    bool docTotalNationalLoadExists;
     int fileManagerSelectedFile;
     bool importCanceled;
 
@@ -111,10 +114,12 @@ private:
     void saveSectorDayDiagramAsExcel(QString&);
     void saveSectorWeekDiagramAsExcel(QString&);
     void saveSubCatsDiagramAsExcel(QString&);
+    void saveSectorTotalNatDiagramAsExcel(QString&);
 
     // sub functions for diagram generation
     void resetMeasurementsChart();
     void findMinMaxDisplayedSeries(double&, double&);
+    void findMaxLineSeries(QLineSeries*, double&, double&);
     void configureChartAxes(QString&, QString&, double&, double&);
     bool compareDates(QDate&, QString&, DateFormat&, bool&);
     std::vector<int> findWeekdays(int&, int&, int&);
@@ -131,6 +136,7 @@ private:
     void displaySectorWeekdayDiagramAsText();
     void displaySectorWeekDiagramAsText();
     void displaySectorSubCatsDiagramAsText();
+    void displaySectorTotalNatDiagramAsText();
 
 private slots:
 
@@ -168,6 +174,7 @@ private slots:
     int generateSectorWeekdayDiagram();
     int generateSectorWeekDiagram();
     int generateSectorSubCatsDiagram();
+    int generateSectorAndTotalNatDiagram();
     void showPointOnHover(const QPointF&, bool);
 
     // Diagram functions after generation
