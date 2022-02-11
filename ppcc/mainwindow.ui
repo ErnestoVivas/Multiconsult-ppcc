@@ -475,7 +475,7 @@
     <property name="title">
      <string>Diagrama</string>
     </property>
-    <addaction name="menuSelectFunction"/>
+    <addaction name="menuSelectFunction_2"/>
     <addaction name="separator"/>
     <addaction name="menuGenerateDiagram"/>
     <addaction name="menuConfigDiagram"/>
@@ -561,6 +561,11 @@
   <action name="menuImportTotalNatDoc">
    <property name="text">
     <string>Importar CC NAC</string>
+   </property>
+  </action>
+  <action name="menuSelectFunction_2">
+   <property name="text">
+    <string>Elegir función</string>
    </property>
   </action>
  </widget>

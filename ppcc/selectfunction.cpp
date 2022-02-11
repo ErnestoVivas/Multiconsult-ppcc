@@ -1,21 +1,20 @@
 #include "selectfunction.h"
 #include "ui_selectfunction.h"
 
-SelectFunction::SelectFunction(QWidget *parent) :
+SelectFunction::SelectFunction(QWidget *parent, int& selectedFunction) :
     QDialog(parent), ui(new Ui::SelectFunction) {
 
     ui->setupUi(this);
     this->setupRadioButtons();
-
-
+    indexRadioButton = &selectedFunction;
     // setup table widget
     ui->tableWidgetFunctions->setColumnCount(3);
-    ui->tableWidgetFunctions->setRowCount(5);
+    ui->tableWidgetFunctions->setRowCount(6);
     ui->tableWidgetFunctions->setShowGrid(true);
 
     ui->tableWidgetFunctions->setColumnWidth(0, 40);
-    ui->tableWidgetFunctions->setColumnWidth(1, 180);
-    ui->tableWidgetFunctions->setColumnWidth(2, 440);
+    ui->tableWidgetFunctions->setColumnWidth(1, 200);
+    ui->tableWidgetFunctions->setColumnWidth(2, 600);
     for(int i = 0; i < 3; ++i) {
         ui->tableWidgetFunctions->setRowHeight(i, 40);
     }
@@ -41,10 +40,11 @@ SelectFunction::SelectFunction(QWidget *parent) :
     ui->tableWidgetFunctions->setCellWidget(4, 1, new QLabel("Curvas de carga de las\nsubcategorías de un sector"));
     ui->tableWidgetFunctions->setCellWidget(4, 2, new QLabel("Seleccione un sector y un día de semana. Se calculará el promedio de las mediciones correspondientes\n"
                                                              "y se visualizará el resultado desagregado por cada subcategoría o el total de todas las subcategorías."));
-
+    ui->tableWidgetFunctions->setCellWidget(5,1, new QLabel("Comparar sector con CC nacional"));
+    ui->tableWidgetFunctions->setCellWidget(5,2, new QLabel(""));
 
     this->addRadioButtonsToFunctionsTable();
-
+    connect(ui->buttonOk, SIGNAL(clicked()), this, SLOT(exitDialog()));
 }
 
 SelectFunction::~SelectFunction() {
@@ -52,16 +52,23 @@ SelectFunction::~SelectFunction() {
 }
 
 void SelectFunction::setupRadioButtons() {
-    for(int i = 0; i < 5; ++i) {
-        functionButtons.append(new QRadioButton("", this));
-        selectFunctionsGroup.addButton(functionButtons[i], i);
+    for(int i = 0; i < 6; ++i) {
+        if (i == 0) {
+            functionButtons.append(new QRadioButton("", this));
+            selectFunctionsGroup.addButton(functionButtons[i], i);
+            selectFunctionsGroup.button(i)->click();
+        }
+        else {
+            functionButtons.append(new QRadioButton("", this));
+            selectFunctionsGroup.addButton(functionButtons[i], i);
+        }
     }
 }
 
 void SelectFunction::addRadioButtonsToFunctionsTable() {
 
     // ownership of all Widgets is passed to tableWidget!
-    for(int i = 0; i < 5; ++i) {
+    for(int i = 0; i < 6; ++i) {
         QWidget* radioButtonWidget = new QWidget();
         QHBoxLayout* HLayout = new QHBoxLayout(radioButtonWidget);
         HLayout->addWidget(functionButtons[i]);
@@ -69,4 +76,9 @@ void SelectFunction::addRadioButtonsToFunctionsTable() {
         HLayout->setContentsMargins(0,0,0,0);
         ui->tableWidgetFunctions->setCellWidget(i, 0, radioButtonWidget);
     }
+}
+
+void SelectFunction::exitDialog() {
+    *indexRadioButton = selectFunctionsGroup.checkedId();
+    this->close();
 }

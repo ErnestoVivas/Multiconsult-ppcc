@@ -78,7 +78,7 @@ MainWindow::MainWindow(QWidget *parent):
     connect(ui->menuQuit, SIGNAL(triggered()), this, SLOT(exitProgram()));
     connect(ui->menuRemoveFile, SIGNAL(triggered()), this, SLOT(removeDocument()));
     connect(ui->menuRemoveAllFiles, SIGNAL(triggered()), this, SLOT(removeAllDocuments()));
-    connect(ui->menuSelectFunction, SIGNAL(triggered()), this, SLOT(selectFunction()));
+    connect(ui->menuSelectFunction_2, SIGNAL(triggered()), this, SLOT(selectFunction()));   // implement later!
     connect(ui->menuExport, SIGNAL(triggered()), this, SLOT(exportDiagram()));
     connect(ui->menuConfigDiagram, SIGNAL(triggered()), this, SLOT(configDiagram()));
     connect(ui->menuGenerateDiagram, SIGNAL(triggered()), this, SLOT(generateDiagram()));
@@ -475,10 +475,14 @@ void MainWindow::configDocumentCategories(MeasurementsDocument &newDoc, Categori
 }
 
 void MainWindow::selectFunction() {
-    SelectFunction* selectFunctionDialog = new SelectFunction();
+    int selectedFunction = -1;
+    SelectFunction* selectFunctionDialog = new SelectFunction(this, selectedFunction);
     selectFunctionDialog->setWindowTitle("Elegir función");
     selectFunctionDialog->exec();
     delete selectFunctionDialog;
+    qDebug() << selectedFunction;
+    selectFunction(selectedFunction);
+    ui->comboBoxSelectFunction->setCurrentIndex(selectedFunction);
 }
 
 void MainWindow::selectFunction(int functionIndex) {
